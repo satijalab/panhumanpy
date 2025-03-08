@@ -160,6 +160,16 @@ def return_match(contents, templates):
     return match
 
 
+def give_model_dir(model):
+    """
+    Returns the directory path with the saved model files.
+    """
+    cwd = give_script_dir()
+    package_root = os.path.dirname(os.path.dirname(cwd))
+    model_dir = os.path.join(package_root, "src", "panhumanpy", "models", model)
+    return model_dir
+
+
 def give_exp_dir(
     split_mode,
     model,
@@ -185,60 +195,7 @@ def give_exp_dir(
     Returns the directory path with the saved model based on the
     arguments provided.
     """
-
-    data_source_id = data_source.split("/")[-1]
-    cwd = give_script_dir()
-    exp_dir = os.path.join(cwd, "experiments/" + data_source_id)
-    exp_dir = os.path.join(exp_dir, split_mode)
-    exp_dir = os.path.join(exp_dir, model)
-    exp_dir = os.path.join(exp_dir, loss_name)
-    exp_data_source, dataset_name = data_dir(data_source, data_seed, data_split)
-    exp_dir = os.path.join(exp_dir, dataset_name)
-
-    if mask_seed:
-        if if_val(tm_frac) + if_val(lm_frac) != 1:
-            raise ValueError(
-                "One and exactly one of tail_mask or single_level_mask"
-                "needs to be provided."
-            )
-        if tm_frac:
-            mask_mode = "tail"
-            mask_subdir = f"tail_mask/tm_frac{tm_frac[0]}_{tm_frac[1]}"
-        elif lm_frac:
-            mask_mode = "single_level"
-            mask_subdir = f"single_level_mask/lm_frac{lm_frac}"
-        exp_dir = os.path.join(exp_dir, mask_subdir, f"/mask_seed_{mask_seed}")
-        mask_dir = exp_dir
-    else:
-        mask_mode = None
-        mask_subdir = "no_mask"
-        exp_dir = os.path.join(exp_dir, mask_subdir)
-        mask_dir = None
-
-    if save:
-        exp_dir = os.path.join(exp_dir, "saved_models")
-
-    exp_name = f"TS{train_seed}_BS{batch_size}_optim_{optimizer_name}_lr{lr}"
-
-    exp_name_0 = f"{exp_name}_l2{l2}_dropout{dropout}_epochs{epochs}"
-    exp_name_1 = f"{exp_name}_l1{l1}_l2{l2}_dropout{dropout}_epochs{epochs}"
-
-    exp_names = [exp_name_0, exp_name_1]  # updatable
-
-    if exist:
-        contents = os.listdir(path=exp_dir)
-        matching_dirname = return_match(contents, exp_names)
-        exp_dir = os.path.join(exp_dir, matching_dirname)
-    else:
-        now = datetime.now()
-        date_time = now.strftime("%m_%d_%Y_%H_%M")
-
-        exp_name = exp_names[-1]
-        exp_name = exp_name + "_" + date_time
-
-        exp_dir = os.path.join(exp_dir, exp_name)
-
-    return (exp_dir, exp_data_source, dataset_name, mask_mode, mask_dir, mask_subdir)
+    return give_model_dir(model)
 
 
 def read_obj(query_path, feature_names_col):
@@ -1769,8 +1726,7 @@ def annotate_core(
     print(f"    Evaluation batch size: {eval_batch_size}")
     print(f"    Extract embeddings: {embeddings_mode}")
     print(f"    Run umap: {if_umap_embeddings}")
-    print(f"    Refine labels in postprocessing: {if_refine_labels}")
-    print(f"    Compute knn scores: {if_knn_scores}\n")
+    print(f"    Refine labels in postprocessing: {if_refine_labels}\n")
 
     X_query, check_norm = normalize(X_query, normalization_override)
 
@@ -1789,33 +1745,17 @@ def annotate_core(
 
     depth_aug = model[-5:] == "depth"
 
-    exp_dir, _, _, _, _, _ = give_exp_dir(
-        split_mode,
-        model,
-        epochs,
-        train_seed,
-        loss_name,
-        data_seed,
-        data_source,
-        data_split,
-        mask_seed,
-        tm_frac,
-        lm_frac,
-        batch_size,
-        optimizer_name,
-        lr,
-        l1,
-        l2,
-        dropout,
-        save,
-        exist=True,
-    )
+    model_dir = give_model_dir(model)
+    model_path = os.path.join(model_dir, "saved_model.keras")
+    enc_path = os.path.join(model_dir, "encoders.pkl")
 
-    model_path = os.path.join(exp_dir, "saved_model.keras")
+    if not os.path.exists(model_path):
+        raise FileNotFoundError(f"Model file not found at {model_path}")
+    if not os.path.exists(enc_path):
+        raise FileNotFoundError(f"Encoders file not found at {enc_path}")
 
     model_import = load_model(model_path)
 
-    enc_path = os.path.join(exp_dir, "encoders.pkl")
     with open(enc_path, "rb") as f:
         label_encoders = pickle.load(f)
 
@@ -1935,7 +1875,7 @@ def annotate_core(
         ann_level = "fine"
         print("")
         print(f"Finalizing label predictions for consistent granularity.\n")
-        enc_map_path = os.path.join(exp_dir, "encoder_maps.json")
+        enc_map_path = os.path.join(model_dir, "encoder_maps.json")
         with open(enc_map_path, "r") as file:
             encoder_map = json.load(file)
         fine_annot = pd.read_csv(

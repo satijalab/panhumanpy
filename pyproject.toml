@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "A Python package for automated cell type annotation using neural networks"
 readme = "README.md"
 license = {text = "MIT"}
-requires-python = ">=3.9"
+requires-python = ">=3.11,<3.12"
 authors = [
     {name = "Your Name", email = "your.email@example.com"}
 ]
@@ -17,23 +17,23 @@ classifiers = [
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.11",
 ]
 dependencies = [
     "numba",
-    "numpy>=2.0",
+    "numpy>=1.24.0,<1.25.0",
     "matplotlib>=3.9",
     "pandas>=2.2",
     "pytest>=8.3",
     "jupyter",
-    "torch>=2.5.0",
-    "tensorboard>=2.18",
+    "tensorboard>=2.15.0,<2.16.0",
     "scikit-learn",
     "h5py",
     "anndata>=0.10.9",
     "DateTime",
     "distances",
-    "umap-learn"
+    "umap-learn",
+    "tensorflow>=2.15.0,<2.16.0"
 ]
 
 [project.urls]
@@ -42,9 +42,17 @@ Documentation = "https://panhumanpy.readthedocs.io/"
 Repository = "https://github.com/yourusername/panhumanpy.git"
 Changelog = "https://github.com/yourusername/panhumanpy/blob/main/CHANGELOG.md"
 
+[tool.hatch.build]
+packages = ["src/panhumanpy"]
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/panhumanpy"]
-include = ["experiments/**/*"]
+include = [
+    "src/panhumanpy/**/*.py",
+    "src/panhumanpy/models/**/*.keras",
+    "src/panhumanpy/models/**/*.pkl",
+    "src/panhumanpy/models/**/*.json"
+]
 exclude = [
     "*.pyc",
     "*.pyo",
@@ -57,11 +65,17 @@ exclude = [
     "dist",
     "build",
     "data/*",
-    "queries/*"
+    "queries/*",
+    "experiments/*"
 ]
 
 [tool.hatch.build.targets.sdist]
-include = ["experiments/**/*"]
+include = [
+    "src/panhumanpy/**/*.py",
+    "src/panhumanpy/models/**/*.keras",
+    "src/panhumanpy/models/**/*.pkl",
+    "src/panhumanpy/models/**/*.json"
+]
 exclude = [
     "*.pyc",
     "*.pyo",
@@ -74,7 +88,8 @@ exclude = [
     "dist",
     "build",
     "data/*",
-    "queries/*"
+    "queries/*",
+    "experiments/*"
 ]
 
 [tool.pytest.ini_options]

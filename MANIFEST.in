@@ -7,8 +7,8 @@ include cell_types.txt
 
 # Include package source files and model files
 recursive-include src/panhumanpy *.py
+recursive-include src/panhumanpy/models *.keras *.pkl *.json
 recursive-include tests *.py
-recursive-include experiments *
 
 # Explicitly exclude development files
 global-exclude .git*
@@ -28,6 +28,7 @@ exclude .devcontainer
 exclude .pixi
 exclude utils
 exclude src/package_name
+exclude experiments
 prune .devcontainer
 prune .pixi
 prune utils
@@ -38,4 +39,5 @@ prune dist
 prune build
 prune .git
 prune .pytest_cache
+prune experiments
 prune **/__pycache__ 

@@ -2,7 +2,7 @@
 name = "panhumanpy"
 version = "0.1.0"
 description = "A Python package for automated cell type annotation using neural networks"
-channels = ["conda-forge", "pytorch"]
+channels = ["conda-forge", "nvidia"]
 platforms = ["linux-64"]
 
 [tasks]
@@ -14,16 +14,15 @@ build = "python -m build"
 docs = "mkdocs serve"
 
 [dependencies]
-python = ">=3.9,<3.13"
+python = "3.11.*"
 pip = "*"
-numpy = "2.0.*"
+numpy = "1.24.*"
 matplotlib = "3.9.*"
 pandas = "2.2.*"
 pytest = "8.3.*"
 jupyter = "*"
-pytorch = "2.5.*"
-pytorch-cpu = "2.5.*"
-tensorboard = "2.18.*"
+tensorflow = "2.15.*"
+tensorboard = "2.15.*"
 scikit-learn = "*"
 h5py = "*"
 anndata = "0.10.9"
