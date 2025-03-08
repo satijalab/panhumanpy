@@ -33,7 +33,7 @@ dependencies = [
     "DateTime",
     "distances",
     "umap-learn",
-    "tensorflow>=2.15.0,<2.16.0"
+    "tensorflow-cpu>=2.15.0,<2.16.0"
 ]
 
 [project.urls]
