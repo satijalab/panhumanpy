@@ -21,19 +21,20 @@ classifiers = [
 ]
 dependencies = [
     "numba",
-    "numpy>=1.24.0,<1.25.0",
+    "numpy>=1.26.0,<1.27.0",
     "matplotlib>=3.9",
     "pandas>=2.2",
     "pytest>=8.3",
     "jupyter",
-    "tensorboard>=2.15.0,<2.16.0",
+    "tensorboard==2.18.0",
     "scikit-learn",
     "h5py",
     "anndata>=0.10.9",
     "DateTime",
     "distances",
     "umap-learn",
-    "tensorflow-cpu>=2.15.0,<2.16.0"
+    "protobuf>=4.21.6,<6.0.0",
+    "tensorflow-cpu==2.18.0"
 ]
 
 [project.urls]

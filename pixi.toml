@@ -16,13 +16,11 @@ docs = "mkdocs serve"
 [dependencies]
 python = "3.11.*"
 pip = "*"
-numpy = "1.24.*"
+numpy = "1.26.*"
 matplotlib = "3.9.*"
 pandas = "2.2.*"
 pytest = "8.3.*"
 jupyter = "*"
-tensorflow-cpu = "2.15.*"
-tensorboard = "2.15.*"
 scikit-learn = "*"
 h5py = "*"
 anndata = "0.10.9"
@@ -43,4 +41,6 @@ mkdocs-material = "*"
 
 [pypi-dependencies]
 panhumanpy = { path = ".", editable = true }
-distances = "*" 
+distances = "*"
+tensorflow-cpu = "==2.18.0"
+tensorboard = "==2.18.0" 
