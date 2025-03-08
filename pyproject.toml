@@ -3,42 +3,93 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "package-name"
+name = "panhumanpy"
 version = "0.1.0"
-description = "..."
+description = "A Python package for automated cell type annotation using neural networks"
 readme = "README.md"
 license = {text = "MIT"}
 requires-python = ">=3.9"
-dependencies = []
+authors = [
+    {name = "Your Name", email = "your.email@example.com"}
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+]
+dependencies = [
+    "numba",
+    "numpy>=2.0",
+    "matplotlib>=3.9",
+    "pandas>=2.2",
+    "pytest>=8.3",
+    "jupyter",
+    "torch>=2.5.0",
+    "tensorboard>=2.18",
+    "scikit-learn",
+    "h5py",
+    "anndata>=0.10.9",
+    "DateTime",
+    "distances",
+    "umap-learn"
+]
 
-[tool.pixi.project]
-channels = ["conda-forge"]
-platforms = ["win-64", "linux-64", "osx-arm64"]
+[project.urls]
+Homepage = "https://github.com/yourusername/panhumanpy"
+Documentation = "https://panhumanpy.readthedocs.io/"
+Repository = "https://github.com/yourusername/panhumanpy.git"
+Changelog = "https://github.com/yourusername/panhumanpy/blob/main/CHANGELOG.md"
 
-[tool.pixi.dependencies]
-python = ">=3.13"
-black = "*"
-flake8 = "*"
-isort = "*"
-jupyterlab = "*"
-jupytext = "*"
-pre-commit = "*"
-pyright = "*"
-pytest = "*"
+[tool.hatch.build.targets.wheel]
+packages = ["src/panhumanpy"]
+include = ["experiments/**/*"]
+exclude = [
+    "*.pyc",
+    "*.pyo",
+    "*.pyd",
+    "__pycache__",
+    "*.so",
+    ".git*",
+    ".pytest_cache",
+    "*.egg-info",
+    "dist",
+    "build",
+    "data/*",
+    "queries/*"
+]
 
-[tool.pixi.pypi-dependencies]
-package-name = { path = ".", editable = true }
+[tool.hatch.build.targets.sdist]
+include = ["experiments/**/*"]
+exclude = [
+    "*.pyc",
+    "*.pyo",
+    "*.pyd",
+    "__pycache__",
+    "*.so",
+    ".git*",
+    ".pytest_cache",
+    "*.egg-info",
+    "dist",
+    "build",
+    "data/*",
+    "queries/*"
+]
 
-[tool.pixi.tasks]
-isort = "isort src/ tests/"
-black = "black src/ tests/"
-pre-commit = "pre-commit run --all --show-diff-on-failure"
-flake8 = "flake8 src/ tests/"
-pyright = "pyright src/ tests/"
-pre-merge = { depends-on = ["isort", "black", "flake8", "pyright"] }
-pytest = "pytest tests/"
-jupyter = "jupyter lab"
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q"
+testpaths = [
+    "tests",
+]
+
+[tool.black]
+line-length = 88
+target-version = ['py39']
+include = '\.pyi?$'
 
 [tool.isort]
 profile = "black"
-float_to_top = "True"
+multi_line_output = 3
+float_to_top = true

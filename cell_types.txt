@@ -1,0 +1,380 @@
+Immune cell|Lymphoid cell|T/NK cell|T cell|CD4 T cell|KLRB1 cytotoxic CD4 T
+Epithelial cell|Epithelial cell of testis|Leydig cell|Cycling Leydig cell
+Endothelial cell|Endothelial‑mesenchymal transition EC
+Fibroblast|IGFBP6+SFRP4+ fibroblast
+Immune cell|Lymphoid cell|T/NK cell|T cell|Double negative T cell|Double negative T cell (entry)
+Neuron|Neuron of retina|Bipolar cell|Rod-bipolar cell
+Fibroblast|GREB1+ fibroblast
+Perivascular cell
+Neuron|Neuron of brain|Miscellaneous neuron|Mammillary body neuron
+Epithelial cell|Epithelial cell of lung|Aerocyte
+Epithelial cell|Mesothelial cell
+Neuron|Neuron of brain|Excitatory neuron|Cortical excitatory neuron|Deep-layer excitatory neuron|L5/6 excitatory neuron
+Fibroblast|C2orf40+ fibroblast
+Immune cell|Myeloid cell|Monocyte|CD14orCD16 monocyte
+Epithelial cell|Epithelial cell of intestine|Squamous epithelial cell
+Immune cell|Lymphoid cell|T/NK cell|T cell|CD4 T cell|Memory CD4 T cell
+Epithelial cell|Epithelial cell of stomach|Surface mucous cell|Cycling surface mucous cell|G2/M phase surface mucous cell
+Immune cell|Erythrocyte/Megakaryocyte|Megakaryocyte
+Neuron|Neuron of brain|Inhibitory neuron|CGE-derived inhibitory neuron|VIP inhibitory neuron
+Endothelial cell|Tip EC
+Immune cell|Lymphoid cell|T/NK cell|T cell|Agonist T cell
+Epithelial cell|Endocrine cell
+Epithelial cell|Epithelial cell of adrenal gland|Capsular cell
+Immune cell|Hematopoietic precursor cell|GMP
+Epithelial cell|Epithelial cell of eye|Eye melanocyte
+Embryonic cell|Mesodermal cell|ZEB2+ mesoderm
+Epithelial cell|Epithelial cell of bladder|Basal cell of bladder|DKK1+MMP1+ basal cell of bladder
+Fibroblast|NR4A3 fibroblast
+Neuron|Neuron of brain|Excitatory neuron|Cortical excitatory neuron|Deep-layer excitatory neuron|L6 excitatory neuron
+Neuron|Neuron of retina|Ganglion cell
+Immune cell|Lymphoid cell|T/NK cell|T cell
+Fibroblast|CLU+ fibroblast
+Epithelial cell|Epithelial cell of kidney|Renal intercalated cell|Podocyte
+Immune cell|Lymphoid cell|T/NK cell|T cell|CD4 T cell|Treg cell
+Immune cell|Lymphoid cell|T/NK cell|T cell|CD8 T cell|Memory CD8 T cell
+Neuron|Neuron of brain|Excitatory neuron|Cortical excitatory neuron|Upper-layer excitatory neuron|L2/3 excitatory neuron
+Neuron|Neuron of brain|Inhibitory neuron|PVALB inhibitory neuron
+Epithelial cell|Epithelial cell of stomach|Surface mucous cell|Cycling surface mucous cell|S phase surface mucous cell
+Immune cell|Lymphoid cell|T/NK cell|ILC
+Muscle cell|Cardiomyocyte|Ventricular cardiomyocyte|Fetal ventricular cardiomyocyte
+Immune cell|Myeloid cell|Macrophage|LYVE1 macrophage|Cycling LYVE1 macrophage
+Epithelial cell|Epithelial cell of lung|Alveolar epithelial cell|AT2
+Epithelial cell|Epithelial cell of breast|Mammary luminal progenitor|Cycling mammary luminal progenitor
+Fibroblast|CFD+MGP+ fibroblast|CXCL14+ fibroblast|CXCL14+POSTN+ fibroblast
+Epithelial cell|Epithelial cell of testis|Leydig cell|Fetal Leydig cell
+Immune cell|Lymphoid cell|T/NK cell|T cell|CD8 T cell|Memory CD8 T cell|GZMK CD8 T cell|GZMK+IL7R+ CD8 T cell
+Epithelial cell|Epithelial cell of testis|Sertoli and Interstitial cell common progenitor
+Epithelial cell|Epithelial cell of intestine|Enterocyte|BEST4 enterocyte
+Epithelial cell|Epithelial cell of pancreas|PP cell
+Neuron|Neuron of brain|Miscellaneous neuron|Lower rhombic lip-derived neuron
+Muscle cell|Skeletal muscle cell|Fast-twitch skeletal muscle cell
+Epithelial cell|Epithelial cell of kidney|Renal epithelial cell - proximal tubules
+Immune cell|Lymphoid cell|B cell|B cell precursor|PreB cell
+Endothelial cell|Arterial EC|ACTA2+ arterial EC
+Epithelial cell|Epithelial cell of liver|Hepatocyte
+Fibroblast
+Epithelial cell|Epithelial cell of eye|Corneal epithelial cell
+Immune cell|Lymphoid cell|T/NK cell|ILC|SLAMF1+XCL- ILC
+Epithelial cell|Epithelial cell of intestine|Paneth cell
+Neuron|Neuron of retina|Amacrine cell
+Immune cell|Myeloid cell|Osteoclast
+Fibroblast|CFD+MGP+ fibroblast|FGFBP2+ fibroblast
+Endothelial cell|Lymphatic EC
+Immune cell|Hematopoietic precursor cell|EoBaMa Progenitor
+Embryonic cell|Trophoblast|Cytotrophoblast|Villous cytotrophoblast|Cycling villous cytotrophoblast
+Epithelial cell|Epithelial cell of lung|Multiciliated cell
+Immune cell|Lymphoid cell|T/NK cell|T cell|CD8 T cell|Memory CD8 T cell|GZMK CD8 T cell|GZMK+IL7R- CD8 T cell
+Immune cell|Lymphoid cell
+Immune cell|Lymphoid cell|T/NK cell|T cell|CD4 T cell
+Immune cell|Lymphoid cell|T/NK cell|T cell|Naive T cell
+Epithelial cell|Epithelial cell of thymus|Medullary thymic epithelial cell|Corneocyte-like mTEC
+Embryonic cell|Trophoblast|INF-activated trophoblast
+Immune cell|Lymphoid cell|T/NK cell|ILC|SLAMF1-XCL+ ILC
+Immune cell|Myeloid cell|Granulocyte|Neutrophil|Neutrophil precursor|S100A+ preNeutrophil|Cycling S100A+ preNeutrophil
+Epithelial cell|Epithelial cell of breast|Mammary luminal cell|Secretoglobin mammary luminal cell
+Neuron|Neuron of brain|Excitatory neuron|Thalamic excitatory neuron
+Epithelial cell|Epithelial cell of stomach|Chief cell
+Epithelial cell|Epithelial cell of intestine|Enteroendocrine cell
+Endothelial cell|Capillary EC
+Epithelial cell|Epithelial cell of liver|cholangiocyte|CXCL6+ cholangiocyte
+Immune cell|Myeloid cell|Monocyte|Placenta defensin+ monocyte
+Immune cell|Hematopoietic precursor cell|MPP|MPP-Cycling
+Fibroblast|CFD+MGP+ fibroblast|CXCL14+ fibroblast
+Epithelial cell|Epithelial cell of breast|Lactocyte
+Embryonic cell|Mesodermal cell
+Epithelial cell|Epithelial cell of kidney|Renal intercalated cell|Type A intercalated cell
+Neuron|Neuron of brain|Inhibitory neuron|Medium spiny neurons|D1 medium spiny neuron
+Epithelial cell|Epithelial cell of stomach|Surface mucous cell
+Immune cell|Myeloid cell|Dendritic cell|mregDC
+Immune cell|Hematopoietic precursor cell|MPP
+Fibroblast|Cycling fibroblast
+Epithelial cell|Epithelial cell of intestine|Colonocyte
+Epithelial cell|Epithelial cell of adrenal gland|Sympathoadrenal cell
+Epithelial cell|Mesothelial cell|CRABP1+ mesothelial cell
+Epithelial cell|Epithelial cell of stomach|Surface mucous cell|CXCL2/3+ surface mucous cell
+Perivascular cell|Pericyte|CCL19/21 pericyte
+Neuron|Neuron of brain|Inhibitory neuron|Medium spiny neurons|Eccentric medium spiny neuron
+Epithelial cell|Epithelial cell of testis|Leydig cell|INSL3+ Leydig cell
+Neuron|Neuron of brain|Inhibitory neuron|Cerebellar inhibitory neuron|PAX2 inhibitory neuron
+Immune cell|Lymphoid cell|T/NK cell|T cell|CD8 T cell|Memory CD8 T cell|CXCL13 exhausted CD8 T cell
+Muscle cell|Cardiomyocyte|Ventricular cardiomyocyte
+Fibroblast|Metallothionein+ fibroblast
+Epithelial cell|Epithelial cell of breast|Mammary luminal progenitor|Secretoglobin mammary luminal progenitor
+Endothelial cell
+Epithelial cell|Epithelial cell of testis|Peritubular myoid cell|Peritubular myoid cell progenitor
+Epithelial cell|Epithelial cell of skin|Keratinocyte|Secretory cell
+Immune cell|Hematopoietic precursor cell|Pre-cDC
+Fibroblast|SCN7A fibroblast
+Epithelial cell|Epithelial cell of kidney|Renal intercalated cell|Type B intercalated cell
+Epithelial cell|Epithelial cell of adrenal gland|Steroidogenic cell
+Epithelial cell|Epithelial cell of pancreas|Pancreatic ductal cell|TFF1+ ductal cell
+Immune cell|Lymphoid cell|T/NK cell|T cell|CD8 T cell|Memory CD8 T cell|GZMB CD8 T cell
+Epithelial cell|Epithelial cell of thymus|Medullary thymic epithelial cell|Immature medullary thymic epithelial cell
+Epithelial cell|Epithelial cell of lung|Neuroendocrine cell
+Epithelial cell|Epithelial cell of bladder|Basal cell of bladder|MMP7+ basal cell of bladder
+Neuron|Neuron of retina|Cone cell
+Epithelial cell|Epithelial cell of liver|Hepatocyte|AFP+ fetal hepatocyte
+Fibroblast|IGFBP6+APOD+ fibroblast
+Epithelial cell|Epithelial cell of testis|Peritubular myoid cell
+Epithelial cell|Epithelial cell of breast|Mammary luminal cell|PIP mammary luminal cell
+Neuron|Neuron of brain|Inhibitory neuron|CXCL14 inhibitory neuron
+Fibroblast|TCIM+NRG1+ fibroblast
+Fibroblast|WISP2+ fibroblast
+Epithelial cell|Mesothelial cell|GATA4+ mesothelial cell
+Fibroblast|CFD+MGP+ fibroblast
+Epithelial cell|Epithelial cell of stomach|Surface mucous cell|GKN1/2+ surface mucous cell
+Epithelial cell|Epithelial cell of lung|Alveolar epithelial cell|AT1
+Immune cell|Lymphoid cell|T/NK cell|T cell|CD4 T cell|GZMK cytotoxic CD4 T cell
+Immune cell|Lymphoid cell|T/NK cell|NK cell
+Muscle cell|Skeletal muscle cell|MYOM1+ skeletal muscle cell
+Endothelial cell|Arterial EC|Fetal MHC- arterial EC|Fetal MHC- Collagen+ arterial EC
+Epithelial cell|Epithelial cell of lung|Multiciliated cell|CDC20B+ Multiciliated cell
+Epithelial cell|Epithelial cell of eye|Ciliary body cell
+Endothelial cell|Capillary EC|ACTA2+ capillary EC
+Germ cell|Spermatocyte|Late spermatocyte
+Immune cell|Lymphoid cell|T/NK cell|T cell|gdT cell
+Fibroblast|C3+ fibroblast
+Epithelial cell|Epithelial cell of pancreas|Epsilon cell
+Epithelial cell|Epithelial cell of ovary|Granulosa cell|MT2A+ granulosa cell
+Fibroblast|CXCL+ fibroblast
+Fibroblast|CDCA7+ fibroblast|Cycling CDCA7+ fibroblast
+Epithelial cell|Epithelial cell of thymus|Thymic ciliated cell
+Neuron|Neuron of retina|Horizontal cell
+Immune cell|Erythrocyte/Megakaryocyte|Red blood cell|Erythroblast|Late hemoglobin+ erythroblast
+Fibroblast|CCL2+SFRP2+ fibroblast
+Neuron|Neuron of brain|Excitatory neuron|Hippocampal excitatory neurons|Hippocampal dentate gyrus neuron
+Immune cell|Hematopoietic precursor cell|GMP|Early GMP
+Germ cell|Spermatocyte|Spermatogonial stem cell|Cycling spermatogonial stem cell
+Glial cell|Glial cell of intestine|Cycling glial cell
+Fibroblast|CFD+MGP+ fibroblast|CXCL14+ fibroblast|Cycling CXCL14+ fibroblast
+Perivascular cell|Vascular smooth muscle cell|PCP4+ vascular smooth muscle cell
+Epithelial cell|Epithelial cell of adrenal gland|Sympathoblast
+Immune cell|Lymphoid cell|T/NK cell|T cell|Cycling DN/DP T cell
+Fibroblast|CCL11+ fibroblast
+Fibroblast|CFD+MGP+ fibroblast|APCDD1+ fibroblast
+Immune cell|Myeloid cell|Dendritic cell|cDC
+Epithelial cell|Epithelial cell of intestine|Goblet cell
+Immune cell|Hematopoietic precursor cell|CLP
+Immune cell|Lymphoid cell|T/NK cell|Cycling T/NK cell|Cycling T cell
+Fibroblast|F3+ fibroblast
+Immune cell|Erythrocyte/Megakaryocyte|Red blood cell|Fetal HBG+ erythrocyte
+Immune cell|Lymphoid cell|B cell|B cell precursor|Pre-ProB cell
+Embryonic cell|Trophoblast|Cytotrophoblast|Villous cytotrophoblast
+Immune cell|Hematopoietic precursor cell|Pre-pDC
+Embryonic cell|Trophoblast|Cytotrophoblast|PSG5+ syncytiotrophoblast
+Doublet like cell|Fibroblast/Granulosa doublet like cell
+Endothelial cell|Capillary EC|Fetal MHC- capillary EC
+Fibroblast|Metallothionein+ fibroblast|Metallothionein+ Collagen- fibroblast
+Epithelial cell|Epithelial cell of breast|Mammary luminal cell|KRT17 mammary luminal cell
+Immune cell|Lymphoid cell|B cell|B cell precursor|ProB cell|Cycling proB cell
+Germ cell|Spermatocyte|Spermatid|Round spermatid
+Neuron|Neuron of brain|Miscellaneous neuron|Upper rhombic lip-derived neuron
+Epithelial cell|Epithelial cell of ovary|Granulosa cell|OSR1+ granulosa cell
+Germ cell|Oocyte|Mitotic oocyte
+Immune cell|Erythrocyte/Megakaryocyte|Red blood cell|Erythroblast
+Perivascular cell|Pericyte
+Immune cell|Lymphoid cell|B cell|Cycling B
+Epithelial cell|Epithelial cell of stomach|Delta cell
+Fibroblast|THY1+ fibroblast
+Immune cell|Myeloid cell|Dendritic cell|ASDC
+Fibroblast|FBLN2+APOD+ fibroblast
+Epithelial cell|Epithelial cell of intestine|Microfold cell
+Fibroblast|CFD+MGP+ fibroblast|C7+ fibroblast
+Epithelial cell|Epithelial cell of lung|Alveolar epithelial cell|AT2|Cycling AT2
+Fibroblast|PLA2G2A+IGFBP4+APOC1+ fibroblast
+Neuron
+Epithelial cell|Epithelial cell of pancreas|Metallothionein+ epithelial cell
+Epithelial cell|Epithelial cell of intestine|Transit-amplifying cell
+Epithelial cell|Epithelial cell of thymus|Cortical thymic epithelial cell
+Neuron|Neuron of brain|Inhibitory neuron|Medium spiny neurons|D2 medium spiny neuron
+Fibroblast|CFD+MGP+ fibroblast|APOE+ fibroblast
+Epithelial cell|Epithelial cell of ovary|Granulosa cell|TAC1+ granulosa cell
+Germ cell|Spermatocyte|Spermatid|Elongating spermatid
+Immune cell|Myeloid cell|Macrophage|DIAPH3+ macrophage
+Epithelial cell|Epithelial cell of breast|Mammary basal cell|CXCL14 mammary basal cell
+Immune cell|Lymphoid cell|T/NK cell|T cell|CD8 T cell|Memory CD8 T cell|KLRB1 CD8 T cell
+Fibroblast|Adipose ITLN1 fibroblast
+Immune cell|Hematopoietic precursor cell
+Neuron|Neuron of brain|Excitatory neuron|Cortical excitatory neuron|Deep-layer excitatory neuron|L4 excitatory neuron
+Immune cell|Hematopoietic precursor cell|MPP|MPP-MkEry
+Embryonic cell|Trophoblast|Syncytiotrophoblast|SLC13A4+ Syncytiotrophoblast
+Neuron|Neuron of brain|Excitatory neuron|Hippocampal excitatory neurons|Hippocampal CA1-3 neuron
+Immune cell|Lymphoid cell|T/NK cell|Cycling T/NK cell
+Glial cell|Muller glia
+Epithelial cell|Epithelial cell of stomach|SCGB2A1+ endocrine cell
+Immune cell|Myeloid cell|Macrophage|Cycling macrophage
+Immune cell|Myeloid cell|Monocyte
+Immune cell|Myeloid cell|Cycling myeloid cell
+Epithelial cell|Epithelial cell of lung|Airway basal cell
+Immune cell|Hematopoietic precursor cell|HSC
+Endothelial cell|Venous EC|Fetal MHC- venous EC|Fetal MHC- Collagen+ venous EC
+Epithelial cell|Epithelial cell of liver|cholangiocyte|TFF+ cholangiocyte
+Immune cell|Lymphoid cell|T/NK cell|NK cell|Tissue-resident NK cell
+Immune cell|Cycling immune cell
+Epithelial cell|Epithelial cell of pancreas|Acinar cell
+Epithelial cell|Epithelial cell of breast|Mammary basal cell|CCSER1 mammary basal cell
+Epithelial cell|Epithelial cell of testis|Sertoli cell
+Immune cell|Myeloid cell|Macrophage|M1 macrophage
+Epithelial cell|Epithelial cell of intestine|Enterocyte
+Fibroblast|FRZB+ fibroblast
+Neuron|Neuron of brain|Excitatory neuron|PLCH1 L4/5 excitatory neuron
+Glial cell|Glial cell of brain|Astrocyte
+Epithelial cell|Epithelial cell of ovary|CLDN3+ epithelial cell
+Epithelial cell|Epithelial cell of testis|Luminal cell
+Endothelial cell|Capillary EC|Fetal MHC- capillary EC|Fetal MHC- Collagen+ capillary EC
+Epithelial cell|Epithelial cell of breast|Mammary luminal progenitor|SFN mammary luminal progenitor
+Epithelial cell|Epithelial cell of lung|Club cell
+Perivascular cell|Vascular smooth muscle cell|Metallothionein+ smooth muscle cell
+Epithelial cell|Epithelial cell of pancreas|Beta cell
+Perivascular cell|Vascular smooth muscle cell
+Perivascular cell|Pericyte|CXCL+ pericyte
+Muscle cell|Skeletal muscle cell|Skeletal muscle myoblast
+Immune cell|Erythrocyte/Megakaryocyte|Red blood cell|Erythroblast|Intermediate EPCAM+ erythroblast
+Immune cell|Lymphoid cell|T/NK cell|T cell|CD4 T cell|Treg cell|Differentiating Treg cell
+Immune cell|Myeloid cell|Monocyte|CD14 monocyte|MHCII low CD14 monocyte
+Immune cell|Myeloid cell|Dendritic cell|pDC
+Fibroblast|RNASE1+ fibroblast
+Neuron|Neuron of brain|Excitatory neuron|Cortical excitatory neuron|Deep-layer excitatory neuron|TSHZ2 L4/5 excitatory neuron
+Neuron|Neuron of brain|Miscellaneous neuron|Splatter neuron
+Perivascular cell|Pericyte|SPRR2F+ pericyte
+Immune cell|Lymphoid cell|T/NK cell|NK cell|CD56 NK cell
+Epithelial cell|Epithelial cell of ovary|AFP+ epithelial cell
+Immune cell|Lymphoid cell|T/NK cell|T cell|CD8 T cell|Memory CD8 T cell|GZMK CD8 T cell
+Adipocyte
+Immune cell|Lymphoid cell|T/NK cell|T cell|Double negative T cell
+Endothelial cell|Arterial EC
+Epithelial cell|Epithelial cell of testis|Sertoli cell|Cycling Sertoli cell
+Immune cell|Myeloid cell|Dendritic cell|cDC|cDC2
+Epithelial cell|Epithelial cell of pancreas|Alpha cell
+Epithelial cell|Epithelial cell of thymus|Medullary thymic epithelial cell
+Glial cell|Glial cell of brain|Oligodendrocyte|Oligodendrocyte progenitor cell
+Germ cell|Oocyte
+Fibroblast|MDK+NREP+ fibroblast|ADAMDEC1+ fibroblast
+Neuron|Neuron of brain|Excitatory neuron|Cortical excitatory neuron|Deep-layer excitatory neuron|L5b excitatory neuron
+Neuron|Neuron of brain|Excitatory neuron|Pyramidal neuron
+Epithelial cell|Epithelial cell of skin|Merkel cell carcinoma enriched epithelial cell
+Immune cell|Erythrocyte/Megakaryocyte|Megakaryocyte|Platelet
+Immune cell|Lymphoid cell|B cell|B cell precursor|ProB cell
+Immune cell|Lymphoid cell|B cell|Naive B cell
+Germ cell|Spermatocyte|Early spermatocyte
+Immune cell|Myeloid cell|Monocyte|Placenta CAMP+ monocyte
+Neuron|Neuron of brain|Inhibitory neuron|Cerebellar inhibitory neuron|SCGN inhibitory neuron
+Epithelial cell|Epithelial cell of eye|Retinal pigment epithelial cell
+Immune cell|Lymphoid cell|B cell|Memory B cell
+Germ cell|Spermatocyte|Spermatogonial stem cell
+Perivascular cell|Pericyte|CYGB+ pericyte
+Immune cell|Myeloid cell|Monocyte|CD14 monocyte|MHCII high CD14 monocyte
+Epithelial cell|Epithelial cell of testis|Leydig cell|Leydig cell progenitor
+Fibroblast|CFD+MGP+ fibroblast|CXCL14+ fibroblast|PTGDS+CXCL14+ fibroblast
+Germ cell|Spermatocyte|Spermatid|Elongated spermatid
+Immune cell|Myeloid cell|Macrophage|Tissue resident macrophage|Microglia
+Immune cell|Lymphoid cell|T/NK cell|T cell|CD4 T cell|Tfh cell
+Muscle cell|Skeletal muscle cell|Slow-twitch skeletal muscle cell
+Immune cell|Myeloid cell|Monocyte|CD16 monocyte
+Epithelial cell|Epithelial cell of adrenal gland|Chromaffin cell
+Immune cell|Erythrocyte/Megakaryocyte|Red blood cell|Erythroblast|Early SOX4+ erythroblast
+Immune cell|Lymphoid cell|T/NK cell|T cell|CD8 T cell|Naive CD8 T cell
+Immune cell|Lymphoid cell|B cell|Plasma cell|Plasma cell precursor
+Immune cell|Lymphoid cell|B cell|B cell precursor|PreB cell|Cycling preB cell
+Germ cell|Primordial germ cell
+Epithelial cell|Epithelial cell of skin|Keratinocyte|Granular keratinocyte
+Muscle cell|Cardiomyocyte|Atrial cardiomyocyte
+Immune cell|Lymphoid cell|T/NK cell|NK cell|CD16 NK cell
+Immune cell|Myeloid cell|Dendritic cell
+Neuron|Neuron of brain|Excitatory neuron|Hippocampal excitatory neurons|Hippocampal CA4 neuron
+Epithelial cell|Epithelial cell of gingiva|Melanocyte
+Immune cell|Lymphoid cell|T/NK cell|T cell|CD8 T cell|CD8aa+ T cell
+Neuron|Neuron of brain|Excitatory neuron|Amygdala excitatory neuron
+Immune cell|Erythrocyte/Megakaryocyte|Red blood cell
+Immune cell|Lymphoid cell|T/NK cell|T cell|CD8 T cell
+Fibroblast|PLAC9+ fibroblast
+Embryonic cell|Trophoblast|Extravillous trophoblast|Cycling extravillous trophoblast
+Epithelial cell|Epithelial cell of testis|Leydig cell|IL1RAPL1+ Leyding cell
+Neuron|Neuron of brain|Inhibitory neuron|MGE-derived inhibitory neuron|SST inhibitory neuron
+Immune cell|Myeloid cell|Granulocyte|Neutrophil|Neutrophil precursor|S100A+ preNeutrophil
+Immune cell|Myeloid cell|Cycling myeloid cell|G2/M phase myeloid cell
+Neuron|Neuron of brain|Inhibitory neuron|CGE-derived inhibitory neuron|SV2C inhibitory neuron
+Epithelial cell|Epithelial cell of ovary|Granulosa cell|PAX8+ granulosa cell
+Immune cell|Hematopoietic precursor cell|LMPP
+Immune cell|Hematopoietic precursor cell|MPP|MPP-MyLy
+Immune cell|Hematopoietic precursor cell|MEP
+Immune cell|Myeloid cell|Macrophage
+Fibroblast|SPARCL1+ fibroblast
+Fibroblast|ANGPTL7+NRP2+ fibroblast
+Epithelial cell|Epithelial cell of kidney|Renal epithelial cell - Loop of Henle
+Neuron|Neuron of brain|Excitatory neuron|Cortical excitatory neuron|Deep-layer excitatory neuron|L5 excitatory neuron
+Immune cell|Lymphoid cell|T/NK cell|T cell|CD4 T cell|Naive CD4 T cell
+Perivascular cell|Cycling perivascular cell
+Immune cell|Myeloid cell|Dendritic cell|cDC|cDC1
+Glial cell
+Epithelial cell|Epithelial cell of testis|Supporting-like PAX8+ cell
+Fibroblast|MMP1+ fibroblast
+Fibroblast|IGFBP1+ fibroblast
+Immune cell|Hematopoietic precursor cell|GMP|Late GMP
+Fibroblast|CXCL+ fibroblast|CXCL1/2/3 fibroblast
+Fibroblast|Myofibroblast
+Epithelial cell|Epithelial cell of skin|Keratinocyte|Cycling keratinocyte
+Neuron|Neuron of retina|Bipolar cell|Cone-OFF-bipolar cell
+Neuron|Neuron of retina|Rod cell
+Immune cell|Lymphoid cell|T/NK cell|T cell|Memory T cell
+Epithelial cell|Epithelial cell of kidney|Renal epithelial cell - distal tubules
+Neuron|Neuron of retina|Bipolar cell|Cone-ON-bipolar cell
+Fibroblast|CD55+SEMA3C+ fibroblast
+Immune cell|Myeloid cell|Cycling myeloid cell|S phase myeloid cell
+Epithelial cell|Epithelial cell of thymus|Cycling thymic epithelial cell
+Immune cell|Myeloid cell|Monocyte|CD14 monocyte
+Epithelial cell|Epithelial cell of testis|Sertoli cell|ROBO2+ fetal Sertoli cell
+Immune cell|Myeloid cell|Granulocyte|Mast cell
+Fibroblast|POSTN fibroblast
+Immune cell|Myeloid cell|Monocyte/DC
+Immune cell|Lymphoid cell|B cell
+Endothelial cell|Cycling EC
+Epithelial cell|Epithelial cell of intestine|Tuft cell
+Immune cell|Erythrocyte/Megakaryocyte|Red blood cell|Erythroblast|Late hemoglobin+ erythroblast|Cycling late hemoglobin+ erythroblast
+Endothelial cell|Arterial EC|SRGN+ arterial EC
+Glial cell|Glial cell of brain|Astrocyte|Protoplasmic astrocyte
+Immune cell|Myeloid cell|Macrophage|Tissue resident macrophage|Alveolar macrophage
+Epithelial cell|Epithelial cell of testis|Leydig cell
+Perivascular cell|Vascular smooth muscle cell|CREB+MT1A+ vascular smooth muscle cell
+Epithelial cell|Epithelial cell of ovary|GABRP+ epithelial cell
+Immune cell|Lymphoid cell|T/NK cell|T cell|INF-activated T cell
+Immune cell|Hematopoietic precursor cell|MkP
+Embryonic cell|Trophoblast|Extravillous trophoblast
+Glial cell|Glial cell of brain|Astrocyte|Fibrous astrocyte
+Epithelial cell|Epithelial cell of breast|Mammary basal cell|KRT6B mammary basal cell
+Epithelial cell|Epithelial cell of stomach|Enterochromaffin cell
+Germ cell|Primordial germ cell|Cycling primordial germ cell
+Fibroblast|G0S2+PPP1R14A+ fibroblast
+Immune cell|Lymphoid cell|T/NK cell
+Germ cell|Oocyte|Meiotic oocyte
+Endothelial cell|Venous EC
+Epithelial cell|Epithelial cell of skin|Keratinocyte|Spinous keratinocyte
+Epithelial cell|Epithelial cell of skin|Keratinocyte|Basal keratinocyte
+Immune cell|Lymphoid cell|T/NK cell|NK cell|CD56 NK cell|GZMK NK cell
+Neuron|Neuron of retina|Bipolar cell|PCP4L1+ bipolar cell
+Immune cell|Lymphoid cell|B cell|Plasma cell
+Immune cell|Myeloid cell|Granulocyte|Neutrophil
+Epithelial cell|Epithelial cell of pancreas|Pancreatic ductal cell|TUBA1A+ ductal cell
+Epithelial cell|Epithelial cell of bladder|Basal cell of bladder|FOS+ basal cell of bladder
+Epithelial cell|Epithelial cell of breast|Mammary luminal progenitor|SCGB3A1 mammary luminal progenitor
+Immune cell|Lymphoid cell|B cell|Germinal center B cell
+Neuron|Neuron of brain|Inhibitory neuron|Midbrain-derived inhibitory neuron
+Fibroblast|TNC fibroblast
+Fibroblast|Mesenchymal stromal cell
+Epithelial cell|Epithelial cell of thymus|Thymic myoid cell
+Epithelial cell|Mesothelial cell|Cycling mesothelial cell
+Glial cell|Glial cell of brain|Oligodendrocyte
+Germ cell|Oocyte|Retinoid acid responsive oocyte
+Epithelial cell|Epithelial cell of liver|cholangiocyte|SPINK1+SGMS2+ cholangiocyte
+Immune cell|Lymphoid cell|T/NK cell|T cell|Double positive T cell
+Endothelial cell|Endocardial cell
+Fibroblast|KCNN3+ fibroblast
+Epithelial cell|Epithelial cell of eye|Epithelial cell of conjunctiva
+Immune cell|Lymphoid cell|T/NK cell|T cell|abT (entry) cell
+Immune cell|Lymphoid cell|T/NK cell|T cell|MAIT cell
+Epithelial cell|Epithelial cell of breast|Mammary luminal progenitor|SAA2 mammary luminal progenitor
+Immune cell|Myeloid cell|Macrophage|LYVE1 macrophage
+Immune cell|Myeloid cell|Macrophage|Tissue resident macrophage|Hofbauer cell
+Fibroblast|CFD+MGP+ fibroblast|COCH+ fibroblast
+Fibroblast|PCOLCE2 fibroblast

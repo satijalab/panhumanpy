@@ -1,0 +1,9 @@
+# use conda env create -f env_filename.yml
+
+name: AzimuthNN_min
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+
+# goes together with requirements_min.txt

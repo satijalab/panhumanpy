@@ -1,0 +1,47 @@
+[project]
+name = "panhumanpy"
+version = "0.1.0"
+description = "A Python package for automated cell type annotation using neural networks"
+channels = ["conda-forge", "pytorch"]
+platforms = ["linux-64"]
+
+[tasks]
+test = "pytest tests/"
+lint = "pre-commit run --all-files"
+format = { cmd = "black src/ tests/", depends-on = [] }
+check = { depends-on = ["test", "lint"] }
+build = "python -m build"
+docs = "mkdocs serve"
+
+[dependencies]
+python = ">=3.9,<3.13"
+pip = "*"
+numpy = "2.0.*"
+matplotlib = "3.9.*"
+pandas = "2.2.*"
+pytest = "8.3.*"
+jupyter = "*"
+pytorch = "2.5.*"
+pytorch-cpu = "2.5.*"
+tensorboard = "2.18.*"
+scikit-learn = "*"
+h5py = "*"
+anndata = "0.10.9"
+python-dateutil = "*"
+umap-learn = "*"
+numba = "*"
+black = "*"
+flake8 = "*"
+isort = "*"
+jupyterlab = "*"
+jupytext = "*"
+pre-commit = "*"
+pyright = "*"
+python-build = "*"
+twine = "*"
+mkdocs = "*"
+mkdocs-material = "*"
+
+[pypi-dependencies]
+panhumanpy = { path = ".", editable = true }
+distances = "*" 

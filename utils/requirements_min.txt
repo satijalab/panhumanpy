@@ -1,0 +1,27 @@
+# for env_min.yml: AzimuthNN_min
+
+# dependencies to be installed with pip 
+# use pip install -r /path_to_home_dir/utils/requirements_min.txt 
+
+numba
+numpy==2.0
+matplotlib==3.9.*
+pandas==2.2.*
+pytest==8.3.*
+jupyter
+torch==2.5.0 --index-url https://download.pytorch.org/whl/cpu
+tensorboard==2.18.*
+scikit-learn
+h5py
+anndata==0.10.9  # later versions seem to demand cudnn 9 at least
+DateTime
+distances
+umap-learn
+
+# DO NOT install scanpy
+
+# install keras3 and a backend of tensorflow separately
+# pip install --upgrade pip
+# pip install --upgrade keras
+# pip install tensorflow[and-cuda]==2.17
+# for cpu: pip install tensorflow-cpu==2.17.0
