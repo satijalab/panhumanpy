@@ -17,14 +17,15 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 import umap
-from data_prep import *
-from loss_fn import *
-from postprocessing import *
 from scipy.sparse import csr_matrix, hstack
 from sklearn.neighbors import NearestNeighbors
 from tensorflow.keras.models import Model, load_model
 
 from data.kfold_data.read_data import load_training_genes
+
+from ..postprocessing.postprocessing import *
+from ..preprocessing.data_prep import *
+from ..utils.loss_fn import *
 
 warnings.filterwarnings("ignore")
 
@@ -164,9 +165,8 @@ def give_model_dir(model):
     """
     Returns the directory path with the saved model files.
     """
-    cwd = give_script_dir()
-    package_root = os.path.dirname(os.path.dirname(cwd))
-    model_dir = os.path.join(package_root, "src", "panhumanpy", "models", model)
+    cwd = os.path.dirname(os.path.abspath(__file__))
+    model_dir = os.path.join(os.path.dirname(cwd), "models", model)
     return model_dir
 
 
@@ -642,8 +642,9 @@ def load_cell_types():
     """
     Loads list of all cell types stored in cell_types.txt.
     """
-    cwd = give_script_dir()
-    cell_types_file = os.path.join(cwd, "cell_types.txt")
+    cwd = os.path.dirname(os.path.abspath(__file__))
+    package_root = os.path.dirname(os.path.dirname(os.path.dirname(cwd)))
+    cell_types_file = os.path.join(package_root, "cell_types.txt")
     with open(cell_types_file, "r") as f:
         cell_types_enc = f.read()
         if isinstance(cell_types_enc, bytes):
@@ -1269,9 +1270,7 @@ def arg_parse_in():
     parser.add_argument(
         "-sdd",
         "--source_data_dir",
-        default=(
-            "/brahms/sarkars/AzimuthNN_clone/" "AzimuthNN/sarkars/data/dataset_main"
-        ),
+        default="data/kfold_data",
         help=("enter the dir path where the dataset" " object is stored"),
         type=str,
     )
@@ -1279,7 +1278,7 @@ def arg_parse_in():
     parser.add_argument(
         "-ft",
         "--features_txt",
-        default="features_02_26_25_17_50.txt",
+        default="features.txt",
         help=(
             "features txt file with feature selection, "
             "ensure model chosen is trained on "
@@ -1816,9 +1815,9 @@ def annotate_core(
     ) = split_labels_w_final_level(labels_pred, max_depth)
     final_level_prob = labels_prob[np.arange(num_cells), final_levels_arr]
 
-    assert str(type(query_cells_df)) == (
-        "<class 'pandas.core.frame.DataFrame'>"
-    ), "Query cell meta is not available as dataframe."
+    assert isinstance(
+        query_cells_df, pd.DataFrame
+    ), "Query cell meta is not available as dataframe"
 
     query_cells_df = insert_col(
         query_cells_df, 0, "abs_cell_type_label", combined_labels
@@ -1878,9 +1877,9 @@ def annotate_core(
         enc_map_path = os.path.join(model_dir, "encoder_maps.json")
         with open(enc_map_path, "r") as file:
             encoder_map = json.load(file)
+        cwd = os.path.dirname(os.path.abspath(__file__))
         fine_annot = pd.read_csv(
-            "/brahms/sarkars/Panhuman_AzimuthNN_public/data/"
-            f"postprocessing_files/panhuman_annotate_{ann_level}.csv",
+            os.path.join(cwd, f"panhuman_annotate_{ann_level}.csv"),
             index_col=None,
         )
         refined_results = refine_annotations(
