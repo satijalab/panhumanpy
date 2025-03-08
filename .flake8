@@ -1,0 +1,16 @@
+[flake8]
+# Black and Flake8 don't always agree, see:
+
+# Black recommends that rule "E501" be tweaked to conform with it's 80 
+# character maximum line length but we'll allow up to 132 character instead. We 
+# arrive at 132 by applying Black's 10% rule to the typical maximum line length
+# for comments of 120. Since we're running `black` as a pre-commit hook, we 
+# should only ever expect `flake8` to complain about long comment lines.
+max-line-length = 132
+
+# Black also recommends that `flake8` rules "E203" and "E501" are ignored,
+# for more details, see: 
+# https://black.readthedocs.io/en/stable/guides/using_black_with_other_tools.html#minimal-configuration.
+# We will also ignore rule W503 since it's soon to be reversed, for more details, 
+# see: https://www.flake8rules.com/rules/W503.html.
+extend-ignore = E203, E701, W503

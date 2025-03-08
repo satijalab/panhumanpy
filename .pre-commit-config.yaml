@@ -1,0 +1,12 @@
+repos:
+  # Run `isort` to sort imports.
+  - repo: https://github.com/PyCQA/isort
+    rev: 5.12.0
+    hooks:
+      - id: isort
+
+  # Run `black` to format code.
+  - repo: https://github.com/psf/black
+    rev: 23.9.1
+    hooks:
+      - id: black

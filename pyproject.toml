@@ -1,0 +1,44 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "package-name"
+version = "0.1.0"
+description = "..."
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.9"
+dependencies = []
+
+[tool.pixi.project]
+channels = ["conda-forge"]
+platforms = ["win-64", "linux-64", "osx-arm64"]
+
+[tool.pixi.dependencies]
+python = ">=3.13"
+black = "*"
+flake8 = "*"
+isort = "*"
+jupyterlab = "*"
+jupytext = "*"
+pre-commit = "*"
+pyright = "*"
+pytest = "*"
+
+[tool.pixi.pypi-dependencies]
+package-name = { path = ".", editable = true }
+
+[tool.pixi.tasks]
+isort = "isort src/ tests/"
+black = "black src/ tests/"
+pre-commit = "pre-commit run --all --show-diff-on-failure"
+flake8 = "flake8 src/ tests/"
+pyright = "pyright src/ tests/"
+pre-merge = { depends-on = ["isort", "black", "flake8", "pyright"] }
+pytest = "pytest tests/"
+jupyter = "jupyter lab"
+
+[tool.isort]
+profile = "black"
+float_to_top = "True"
