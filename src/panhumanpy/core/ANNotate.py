@@ -21,8 +21,7 @@ from scipy.sparse import csr_matrix, hstack
 from sklearn.neighbors import NearestNeighbors
 from tensorflow.keras.models import Model, load_model
 
-from data.kfold_data.read_data import load_training_genes
-
+from ..data.kfold_data.read_data import load_training_genes
 from ..postprocessing.postprocessing import *
 from ..preprocessing.data_prep import *
 from ..utils.loss_fn import *
