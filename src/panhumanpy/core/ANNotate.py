@@ -21,12 +21,30 @@ from scipy.sparse import csr_matrix, hstack
 from sklearn.neighbors import NearestNeighbors
 from tensorflow.keras.models import Model, load_model
 
-from ..data.kfold_data.read_data import load_training_genes
 from ..postprocessing.postprocessing import *
 from ..preprocessing.data_prep import *
 from ..utils.loss_fn import *
 
 warnings.filterwarnings("ignore")
+
+
+def load_training_genes(data_dir, features_txt):
+    """
+    Load the list of training genes from a text file.
+
+    Args:
+        data_dir (str): Directory path where the features text file is stored
+        features_txt (str): Name of the text file containing the training genes
+
+    Returns:
+        numpy.ndarray: Array of training gene names encoded as UTF-8 bytes
+    """
+    file_path = os.path.join(data_dir, features_txt)
+    with open(file_path, "r") as f:
+        training_genes = f.read().splitlines()
+    training_genes = [gene.encode("utf-8") for gene in training_genes]
+    training_genes = np.unique(np.array(training_genes))
+    return training_genes
 
 
 def give_script_dir():
