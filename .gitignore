@@ -70,14 +70,6 @@ ENV/
 *.swp
 *.swo
 
-# Project specific
-data/
-experiments/
-queries/
-*.h5ad
-*.npz
-*.pkl
-
 # PyInstaller
 #  Usually these files are written by a python script from a template
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.
