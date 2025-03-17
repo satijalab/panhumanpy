@@ -470,15 +470,14 @@ class AzimuthNN_base(AutoloadInferenceTools):
 
         if save_path:
             if os.path.exists(save_path):
-                warnings.warn(
-                    f"File {save_path} already exists. Adding timestamp "
-                    "suffix to prevent overwrite.",
-                    UserWarning
-                )
                 
                 base_path, ext = os.path.splitext(save_path)
                 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                 save_path = f"{base_path}_{timestamp}{ext}"
+                print(
+                    f"File {save_path} already exists. Adding timestamp "
+                    "suffix to prevent overwrite.",
+                )
                 print(f"Saving to: {save_path}")
             adata_obj.write(save_path)
 
