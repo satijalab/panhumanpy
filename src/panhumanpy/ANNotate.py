@@ -1162,7 +1162,8 @@ def annotate():
 
     dir_path = os.path.dirname(query_filepath)
     filename = os.path.basename(query_filepath)
-    out_path = os.path.join(dir_path, f'ANNotations_{filename}')
+    filename, ext = os.path.splitext(filename)
+    out_path = os.path.join(dir_path, f'{filename}_ANN{ext}')
 
     azimuth_object.pack_adata(save_path=out_path)
 
