@@ -79,22 +79,18 @@ pip install panhumanpy-0.1.0-py3-none-any.whl
 git clone https://github.com/yourusername/panhumanpy.git
 cd panhumanpy
 
-# Install the package in editable mode with dependencies
-pip install -e .
+# Install with automatic TensorFlow detection (recommended)
+# This will detect if you have a GPU and install the appropriate TensorFlow version
+pip install .
 
-# Note: This will automatically install dependencies specified in pyproject.toml
-```
+# Or, install with forced CPU version of TensorFlow
+pip install .[cpu]
 
-#### TensorFlow Installation with pip
+# Or, install with forced GPU version of TensorFlow
+pip install .[gpu]
 
-After installing the package, install the appropriate TensorFlow version:
-
-```bash
-# For CPU-only systems:
-pip install tensorflow-cpu==2.17.0
-
-# For systems with NVIDIA GPU:
-pip install tensorflow[and-cuda]==2.17.0
+# For development, install with all development tools
+pip install -e .[dev]
 ```
 
 ## Dependencies
