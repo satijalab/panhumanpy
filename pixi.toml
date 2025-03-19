@@ -34,8 +34,6 @@ mkdocs-material = "*"
 # PyPI dependencies - installed via pip
 [pypi-dependencies]
 panhumanpy = { path = ".", editable = true }
-distances = "*"
-keras = "*"
 
 # Tasks for development workflows
 [tasks]
@@ -55,10 +53,12 @@ try:
     subprocess.run(['nvidia-smi'], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     print('GPU detected, installing TensorFlow with CUDA support')
     subprocess.run(['pip', 'install', 'tensorflow[and-cuda]==2.17.0'], check=True)
+    subprocess.run(['pip', 'install', 'keras==3.7.0'], check=True)
 except (subprocess.SubprocessError, FileNotFoundError):
     print('No GPU detected, installing CPU-only TensorFlow')
     subprocess.run(['pip', 'install', 'tensorflow-cpu==2.17.0'], check=True)
+    subprocess.run(['pip', 'install', 'keras'], check=True)
 "
 """
-tf-cpu = "pip install tensorflow-cpu==2.17.0"
-tf-gpu = "pip install tensorflow[and-cuda]==2.17.0"
+tf-cpu = "pip install tensorflow-cpu==2.17.0 keras==3.7.0"
+tf-gpu = "pip install tensorflow[and-cuda]==2.17.0 keras==3.7.0"
