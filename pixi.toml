@@ -5,6 +5,39 @@ description = "A Python package for automated cell type annotation using neural 
 channels = ["conda-forge"]
 platforms = ["linux-64"]
 
+# Runtime dependencies - necessary for the package to function
+[dependencies]
+python = "3.12.8"
+pip = "*"
+numpy = "1.26.4"
+pandas = "2.2.3"
+scikit-learn = "1.6.0"
+h5py = "3.12.1"
+anndata = "0.10.9"
+python-dateutil = "*"
+umap-learn = "0.5.7"
+numba = "0.60.0"
+
+# Development dependencies - tools for development, testing, docs, etc.
+[dev-dependencies]
+pytest = "8.3.*"
+black = "*"
+flake8 = "*"
+isort = "*"
+pre-commit = "*"
+pyright = "*"
+python-build = "*"
+twine = "*"
+mkdocs = "*"
+mkdocs-material = "*"
+
+# PyPI dependencies - installed via pip
+[pypi-dependencies]
+panhumanpy = { path = ".", editable = true }
+distances = "*"
+keras = "*"
+
+# Tasks for development workflows
 [tasks]
 test = "pytest tests/"
 lint = "pre-commit run --all-files"
@@ -13,34 +46,19 @@ check = { depends-on = ["test", "lint"] }
 build = "python -m build"
 docs = "mkdocs serve"
 
-[dependencies]
-python = "3.11.*"
-pip = "*"
-numpy = "1.26.*"
-matplotlib = "3.9.*"
-pandas = "2.2.*"
-pytest = "8.3.*"
-jupyter = "*"
-scikit-learn = "*"
-h5py = "*"
-anndata = "0.10.9"
-python-dateutil = "*"
-umap-learn = "*"
-numba = "*"
-black = "*"
-flake8 = "*"
-isort = "*"
-jupyterlab = "*"
-jupytext = "*"
-pre-commit = "*"
-pyright = "*"
-python-build = "*"
-twine = "*"
-mkdocs = "*"
-mkdocs-material = "*"
-
-[pypi-dependencies]
-panhumanpy = { path = ".", editable = true }
-distances = "*"
-tensorflow-cpu = "==2.18.0"
-tensorboard = "==2.18.0" 
+# TensorFlow installation options
+tf-auto = """
+python -c "
+import subprocess, os
+try:
+    # Check for NVIDIA GPU
+    subprocess.run(['nvidia-smi'], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    print('GPU detected, installing TensorFlow with CUDA support')
+    subprocess.run(['pip', 'install', 'tensorflow[and-cuda]==2.17'], check=True)
+except (subprocess.SubprocessError, FileNotFoundError):
+    print('No GPU detected, installing CPU-only TensorFlow')
+    subprocess.run(['pip', 'install', 'tensorflow-cpu==2.17.0'], check=True)
+"
+"""
+tf-cpu = "pip install tensorflow-cpu==2.17.0"
+tf-gpu = "pip install tensorflow[and-cuda]==2.17"
