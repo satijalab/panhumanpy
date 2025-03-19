@@ -51,14 +51,3 @@ Alternatively, you can run them individually:
 pixi run flake8
 pixi run pyright
 ```
-
-### Interactive Development
-
-For interactive development you can spin up a [JupyterLab](https://jupyterlab.readthedocs.io/en/latest/) session:
-
-```bash
-pixi run jupyter
-```
-
-Please take advantage of [jupytext](https://jupytext.readthedocs.io/en/latest/) to write notebooks as plain text
-`.py` files and avoid committing `.ipynb` files directly.
