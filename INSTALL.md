@@ -164,6 +164,7 @@ If you encounter issues with the GPU version of TensorFlow:
     ```bash
     #On Unix/Linux/macOS, run:
     export CUDA_VISIBLE_DEVICES=0
+
     #On Windows (Command Prompt), run:
     set CUDA_VISIBLE_DEVICES=0
     ```
