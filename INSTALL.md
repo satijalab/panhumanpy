@@ -169,6 +169,7 @@ If you encounter issues with the GPU version of TensorFlow:
     set CUDA_VISIBLE_DEVICES=0
     ```
 This variable controls which GPU(s) TensorFlow will see. If you do not set this variable, TensorFlow might use a GPU by default or may run into issues if multiple GPUs are available.
+
 5. Try the CPU-only version instead
 
 ### Version Conflicts
