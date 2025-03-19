@@ -54,11 +54,11 @@ try:
     # Check for NVIDIA GPU
     subprocess.run(['nvidia-smi'], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     print('GPU detected, installing TensorFlow with CUDA support')
-    subprocess.run(['pip', 'install', 'tensorflow[and-cuda]==2.17'], check=True)
+    subprocess.run(['pip', 'install', 'tensorflow[and-cuda]==2.17.0'], check=True)
 except (subprocess.SubprocessError, FileNotFoundError):
     print('No GPU detected, installing CPU-only TensorFlow')
     subprocess.run(['pip', 'install', 'tensorflow-cpu==2.17.0'], check=True)
 "
 """
 tf-cpu = "pip install tensorflow-cpu==2.17.0"
-tf-gpu = "pip install tensorflow[and-cuda]==2.17"
+tf-gpu = "pip install tensorflow[and-cuda]==2.17.0"
