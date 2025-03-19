@@ -21,6 +21,7 @@ import warnings
 from datetime import datetime
 
 import sys
+import importlib
 from importlib.resources import files
 from tools import inference_model, inference_encoders
 from tools import inference_feature_panel
@@ -719,7 +720,7 @@ class InferenceTools():
             self, 
             annotation_pipeline,
             inference_model_filename='inference_model.keras',
-            model_meta_filename = 'model_meta.pkl', 
+            model_meta_filename = 'model_meta.py', 
             inference_encoders_filename='inference_encoders.pkl',
             inference_feature_panel_filename='inference_feature_panel.txt'
             ):
@@ -751,11 +752,30 @@ class InferenceTools():
         max_depth, depth_aug, etc
         """
 
-        meta_dir_path = files(inference_model)
-        meta_dict_path = meta_dir_path / self._model_meta_filename
+        module_name = self._model_meta_filename
+        if module_name.endswith('.py'):
+            module_name = module_name[:-3]
+        else:
+            raise ValueError('model meta file must be a .py file.')
 
-        with open(meta_dict_path, "rb") as f:
-            meta_dict = pickle.load(f)
+        try:
+            model_meta_module = importlib.import_module(
+                f"inference_model.{module_name}"
+            )
+            meta_dict = model_meta_module.model_meta
+        except ImportError:
+            raise ImportError(
+                "Could not import model meta from "
+                f"inference_model.{module_name}"
+                )
+        except AttributeError:
+            raise AttributeError(
+                "model_meta dictionary not found in module "
+                f"inference_model.{module_name}"
+                )
+
+
+        
 
         for meta_key in meta_dict.keys():
             assert isinstance(meta_key, str), (
