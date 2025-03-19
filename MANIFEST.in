@@ -3,12 +3,17 @@ include README.md
 include CHANGELOG.md
 include INSTALL.md
 include pyproject.toml
-include cell_types.txt
 
 # Include package source files and model files
 recursive-include src/panhumanpy *.py
-recursive-include src/panhumanpy/models *.keras *.pkl *.json
+recursive-include src/panhumanpy/_tools/inference_model *.keras
+recursive-include src/panhumanpy/_tools/inference_encoders *.pkl
+recursive-include src/panhumanpy/_tools/inference_feature_panel *.txt
+recursive-include src/panhumanpy/_tools/postprocessing *.csv
+
+# Include test files and data
 recursive-include tests *.py
+recursive-include queries *.h5ad
 
 # Explicitly exclude development files
 global-exclude .git*
@@ -17,27 +22,19 @@ global-exclude *.pyo
 global-exclude *.pyd
 global-exclude __pycache__
 global-exclude *.so
-global-exclude .pytest_cache
-global-exclude *.egg-info
+global-exclude .pytest_cache/**
+global-exclude *.egg-info/**
 global-exclude .DS_Store
 global-exclude *.swp
 global-exclude *.swo
 
 # Explicitly exclude directories
-exclude .devcontainer
-exclude .pixi
-exclude utils
-exclude src/package_name
-exclude experiments
 prune .devcontainer
+prune .git
 prune .pixi
-prune utils
-prune src/package_name
-prune data
+prune dev_utils
 prune queries
 prune dist
 prune build
-prune .git
 prune .pytest_cache
-prune experiments
 prune **/__pycache__ 
