@@ -1,5 +1,24 @@
-# package-name
-...
+# panhumanpy
+
+## Prerequisites
+
+- `python` >=3.9
+- `pip`
+- `git`
+
+## Installation
+
+To install the base version of the package (with CPU support only), run:
+
+```bash
+pip install git+https://github.com/rsatija/panhumanpy.git
+```
+
+If you require GPU acceleration for enhanced performance on compatible hardware, install the package with GPU dependencies:
+
+```bash
+pip install git+https://github.com/rsatija/panhumanpy.git[gpu]
+```
 
 ## Developer's Guide
 
@@ -14,7 +33,7 @@ This project uses [pixi](https://pixi.sh/v0.41.4/) for dependency management and
 
 ### pre-commit, isort, & black
 
-This project uses [pre-commit](https://pre-commit.com/) hooks to automatically enforce certain coding standards. Before every commit [isort](https://pycqa.github.io/isort/) and [black](https://black.readthedocs.io/en/stable/index.html) are executed on staged files to ensure that all committed code is formatted consistently. The command can also be invoked manually: 
+This project uses [pre-commit](https://pre-commit.com/) hooks to automatically enforce certain coding standards. Before every commit [isort](https://pycqa.github.io/isort/) and [black](https://black.readthedocs.io/en/stable/index.html) are executed on staged files to ensure that all committed code is formatted consistently. The command can also be invoked manually:
 
 ```bash
 pixi run pre-commit
