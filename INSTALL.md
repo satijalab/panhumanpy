@@ -18,7 +18,7 @@ curl -fsSL https://pixi.sh/install.sh | bash
 # or with conda: conda install -c conda-forge pixi
 
 # Clone the repository
-git clone https://github.com/yourusername/panhumanpy.git
+git clone https://github.com/rsatija/panhumanpy.git
 cd panhumanpy
 
 # Install dependencies using pixi
