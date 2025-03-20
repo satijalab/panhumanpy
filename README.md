@@ -17,7 +17,7 @@ pip install git+https://github.com/rsatija/panhumanpy.git
 If you require GPU acceleration for enhanced performance on compatible hardware, install the package with GPU dependencies:
 
 ```bash
-pip install git+https://github.com/rsatija/panhumanpy.git[gpu]
+pip install git+https://github.com/rsatija/panhumanpy.git#egg=panhumanpy[gpu]
 ```
 
 ## Developer's Guide
