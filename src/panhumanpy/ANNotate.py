@@ -3,7 +3,7 @@ Inference script based on the Azimuth Neural Network trained
 on annotated panhuman scRNA-seq data.
 """
 
-from ANNotate_tools import *
+from panhumanpy.ANNotate_tools import *
 
 _gpu_configured = False
 
@@ -436,7 +436,7 @@ class AzimuthNN_base(AutoloadInferenceTools):
                 )
 
         if (
-            self._azimuth_refined_labels and len(self._azimuth_refined_labels)
+            len(self._azimuth_refined_labels)
          ) > 0:
             start_idx = len(self.processed_outputs or [])
             for col_idx, (refine_col, values) in enumerate(
@@ -509,7 +509,7 @@ class AzimuthNN(AzimuthNN_base):
 
         if (
             not isinstance(query_arg, str) and 
-            not isinstance(query_arg, AnnData)
+            not isinstance(query_arg, anndata.AnnData)
             ):
             raise TypeError(
                 "query argument must either be AnnData object or "
@@ -545,7 +545,7 @@ class AzimuthNN(AzimuthNN_base):
             self._eval_batch_size
         )
 
-        if isinstance(self._query_arg, AnnData):
+        if isinstance(self._query_arg, anndata.AnnData):
             self.query_adata(
                 self._query_arg,
                 feature_names_col = feature_names_col
