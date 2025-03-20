@@ -1,165 +1,62 @@
 [build-system]
-requires = ["hatchling>=1.18.0"]
+requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
 name = "panhumanpy"
 version = "0.1.0"
-description = "A Python package for automated cell type annotation using neural networks"
+description = "..."
 readme = "README.md"
 license = {text = "MIT"}
-requires-python = ">=3.12,<3.13"
-authors = [
-    {name = "Your Name", email = "your.email@example.com"}
-]
-classifiers = [
-    "Development Status :: 3 - Alpha",
-    "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: MIT License",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.12",
-    "Topic :: Scientific :: Bio-Informatics",
-    "Topic :: Scientific :: Artificial Intelligence"
-]
+requires-python = ">=3.9"
 dependencies = [
-    "numpy==1.26.4",
-    "pandas==2.2.3",
+    "anndata",
+    "dash",
+    "dash-bootstrap-components",
+    "numpy",
+    "pandas",
+    "plotly",
+    "scipy",
     "scikit-learn==1.6.0",
-    "h5py==3.12.1",
-    "anndata==0.10.9",
-    "python-dateutil",
-    "umap-learn==0.5.7",
-    "numba==0.60.0",
-    "keras==3.7.0"
+    "tensorflow==2.17",
+    "umap-learn",
+    "xarray",
 ]
 
-[project.optional-dependencies]
-dev = [
-    "pytest==8.3.1",
-    "black==24.3.0",
-    "flake8==7.0.0",
-    "isort==5.13.2",
-    "pre-commit==3.7.0",
-    "pyright==1.1.354",
-    "twine==5.0.0",
-    "mkdocs==1.5.3",
-    "mkdocs-material==9.5.18",
-    "python-build==1.2.1"
-]
-cpu = ["tensorflow-cpu==2.17.0"]
-gpu = ["tensorflow[and-cuda]==2.17.0"]
+[tool.pixi.project]
+channels = ["conda-forge"]
+platforms = ["win-64", "linux-64", "linux-aarch64", "osx-arm64"]
 
+[tool.pixi.dependencies]
+python = ">=3.12, <3.13"
+black = "*"
+flake8 = "*"
+isort = "*"
+jupyterlab = "*"
+jupytext = "*"
+pre-commit = "*"
+pyright = "*"
+pytest = "*"
 
-[tool.hatch.build]
-packages = ["src/panhumanpy"]
+[tool.pixi.pypi-dependencies]
+panhumanpy = { path = ".", editable = true }
 
-exclude = [
-    "*.pyc",
-    "__pycache__",
-    "*.so",
-    ".git",
-    ".gitignore",
-    ".gitattributes",
-    ".devcontainer",
-    ".flake8",
-    ".pre-commit-config.yaml",
-    "pixi.lock",
-    "pixi.toml",
-    "dev_utils"
-]
-
-[tool.hatch.build.targets.wheel]
-packages = ["src/panhumanpy"]
-include = [
-    "src/panhumanpy/**/*.py",
-    "src/panhumanpy/_tools/inference_model/*.keras",
-    "src/panhumanpy/_tools/inference_encoders/*.pkl",
-    "src/panhumanpy/_tools/inference_feature_panel/*.txt",
-    "src/panhumanpy/_tools/postprocessing/*.csv"
-]
-exclude = [
-    "**/.git/**",
-    ".git*",
-    "**/__pycache__/**",
-    "**/*.pyc",
-    "**/*.pyo",
-    "**/*.pyd",
-    "**/*.so",
-    "**/.DS_Store",
-    "**/.*.swp",
-    "**/.pytest_cache/**",
-    "**/*.egg-info/**",
-    "**/dist/**",
-    "**/build/**",
-    "**/tests/**",
-    "**/queries/**"
-]
-
-[tool.hatch.build.targets.sdist]
-include = [
-    "src/panhumanpy/**/*.py",
-    "src/panhumanpy/_tools/inference_model/*.keras",
-    "src/panhumanpy/_tools/inference_encoders/*.pkl",
-    "src/panhumanpy/_tools/inference_feature_panel/*.txt",
-    "src/panhumanpy/_tools/postprocessing/*.csv",
-    "tests/**/*.py",
-    "queries/**/*.h5ad",
-    "README.md",
-    "LICENSE",
-    "INSTALL.md",
-    "pyproject.toml"
-]
-exclude = [
-    ".git/**",
-    ".git*",
-    "__pycache__/**",
-    "*.pyc",
-    "*.pyo",
-    "*.pyd",
-    "*.so",
-    ".pytest_cache/**",
-    "*.egg-info/**",
-    "dist/**",
-    "build/**",
-    ".DS_Store",
-    ".*.swp",
-    ".devcontainer/**",
-    "pixi.lock",
-    "pixi.toml",
-    ".flake8",
-    ".pre-commit-config.yaml",
-    ".gitignore",
-    ".gitattributes",
-    "dev_utils/**"
-]
-
-
-[tool.hatch.build.hooks.tensorflow]
-dependencies = ["hatch-tensorflow-detector>=0.1.0"]
-
-[project.urls]
-Homepage = "https://github.com/rsatija/panhumanpy"
-Documentation = "https://panhumanpy.readthedocs.io/"
-Repository = "https://github.com/rsatija/panhumanpy.git"
-Changelog = "https://github.com/rsatija/panhumanpy/blob/main/CHANGELOG.md"
-
-
-[tool.black]
-line-length = 88
-target-version = ['py312']
-include = '\.pyi?$'
-
+[tool.pixi.tasks]
+isort = "isort src/ tests/"
+black = "black src/ tests/"
+pre-commit = "pre-commit run --all --show-diff-on-failure"
+flake8 = "flake8 src/ tests/"
+pyright = "pyright src/ tests/"
+pre-merge = { depends-on = ["isort", "black", "flake8", "pyright"] }
+pytest = "pytest tests/"
+jupyter = "jupyter lab"
 
 [tool.isort]
 profile = "black"
-multi_line_output = 3
-line_length = 88
-float_to_top = true
+float_to_top = "True"
 
 
-[tool.pytest.ini_options]
-minversion = "6.0"
-addopts = "-ra -q"
-testpaths = ["tests"]
-python_files = "test_*.py"
+
+
+
 
