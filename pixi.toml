@@ -17,19 +17,9 @@ anndata = "0.10.9"
 python-dateutil = "*"
 umap-learn = "0.5.7"
 numba = "0.60.0"
-
-# Development dependencies - tools for development, testing, docs, etc.
-[dev-dependencies]
 pytest = "8.3.*"
-black = "*"
-flake8 = "*"
-isort = "*"
-pre-commit = "*"
-pyright = "*"
-python-build = "*"
-twine = "*"
-mkdocs = "*"
-mkdocs-material = "*"
+
+
 
 # PyPI dependencies - installed via pip
 [pypi-dependencies]
