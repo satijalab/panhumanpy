@@ -28,10 +28,7 @@ def test_azimuthnn_class():
         # Use small batch size for faster testing
         azimuth = AzimuthNN(
             query_arg=test_obj,
-            eval_batch_size=32,
-            extract_embeddings=False,
-            umap_embeddings=False,
-            refine_labels=False
+            eval_batch_size=32
         )
         
         # Verify that we got some basic results
@@ -223,12 +220,11 @@ def test_embeddings_and_umap_with_h5ad():
         # Use small batch size for faster processing
         azimuth = AzimuthNN(
             query_arg=test_file,
-            eval_batch_size=32,
-            extract_embeddings=True,
-            umap_embeddings=True,
-            refine_labels=False,
-            output_mode='minimal'
+            eval_batch_size=32
         )
+
+        _ = azimuth.azimuth_embed()
+        _ = azimuth.azimuth_umap()
         
         # Verify that embeddings and UMAP were generated
         assert 'azimuth_embed' in azimuth.embeddings, (
