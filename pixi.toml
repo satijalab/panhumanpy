@@ -7,23 +7,25 @@ platforms = ["linux-64"]
 
 # Runtime dependencies - necessary for the package to function
 [dependencies]
-python = "3.12.8"
+python = "==3.12.8"
 pip = "*"
-numpy = "1.26.4"
-pandas = "2.2.3"
-scikit-learn = "1.6.0"
-h5py = "3.12.1"
-anndata = "0.10.9"
+numpy = "==1.26.4"
+pandas = "==2.2.3"
+scikit-learn = "==1.6.0"
+h5py = "==3.12.1"
+anndata = "==0.10.9"
 python-dateutil = "*"
-umap-learn = "0.5.7"
-numba = "0.60.0"
-pytest = "8.3.*"
+umap-learn = "==0.5.7"
+numba = "==0.60.0"
+pytest = "==8.3.*"
 
 
 
 # PyPI dependencies - installed via pip
 [pypi-dependencies]
 panhumanpy = { path = ".", editable = true }
+hatchling = ">=1.18.0"
+hatch-tensorflow-detector = ">=0.1.0"
 
 # Tasks for development workflows
 [tasks]
