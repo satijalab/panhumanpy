@@ -9,7 +9,6 @@ def test_package_import():
     """Test that the panhumanpy package can be imported."""
     try:
         import panhumanpy
-        assert True
     except ImportError:
         assert False, (
             "test_package_import: Failed to import panhumanpy package"
@@ -59,7 +58,10 @@ def test_all_variable():
         'configure'
     ]
     assert hasattr(panhumanpy, "__all__")
-    assert set(panhumanpy.__all__) == set(expected_names)
+    assert set(panhumanpy.__all__) == set(expected_names), (
+        "test_all_variable: __all__ is incorrect. Expected: "
+        f"{expected_names}, Got: {panhumanpy.__all__}"
+    )
 
 
 def test_internal_imports():
