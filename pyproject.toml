@@ -16,18 +16,13 @@ dependencies = [
     "plotly",
     "scipy",
     "scikit-learn==1.6.0",
+    "tensorflow==2.17",
+    "umap-learn",
     "xarray",
 ]
 
 [project.optional-dependencies]
-cpu = [
-    "tensorflow==2.17",
-    "umap-learn",
-]
-gpu = [
-    "tensorflow[and-cuda]==2.17",
-    "umap-learn",
-]
+gpu = ["tensorflow[and-cuda]==2.17"]
 
 [tool.pixi.project]
 channels = ["conda-forge"]
