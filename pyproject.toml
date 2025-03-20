@@ -147,7 +147,7 @@ Changelog = "https://github.com/rsatija/panhumanpy/blob/main/CHANGELOG.md"
 [tool.black]
 line-length = 88
 target-version = ['py312']
-include = '\.pyi?$
+include = '\.pyi?$'
 
 
 [tool.isort]
