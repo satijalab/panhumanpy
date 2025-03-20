@@ -11,8 +11,6 @@ license = {text = "MIT"}
 requires-python = ">=3.9"
 dependencies = [
     "anndata",
-    "dash",
-    "dash-bootstrap-components",
     "numpy",
     "pandas",
     "plotly",
@@ -54,9 +52,3 @@ jupyter = "jupyter lab"
 [tool.isort]
 profile = "black"
 float_to_top = "True"
-
-
-
-
-
-
