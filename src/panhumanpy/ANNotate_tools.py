@@ -7,11 +7,9 @@ import argparse
 import os
 from pathlib import Path
 import numpy as np
-import anndata
 import tensorflow as tf
 from tensorflow.keras.models import Model, load_model
 import pickle
-import json
 import anndata
 import pandas as pd
 from scipy.sparse import csr_matrix, coo_matrix, hstack
@@ -23,10 +21,11 @@ from datetime import datetime
 import sys
 import importlib
 from importlib.resources import files
-from ._tools import inference_model, inference_encoders
-from ._tools import inference_feature_panel
-from ._tools import postprocessing
-from .loss_fn import * 
+from panhumanpy._tools import inference_model, inference_encoders
+from panhumanpy._tools.inference_model import model_meta
+from panhumanpy._tools import inference_feature_panel
+from panhumanpy._tools import postprocessing
+from panhumanpy.loss_fn import * 
 
 import warnings
 import gc
@@ -721,13 +720,13 @@ class InferenceTools():
             self, 
             annotation_pipeline,
             inference_model_filename='inference_model.keras',
-            model_meta_filename = 'model_meta.py', 
+            model_meta= model_meta, 
             inference_encoders_filename='inference_encoders.pkl',
             inference_feature_panel_filename='inference_feature_panel.txt'
             ):
         
         self._inference_model_filename = inference_model_filename
-        self._model_meta_filename = model_meta_filename
+        self._model_meta = model_meta
         self._inference_encoders_filename = inference_encoders_filename
         self._inference_feature_panel_filename = (
             inference_feature_panel_filename
@@ -753,30 +752,7 @@ class InferenceTools():
         max_depth, depth_aug, etc
         """
 
-        module_name = self._model_meta_filename
-        if module_name.endswith('.py'):
-            module_name = module_name[:-3]
-        else:
-            raise ValueError('model meta file must be a .py file.')
-
-        try:
-            model_meta_module = importlib.import_module(
-                f"inference_model.{module_name}"
-            )
-            meta_dict = model_meta_module.model_meta
-        except ImportError:
-            raise ImportError(
-                "Could not import model meta from "
-                f"inference_model.{module_name}"
-                )
-        except AttributeError:
-            raise AttributeError(
-                "model_meta dictionary not found in module "
-                f"inference_model.{module_name}"
-                )
-
-
-        
+        meta_dict = self._model_meta      
 
         for meta_key in meta_dict.keys():
             assert isinstance(meta_key, str), (
