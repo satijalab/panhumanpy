@@ -55,3 +55,6 @@ jupyter = "jupyter lab"
 [tool.isort]
 profile = "black"
 float_to_top = "True"
+
+[project.scripts]
+annotate = "panhumanpy.ANNotate:annotate"
