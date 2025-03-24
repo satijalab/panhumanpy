@@ -31,6 +31,11 @@ import warnings
 import gc
 #warnings.filterwarnings("ignore")  make this optional in script
 
+custom_objects = {
+    'level_wt_focal_loss': LvlWtFocalLoss,
+    'my_losses.level_wt_focal_loss': LvlWtFocalLoss
+}
+
 
 
 
@@ -155,7 +160,7 @@ def normalize(
         )
 
     if not check_norm:
-        total_counts = matrix.sum(axis=1)  
+        total_counts = matrix.sum(axis=1)
         total_counts = np.array(total_counts).reshape(-1, 1)
 
         if 0 in total_counts.flatten():
@@ -742,7 +747,7 @@ class InferenceTools():
         model_dir_path = files(inference_model)
         model_path = model_dir_path / self._inference_model_filename
 
-        model= load_model(model_path)
+        model= load_model(model_path, custom_objects=custom_objects)
 
         return model
     
