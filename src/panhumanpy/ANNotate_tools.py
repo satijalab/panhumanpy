@@ -25,16 +25,13 @@ from panhumanpy._tools import inference_model, inference_encoders
 from panhumanpy._tools.inference_model import model_meta
 from panhumanpy._tools import inference_feature_panel
 from panhumanpy._tools import postprocessing
-from panhumanpy.loss_fn import * 
+from panhumanpy.loss_fn import *
 
 import warnings
 import gc
 #warnings.filterwarnings("ignore")  make this optional in script
 
-custom_objects = {
-    'level_wt_focal_loss': LvlWtFocalLoss,
-    'my_losses.level_wt_focal_loss': LvlWtFocalLoss
-}
+
 
 
 
@@ -747,7 +744,7 @@ class InferenceTools():
         model_dir_path = files(inference_model)
         model_path = model_dir_path / self._inference_model_filename
 
-        model= load_model(model_path, custom_objects=custom_objects)
+        model= load_model(model_path)
 
         return model
     
