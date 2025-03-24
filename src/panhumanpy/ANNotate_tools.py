@@ -184,6 +184,12 @@ def reorder_subset_data_matrix(
     """
     write
     """
+    print(f"{len(query_features)} given to reorder_subset_data")
+    for gene in feature_panel_template[:10]:
+        print(gene)
+
+    print("data_matrix given to reorder fn:\n")
+    print(data_matrix[:20,:20])
 
     if not common_features:
         common_features = set(
@@ -191,17 +197,24 @@ def reorder_subset_data_matrix(
             ).intersection(set(feature_panel_template))
         
     extra_features = set(feature_panel_template)-common_features
+    print(f"{len(extra_features)} found in template by reorder_subset_data")
         
     zero_columns = csr_matrix((data_matrix.shape[0], len(extra_features)))
     data_matrix = hstack([data_matrix, zero_columns])
     query_features_extended = query_features.copy()
     query_features_extended.extend(extra_features)
+    print(f"{len(query_features_extended)} extended features in reorder_subset_data")
 
     reordered_query_indices = [
         query_features_extended.index(name) 
         for name in feature_panel_template
         ]
+    print(f"{len(reordered_query_indices)} extended reordered query indices in reorder_subset_data")
     reordered_data_matrix = data_matrix[:,reordered_query_indices]
+
+    print(f"{reordered_data_matrix.shape[1]} columns in reordered data matrix.")
+    print("reordered_data_matrix output from reorder fn:\n")
+    print(reordered_data_matrix[:20,:20])
 
     return reordered_data_matrix
 
@@ -694,6 +707,7 @@ class Inference():
         string_labels_out = []
 
         with MemoryContext():
+            print("run_inference in Inference class start.")
             class_preds, max_probs, softmax_vals_all = self.run_on_X()
         for i in range(self._max_depth):
             string_labels_out.append(
@@ -745,6 +759,8 @@ class InferenceTools():
         model_path = model_dir_path / self._inference_model_filename
 
         model= load_model(model_path)
+        print(model.summary())
+        print(model.loss)
 
         return model
     
@@ -828,6 +844,7 @@ class InferenceTools():
                 gene.decode("utf-8") if isinstance(gene, bytes) else gene 
                 for gene in feat_list
                 ]
+            feat_list = sorted(feat_list)
             
             assert len(feat_list) == len(set(feat_list)), (
                 "There are possible duplicates in the inference feature panel."
@@ -965,6 +982,12 @@ class InferenceInputData():
             normalization_override = False,
             norm_check_batch_size = 1000
             ):
+
+        print("query_features given to InferenceInputData:\n")
+        print(query_features[:10])
+        print(len(query_features))
+        for gene in feature_panel_template[:10]:
+            print(gene)
         
         assert isinstance(X_query, csr_matrix), (
             "X_query should be in the scipy.sparse.csr_matrix format."
@@ -974,6 +997,9 @@ class InferenceInputData():
             normalization_override=normalization_override,
             norm_check_batch_size=norm_check_batch_size
             )
+        print("X_query after normalize, InferenceInputData class:\n")
+        print(self.X_query[:20,:20])
+
         self.num_cells = X_query.shape[0]
 
         assert isinstance(query_features, list), (
@@ -986,12 +1012,13 @@ class InferenceInputData():
 
         if feature_panel_template:
             assert isinstance(feature_panel_template, list), (
-                "query_features must be a list."
+                "feature panel template must be a list."
             ) 
             assert all(
                 isinstance(item, str) for item in feature_panel_template
                 ), (
-                "Each element of the list of query_features must be a string."
+                "Each element of the list of feature panel "
+                "template must be a string."
             )
         self.feature_panel_template = feature_panel_template
         if self.feature_panel_template:
@@ -1041,6 +1068,9 @@ class InferenceInputData():
             print("    Overlap w. feature reference: "
                   f"{len(self.common_features)} "
                   f"(~{int(self.overlap_percent)}%)\n")
+
+            print("X_query after reordering, InferenceInputData class, reorder_subset method:\n")
+            print(reordered_X_query[:20,:20])
             
             return reordered_X_query
         else:
@@ -1059,7 +1089,10 @@ class InferenceInputData():
             input_matrix = self.reorder_subset_on_feature_template()
         else:
             raise ValueError("annotation_pipeline not recognized.")
-        
+
+        print("input_matrix returned by inference_input, InferenceInputData class:\n")
+        print(input_matrix[:20,:20])
+
         return input_matrix
     
 

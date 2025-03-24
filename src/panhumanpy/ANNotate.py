@@ -72,6 +72,10 @@ class AzimuthNN_base(AutoloadInferenceTools):
         self.embeddings = {}
         self.umaps = {}
 
+        print("printing bottom of feature panel upon initialization of base class")
+        for gene in self.inference_feature_panel[:20]:
+            print(gene)
+
     def query_stripped(
         self,
         X_query,
@@ -115,6 +119,7 @@ class AzimuthNN_base(AutoloadInferenceTools):
 
         self.X_query = X_query
         self.query_features = query_features
+        print(f"{len(self.query_features)} received by query_stripped.")
         self.features_meta = pd.DataFrame(
             {'feature_name':query_features},
             index = query_features
@@ -170,7 +175,7 @@ class AzimuthNN_base(AutoloadInferenceTools):
 
         if not isinstance(norm_check_batch_size, int):
             raise TypeError("norm_check_batch_size must be an integer")
-
+        
         query_processing_class = InferenceInputData(
             self.X_query,
             self.query_features,
@@ -182,6 +187,7 @@ class AzimuthNN_base(AutoloadInferenceTools):
         self._inference_input_matrix = query_processing_class.inference_input(
             annotation_pipeline = self._annotation_pipeline
         )
+        
 
     def run_inference_model(self):
 
@@ -740,6 +746,8 @@ def annotate_core(
         annotation_pipeline = annotation_pipeline,
         eval_batch_size = eval_batch_size
     )
+
+    print(f"{len(query_features)} being given to query_stripped.")
 
     azimuth.query_stripped(
         X_query,
