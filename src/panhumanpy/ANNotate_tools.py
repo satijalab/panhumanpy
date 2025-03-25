@@ -157,6 +157,11 @@ def normalize(
         )
 
     if not check_norm:
+        warnings.warn(
+            "Raw counts data provided to Azimuth NN. "
+            "log1p normalizing data after scaling to 10000. \n"
+            "Set normalization_override=False to override normalization."
+        )
         total_counts = matrix.sum(axis=1)
         total_counts = np.array(total_counts).reshape(-1, 1)
 
