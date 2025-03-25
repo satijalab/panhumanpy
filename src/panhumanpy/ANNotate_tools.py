@@ -1397,6 +1397,7 @@ class Embeddings():
         Azimuth Neural Network model using the auxilliary model provided 
         by the function embedding_extractor_model(model, embedding_layer).
         """
+        print("Extracting azimuth embeddings:")
         embedding_batches=[]
         eval_steps = X_query.shape[0]//batch_size
 
