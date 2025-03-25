@@ -457,6 +457,16 @@ class AzimuthNN_base(AutoloadInferenceTools):
                     values
                 )
 
+            if (
+                (
+                    "azimuth_broad" in self.cells_meta.keys()
+                ) and (
+                    "level_zero_labels" in self.cells_meta.keys()
+                    )
+                ):
+                self.cells_meta.drop('level_zero_labels', axis=1, inplace=True)
+
+
         return self.cells_meta
 
 
