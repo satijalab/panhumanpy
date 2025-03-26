@@ -53,9 +53,8 @@ def configure():
       as needed
     - Sets JIT compilation flag to True for potential performance 
       improvements
-    
-    If GPUs are available, prints the number of physical and logical GPUs
-    detected.
+    - If GPUs are available, prints the number of physical and logical 
+      GPUs detected.      
     """
     gpus = tf.config.list_physical_devices('GPU')
     if gpus:
@@ -78,7 +77,17 @@ def configure():
 
 def is_valid_anndata_obj(obj):
     """
-    write
+    Check if an object is a valid AnnData object with required 
+    attributes.
+    
+    Parameters
+    ----------
+    obj : The object to check.
+    
+    Returns
+    -------
+    bool : True if the object is a valid AnnData object with X, obs, 
+            and var attributes.
     """
     return (
         isinstance(obj, anndata.AnnData) and
@@ -94,7 +103,27 @@ def check_normalization(
         norm_check_batch_size
         ):
     '''
-    write docstring
+    Check if a matrix is normalized based on examining a subset of 
+    values.
+    
+    This function determines if a matrix has been normalized by checking
+     if any values are non-integer, which would indicate normalization 
+     has occurred.
+    
+    Parameters
+    ----------
+    matrix : array-like
+        The matrix to check for normalization.
+    normalization_override : bool
+        If True, bypass the normalization check and return True.
+    norm_check_batch_size : int
+        Maximum number of rows to check for efficiency.
+    
+    Returns
+    -------
+    bool
+        True if the matrix is normalized (contains non-integer values)
+        or if normalization_override is True, False otherwise.
     '''
     if matrix.shape[0] > norm_check_batch_size:
         mat = matrix[:norm_check_batch_size,:]
@@ -131,23 +160,27 @@ def normalize(
     that supports the operations .sum(), .multiply(), and .tocsr().
 
     A caveat of the current formulation of this function is that it
-    merely checks if the a certain batch of cells (as specified) has 
+    merely checks if a certain batch of cells (as specified) has 
     integer counts data or not, and if not it assumes that the data is 
     log1p normalized, which need not be the case.
 
-    Args:
-        matrix (scipy.sparse matrix): Gene expression count matrix with 
-            shape (num_cells, num_genes).
-        normalization_override (bool): If True, assumes that the matrix 
-            is already normalized and bypasses the scaling and log1p 
-            transformation.
-        norm_check_batch_size (int, optional): The number of cells used 
-            to determine whether the matrix is normalized.
+    Parameters
+    ----------
+    matrix : scipy.sparse matrix
+        Gene expression count matrix with shape (num_cells, num_genes).
+    normalization_override : bool
+        If True, assumes that the matrix is already normalized and 
+        bypasses the scaling and log1p transformation.
+    norm_check_batch_size : int, optional
+        The number of cells used to determine whether the matrix is 
+        normalized.
 
-    Returns:
-        scipy.sparse.csr_matrix: The normalized gene expression matrix.
-        boolen: Whether the provided matrix was normalized or not 
-            intially.
+    Returns
+    -------
+    scipy.sparse.csr_matrix
+        The normalized gene expression matrix.
+    bool
+        Whether the provided matrix was normalized initially.
     """
 
     check_norm = check_normalization(
@@ -187,7 +220,45 @@ def reorder_subset_data_matrix(
         common_features=None
         ):
     """
-    write
+    Reorders, subsets, and extends a sparse data matrix to match a 
+    template feature order.
+    
+    This function takes a data matrix with features defined by 
+    query_features and transforms it to match the feature order 
+    specified in feature_panel_template. If features in 
+    feature_panel_template are missing from query_features, the
+    function adds zero columns for these features. Extra query features 
+    not present in the feature_panel_template are dropped. 
+    
+    Parameters
+    ----------
+    data_matrix : scipy.sparse.csr_matrix
+        The input data matrix to be reordered.
+    query_features : list
+        List of feature names corresponding to the columns in 
+        data_matrix.
+    feature_panel_template : list
+        List of feature names defining the target order for output.
+    common_features : set, optional
+        Set of features present in both query_features and 
+        feature_panel_template. If None, will be computed as the 
+        intersection of both lists.
+    
+    Returns
+    -------
+    scipy.sparse.csr_matrix
+        A reordered, subsetted, and possibly extended data matrix with 
+        the same number of rows (cells) as the input, but with columns 
+        matching the order and features of feature_panel_template.
+    
+    Notes
+    -----
+    - The function assumes that data_matrix is a scipy sparse matrix in 
+        CSR format.
+    - Zero columns are added for features that are in 
+        feature_panel_template but not in query_features.
+    - Columns are reordered to match the exact order in 
+        feature_panel_template.
     """
     
     if not common_features:
@@ -216,8 +287,8 @@ def reorder_subset_data_matrix(
 def if_full_consistent_hierarchy(cell_label, max_depth):
     '''
     Returns a boolean indicating whether the hierarchical 
-    predictions returned by the model for a given cell form a 
-    consistent hierarchy or not.
+    predictions returned by the model for a given cell form an 
+    internally consistent hierarchy or not.
     '''
     for i in range(max_depth-1):
         res = (
@@ -235,35 +306,208 @@ def if_full_consistent_hierarchy(cell_label, max_depth):
 
 def comb_label(array_label, depth, max_depth):
     """
-    Combine hierarchical label components from a list of label strings.
+    Combine hierarchical label components from a list of hierarchically
+    split label strings.
 
-    This function takes a list of label strings (each expected to 
-    contain hierarchical components separated by the '|' character) and 
-    produces a single concatenated label. For each hierarchy level 
-    (from 0 to depth-1), the function looks for the first non-empty 
-    component among a subset of the labels in `array_label`. The search 
-    for each level starts at index i and considers up to (max_depth - i)
-      subsequent elements. Once a non-empty component is found, it is 
-      appended to the output string, followed by a '|' delimiter. 
-      After processing all levels, the trailing delimiter is removed.
+    This function takes a list of label strings, passed through the 
+    argument 'array_label', each expected to contain hierarchical 
+    components separated by the '|' character in a cumulative manner, 
+    and produces a single concatenated label. Each list corresponds to a 
+    hierarchical label for a cell split into components in a cumulative 
+    manner.
+     
+    The i-th element (0-indexed) of the label is anticipated to have i 
+    '|' characters and none of the strings are anticipated to begin with
+     '|'. For each hierarchy level (from 0 to depth-1), the function  
+    looks for the first non-empty component between two the '|' characters 
+     approproite for that level among a subset of the labels in the 
+     `array_label` argument. The search for each level starts at index i
+     and considers up to (max_depth - i) subsequent elements. Once a 
+     non-empty component is found, it is appended to the output string,
+     followed by a '|' delimiter. This process is iterated up to the 
+     specified depth. 'depth' is also anticipated to be less than or 
+     or equal to 'max_depth'. After processing all levels, the trailing 
+     delimiter is removed.
 
-    Note:
-        - Some discordant cases may not be flagged and will be merged 
-            into the output label.
-        - This function assumes that each element in array_label 
-            contains the same number of '|' delimiters (i.e. a 
-            consistent hierarchical structure).
+    Example 1: an internally consistent tree.
+        array_label = ["A", "A|B", "A|B|C", "A|B|C|D","A|B|C|D|", 
+                        "A|B|C|D||"]
+        depth = 5
+        max_depth = 6
+        
+        Level 0: Search for non-empty at positions [0, 1, 2, 3, 4, 5] 
+                (buffer = 6)
+                - For j = 0: from array_label[0] ("A"), split yields 
+                    ["A"]. Index 0 is "A" → out = "A|"
 
-    Args:
-        array_label (list of str): List of hierarchical label strings. 
-            Each string should contain components separated by '|'.
-        depth (int): Number of hierarchical levels to combine.
-        max_depth (int): Maximum number of label levels available in 
-            array_label.
+        Level 1: Search for non-empty at positions [1, 2, 3, 4, 5] 
+                (buffer = 5)
+                - For j = 0: from array_label[1] ("A|B"), split yields 
+                    ["A", "B"]. Index 1 is "B" → out = "A|B|"
 
-    Returns:
-        str: A concatenated label string built from the appropriate 
-            components.
+        Level 2: Search for non-empty at positions [2, 3, 4, 5] 
+                (buffer = 4)
+                - For j = 0: from array_label[2] ("A|B|C"), split yields
+                 ["A", "B", "C"]. Index 2 is "C" → out = "A|B|C|"
+
+        Level 3: Search for non-empty at positions [3, 4, 5] 
+                (buffer = 3)
+                - For j = 0: from array_label[3] ("A|B|C|D"), split 
+                yields ["A", "B", "C", "D"]. 
+                Index 3 is "D" → out = "A|B|C|D|"
+
+        Level 4: Search for non-empty at positions [4, 5] (buffer = 2)
+                - For j = 0: from array_label[4] ("A|B|C|D|"), split 
+                    yields ["A", "B", "C", "D", ""]. Index 4 is empty.
+                - For j = 1: from array_label[5] ("A|B|C|D||"), split 
+                    yields ["A", "B", "C", "D", "", ""]. Index 4 is 
+                    still empty.
+                → No non-empty component found; out remains "A|B|C|D|"
+
+        After processing all levels, the trailing delimiter is removed.
+
+        Result: "A|B|C|D"
+
+    Example 2: an internally inconsistent tree (that can still be output)
+                by the model.
+        array_label = ["A", "A|B", "A|B|C", "A|B|C1|","A|B|C|D|", 
+                        "A|B|C1|||"]
+        depth = 6
+        max_depth = 6
+        
+        Level 0: Search for non-empty at positions [0, 1, 2, 3, 4, 5] 
+                (buffer = 6)
+                - For j = 0: from array_label[0] ("A"), splitting yields
+                 ["A"]. Index 0 is "A" (non-empty) → out becomes "A|"
+
+        Level 1: Search for non-empty at positions [1, 2, 3, 4, 5] 
+                (buffer = 5)
+                - For j = 0: from array_label[1] ("A|B"), splitting 
+                    yields ["A", "B"]. Index 1 is "B" (non-empty) → out 
+                    becomes "A|B|"
+
+        Level 2: Search for non-empty at positions [2, 3, 4, 5] 
+                (buffer = 4)
+                - For j = 0: from array_label[2] ("A|B|C"), splitting 
+                    yields ["A", "B", "C"].
+                    Index 2 is "C" (non-empty) → out becomes "A|B|C|"
+
+        Level 3: Search for non-empty at positions [3, 4, 5] 
+                (buffer = 3)
+                - For j = 0: from array_label[3] ("A|B|C1|"), splitting 
+                    yields ["A", "B", "C1", ""].
+                    Index 3 is "" (empty).
+                - For j = 1: from array_label[4] ("A|B|C|D|"), splitting
+                     yields ["A", "B", "C", "D", ""].
+                    Index 3 is "D" (non-empty) → out becomes "A|B|C|D|"
+
+        Level 4: Search for non-empty at positions [4, 5] (buffer = 2)
+                - For j = 0: from array_label[4] ("A|B|C|D|"), splitting
+                    yields ["A", "B", "C", "D", ""].
+                    Index 4 is "" (empty).
+                - For j = 1: from array_label[5] ("A|B|C1|||"), 
+                    splitting yields ["A", "B", "C1", "", "", ""].
+                    Index 4 is "" (empty).
+                → No non-empty component found; out remains "A|B|C|D|"
+
+        Level 5: Search for non-empty at position [5] (buffer = 1)
+                - For j = 0: from array_label[5] ("A|B|C1|||"), 
+                    splitting yields ["A", "B", "C1", "", "", ""].
+                    Index 5 is "" (empty).
+                 → No non-empty component found.
+
+        After processing all levels, the trailing delimiter is removed.
+
+        Result: "A|B|C|D"
+
+    Example 3: a more complicated internally inconsistent tree that can
+        still be a model output.
+
+        array_label = ["A", "A|B", "A|B||", "A|B|C1|", "A|B|C1|D1|", 
+                        "A|B|C1|||"]
+        depth = 6
+        max_depth = 6
+
+        Level 0 : Search at positions [0, 1, 2, 3, 4, 5] (buffer = 6)
+                - j = 0: array_label[0] is "A"
+                    → "A".split('|') gives ["A"]
+                    → Element at index 0 is "A" (non-empty)
+                    → out becomes "A|"
+
+        Level 1 : Search at positions [1, 2, 3, 4, 5] (buffer = 5)
+                - j = 0: array_label[1] is "A|B"
+                    → "A|B".split('|') gives ["A", "B"]
+                    → Element at index 1 is "B" (non-empty)
+                    → out becomes "A|B|"
+
+        Level 2 : Search at positions [2, 3, 4, 5] (buffer = 4)
+                - j = 0: array_label[2] is "A|B||"
+                    → "A|B||".split('|') gives ["A", "B", "", ""]
+                    → Element at index 2 is "" (empty)
+                - j = 1: array_label[3] is "A|B|C1|"
+                    → "A|B|C1|".split('|') gives ["A", "B", "C1", ""]
+                    → Element at index 2 is "C1" (non-empty)
+                    → out becomes "A|B|C1|"
+
+        Level 3 : Search at positions [3, 4, 5] (buffer = 3)
+                - j = 0: array_label[3] is "A|B|C1|"
+                    → "A|B|C1|".split('|') gives ["A", "B", "C1", ""]
+                    → Element at index 3 is "" (empty)
+                - j = 1: array_label[4] is "A|B|C1|D1|"
+                    → "A|B|C1|D1|".split('|') gives ["A", "B", "C1", 
+                                                            "D1", ""]
+                    → Element at index 3 is "D1" (non-empty)
+                    → out becomes "A|B|C1|D1|"
+
+        Level 4 : Search at positions [4, 5] (buffer = 2)
+                - j = 0: array_label[4] is "A|B|C1|D1|"
+                    → "A|B|C1|D1|".split('|') gives ["A", "B", "C1", 
+                                                            "D1", ""]
+                    → Element at index 4 is "" (empty)
+                - j = 1: array_label[5] is "A|B|C1|||"
+                    → "A|B|C1|||".split('|') gives ["A", "B", "C1", "", 
+                                                                "", ""]
+                    → Element at index 4 is "" (empty)
+                    → No non-empty component found; out remains 
+                                                    "A|B|C1|D1|"
+
+        Level 5 : Search at position [5] (buffer = 1)
+                - j = 0: array_label[5] is "A|B|C1|||"
+                    → "A|B|C1|||".split('|') gives ["A", "B", "C1", "", 
+                                                                "", ""]
+                    → Element at index 5 is "" (empty)
+                    → No non-empty component found.
+
+        After processing all levels, the trailing '|' is removed.
+
+        Final Result: "A|B|C1|D1"
+
+    Parameters
+    ----------
+    array_label : list of str
+        List of hierarchical label strings. Each string should contain
+        components separated by '|'.
+    depth : int
+        Number of hierarchical levels to combine.
+    max_depth : int
+        Maximum number of label elements to consider when building the
+        combined label.
+    
+    Returns
+    -------
+    str
+        A concatenated label string built from the appropriate components
+        with '|' delimiters between hierarchy levels.
+    
+    Notes
+    -----
+    - Some internally consistent hierarchies cases may be merged 
+      to give a sensible output, which hides the inconsistency.
+      See Example 2 above.
+    - This function assumes that each element in array_label 
+      contains at least 'depth' number of '|' delimiters.
+    - If no non-empty component is found for a level, that level
+      will be blank in the output label.
     """
     out = ''
     for i in range(depth): 
@@ -292,19 +536,29 @@ def abs_labels(hierarchical_labels_array, max_depth):
       '|' delimiters is less than the expected level), the label is 
       replaced with "NA".
 
-    Args:
-        hierarchical_labels_array (list): A list of hierarchical labels,
-             where each element represents the label of a cell. Each 
-             cell label should be in a format that is compatible with 
-             the comb_label function (e.g., a list or string with 
-             components separated by '|'). 
-        max_depth (int): The maximum number of hierarchical levels 
-            available in the labels.
-
-    Returns:
-        list: A list of length max_depth. The i-th element is a list of 
-            absolute labels (strings) for each cell at hierarchical 
-            level i+1.
+    Parameters
+    ----------
+    hierarchical_labels_array : list
+        A list of hierarchical labels, where each element represents the 
+        label of a cell. Each cell label should be in a format that is 
+        compatible with the comb_label function (e.g., a list or string 
+        with components separated by '|').
+    max_depth : int
+        The maximum number of hierarchical levels available in the labels.
+    
+    Returns
+    -------
+    list
+        A list of length max_depth. The i-th element is a list of 
+        absolute labels (strings) for each cell at hierarchical 
+        level i+1 (1-indexed).
+    
+    Notes
+    -----
+    - The function relies on the comb_label function to combine label
+      components for each hierarchical level.
+    - Labels that don't have enough hierarchical depth are marked as "NA".
+    - The returned nested list is organized by level first, then by cell.
     """
 
     abs_labels_upto_level=[[] for i in range(max_depth)]
@@ -323,48 +577,60 @@ def abs_labels(hierarchical_labels_array, max_depth):
 def split_labels_w_final_level(hierarchical_labels_array, max_depth):
     """
     Split hierarchical labels and extract final level annotations.
-
+    
     This function processes an array of hierarchical labels for cells, 
     where each cell's label is expressed as a series of hierarchical 
-    components separated by the '|' character. It performs the following
-      steps:
+    components separated by the '|' character. It performs the following 
+    steps:
+    1. Uses the `abs_labels` function to generate absolute labels for 
+       each hierarchical level (from 1 to max_depth) for each cell.
+    2. Constructs a 2D array of these labels (cells x levels) and 
+       determines the deepest level (final level) for each cell by 
+       counting non-'NA' entries.
+    3. Appends the computed final level (1-indexed) as a new row to the 
+       list of absolute labels.
+    4. For each hierarchical level, extracts only the final component 
+       (i.e., the substring after the last '|' delimiter).
+    5. Extracts the final level label for each cell using the computed 
+       final level indices and appends this as an additional element.
     
-      1. Uses the `abs_labels` function to generate absolute labels for 
-            each hierarchical level (from 1 to max_depth) for each cell.
-      2. Constructs a 2D array of these labels (cells x levels) and 
-            determines the deepest level (final level) for each cell by 
-            counting non-'NA' entries.
-      3. Appends the computed final level (1-indexed) as a new row to 
-            the list of absolute labels.
-      4. For each hierarchical level, extracts only the final component 
-            (i.e., the substring after the last '|' delimiter).
-      5. Extracts the final level label for each cell using the computed
-             final level indices and appends this as an additional 
-             element.
+    Parameters
+    ----------
+    hierarchical_labels_array : list
+        A list (or iterable) where each element corresponds to a cell's 
+        hierarchical label. Each cell's label is itself a list (or 
+        similar iterable) of label strings for each level.
+    max_depth : int
+        The maximum number of hierarchical levels present in the 
+        predicted labels.
     
-    Args:
-        hierarchical_labels_array (list): A list (or iterable) where 
-            each element corresponds to a cell's hierarchical label. 
-            Each cell's label is itself a list (or similar iterable) of 
-            label strings for each level.
-        max_depth (int): The maximum number of hierarchical levels 
-            present in the predicted labels.
+    Returns
+    -------
+    tuple
+        A tuple containing:
+        - abs_labels_list : list
+            A list where:
+            * The first max_depth number of elements are lists of the 
+              final label components for each level (i.e., the part 
+              after the last '|' delimiter in the abs label up to the 
+              corresponding level).
+            * The (max_depth+1)-th element is a list of the computed 
+              final levels (1-indexed) for each cell.
+            * The (max_depth+2)-th element is a list of the final level 
+              labels for each cell.
+        - final_levels_arr : numpy.ndarray
+            A 1D numpy array of shape (num_cells,) containing the 
+            zero-indexed final level for each cell, computed as the 
+            number of non-'NA' levels minus one.
     
-    Returns:
-        tuple: A tuple containing:
-            - abs_labels_list (list): A list where:
-                * The first max_depth number of elements are lists of 
-                    the final label components for each level (i.e., the
-                      part after the last '|' delimiter in the abs label
-                      up to the corresponding level).
-                * The (max_depth+1)-th element is a list of the computed
-                     final levels (1-indexed) for each cell.
-                * The (max_depth+2)-th element is a list of the final 
-                    level labels for each cell.
-            - final_levels_arr (numpy.ndarray): A 1D numpy array of 
-                shape (num_cells,) containing the zero-indexed final 
-                level for each cell, computed as the number of non-'NA' 
-                levels minus one.
+    Notes
+    -----
+    - The function relies on the `abs_labels` function to generate 
+      absolute labels for each hierarchical level.
+    - Final level determination is based on counting non-'NA' entries 
+      in the absolute labels.
+    - The returned abs_labels_list contains processed label components, 
+      not the original absolute labels.
     """
     abs_labels_list = abs_labels(hierarchical_labels_array, max_depth)
     abs_labels_array = np.array(abs_labels_list).T
@@ -392,6 +658,23 @@ def split_labels_w_final_level(hierarchical_labels_array, max_depth):
 
 
 def categorize_refinement_type(value):
+    """
+    Categorize refinement type based on the input value.
+    
+    Parameters
+    ----------
+    value : any
+        The value to be categorized.
+    
+    Returns
+    -------
+    str
+        The categorization result:
+        - "Further": if value is a list
+        - "No-match": if value is the string "False"
+        - "Match": if value is any other string
+        - "Unknown": for any other type
+    """
         if isinstance(value, list):
             return "Further"
         elif value == "False":
@@ -530,13 +813,60 @@ def insert_col(df, loc, col_name, col_vals):
 
 
 class MemoryContext():
+    """
+    A context manager for memory-intensive operations.
+
+    This context manager provides a simple interface to encapsulate 
+    operations that are memory-intensive. Upon exiting the context, it 
+    triggers garbage collection to help free up memory.
+
+    Attributes
+    ----------
+    description : str
+        A description of the memory-intensive operation.
+    """
     def __init__(self, description="Memory-intensive operation"):
+        """
+        Initialize a MemoryContext instance.
+
+        Parameters
+        ----------
+        description : str, optional
+            A description of the memory-intensive operation.
+            Default is "Memory-intensive operation".
+        """
         self.description = description
     
     def __enter__(self):
+        """
+        Enter the memory context.
+
+        Returns
+        -------
+        MemoryContext
+            The current MemoryContext instance.
+        """
         return self
     
     def __exit__(self, exc_type, exc_val, exc_tb):
+        """
+        Exit the memory context and perform garbage collection.
+
+        Parameters
+        ----------
+        exc_type : type
+            The exception type, if an exception occurred, otherwise None.
+        exc_val : Exception
+            The exception instance, if an exception occurred, otherwise 
+            None.
+        exc_tb : traceback
+            The traceback object, if an exception occurred, otherwise 
+            None.
+
+        Returns
+        -------
+        None
+        """
         gc.collect() 
         return None
 
@@ -544,9 +874,49 @@ class MemoryContext():
 
 class Inference():
     """
-    write: supervised inference run
-    we want a confidence calibrated,
-    supervised model running here
+    Run a supervised inference workflow using a confidence-calibrated 
+    model.
+
+    Public Interface
+    ----------------
+    Methods
+      run_inference()
+          Execute the complete inference workflow on the input matrix and 
+          decode predictions to human-readable labels. Wrapped around
+          the method run_on_X()
+      run_on_X()
+          Run inference on the entire input matrix in evaluation batches.
+
+    Private 
+    --------------------------
+    Attributes
+      _X : numpy.ndarray or scipy.sparse matrix
+          The input expression matrix of shape (n_samples, n_features).
+      _model : keras.Model
+          The trained neural network model used for making predictions.
+      _label_encoders : list
+          List of label encoder objects (one per hierarchical level) 
+          used for decoding model predictions.
+      _eval_batch_size : int
+          Batch size used during inference.
+      _eval_steps : int
+          Number of complete evaluation batches (minus one), computed as 
+          X.shape[0] // eval_batch_size.
+      _max_depth : int
+          Maximum number of hierarchical levels to process.
+
+    Private Methods
+      run_on_minibatch(minibatch)
+          Run model inference on a single minibatch.
+      process_minibatch(
+                        minibatch, 
+                        softmax_mb_levels_cache, 
+                        class_preds_mb_cache, 
+                        max_probs_mb_cache
+                    )
+          Process a minibatch to cache softmax outputs, class 
+          predictions, and maximum probabilities for each hierarchical 
+          level.
     """
     def __init__(
             self, 
@@ -556,6 +926,29 @@ class Inference():
             eval_batch_size, 
             max_depth
             ):
+        """
+        Initialize the Inference object with input data, model, and 
+        evaluation parameters.
+
+        Parameters
+        ----------
+        X : numpy.ndarray or scipy.sparse matrix
+            The input expression matrix of shape (n_samples, n_features).
+            Can be sparse for memory efficiency.
+        model : keras.Model
+            The trained neural network model to be used for inference.
+            Should output a list of tensors, one per hierarchical level.
+        label_encoders : list
+            A list of label encoder objects, one per hierarchical level,
+            used for decoding numerical predictions to string labels.
+            The length of this list should match max_depth.
+        eval_batch_size : int
+            The batch size to use during evaluation. Controls memory usage
+            during inference.
+        max_depth : int
+            The maximum number of hierarchical levels to process in the
+            classification taxonomy.
+        """
         self._X = X
         self._model = model
         self._label_encoders = label_encoders
@@ -565,7 +958,18 @@ class Inference():
 
     def run_on_minibatch(self, minibatch):
         """
-        write
+        [Developer-Facing] Run model inference on a single minibatch.
+
+        Parameters
+        ----------
+        minibatch : numpy.ndarray or a tensor
+            A dense array representing a subset of the input matrix.
+
+        Returns
+        -------
+        list of numpy.ndarray/tensor
+            The model's predictions (softmax probabilities) for 
+            the minibatch.
         """
         y_mb = self._model.predict(minibatch)
 
@@ -579,7 +983,38 @@ class Inference():
             max_probs_mb_cache
             ):
         """
-        write
+        Process a minibatch by running inference and 
+        caching predictions.
+
+        This method runs inference on the provided minibatch and, for 
+        each hierarchical level, caches the softmax outputs, computes 
+        the predicted class indices, and determines the maximum 
+        probability values.
+
+        Parameters
+        ----------
+        minibatch : numpy.ndarray or tensor
+            A dense array corresponding to a batch of input data.
+        softmax_mb_levels_cache : list of lists
+            Cache for storing softmax outputs for each hierarchical level.
+        class_preds_mb_cache : list
+            Cache for storing predicted class indices for each minibatch.
+        max_probs_mb_cache : list
+            Cache for storing maximum probability values for each 
+            minibatch.
+
+        Returns
+        -------
+        tuple
+            Updated caches:
+              - softmax_mb_levels_cache (list of lists)
+              - class_preds_mb_cache (list)
+              - max_probs_mb_cache (list)
+
+        Notes
+        -----
+        This method uses TensorFlow operations (tf) for processing 
+        predictions.
         """
         class_levels_cache = []
         prob_levels_cache = []
@@ -612,7 +1047,35 @@ class Inference():
     
     def run_on_X(self):
         """
-        Run inference on the entire input matrix in batches.
+        Run inference on the entire input matrix in evaluation batches.
+
+        The input matrix is divided into batches based on 
+        _eval_batch_size. For each batch, the model is run to obtain 
+        predictions which are then aggregated. Consistency checks 
+        are performed to ensure that the number of predictions matches 
+        the input dimensions.
+
+        Returns
+        -------
+        tuple
+            A tuple containing:
+              - class_preds : numpy.ndarray
+                  Array of predicted class indices with shape 
+                  (n_samples, _max_depth).
+              - max_probs : numpy.ndarray
+                  Array of maximum probability values at each level 
+                  with shape (n_samples, _max_depth).
+              - softmax_vals_all : list of numpy.ndarray
+                  List of softmax outputs for each hierarchical level.
+
+        Raises
+        ------
+        ValueError
+            If the input matrix is empty.
+        RuntimeError
+            If no predictions were generated.
+        AssertionError
+            If the dimensions of the predictions do not match the input.
         """
         if self._X.shape[0] == 0:
             raise ValueError("Input matrix is empty")
@@ -695,7 +1158,36 @@ class Inference():
     
     def run_inference(self):
         """
-        write
+        Run the complete inference workflow and decode predictions to 
+        string labels.
+
+        This public method executes the full inference process on the 
+        input matrix (in batches), gathers predictions from the model, 
+        and decodes the class predictions using the provided 
+        label encoders. The final output is a dictionary containing
+        both the raw numerical predictions and human-readable labels.
+
+        Returns
+        -------
+        dict
+            Dictionary with keys:
+              'hierarchical_label_preds' : numpy.ndarray
+                  Array of decoded string labels with shape 
+                  (n_samples, _max_depth).
+              'class_preds' : numpy.ndarray
+                  Array of predicted class indices with shape 
+                  (n_samples, _max_depth).
+              'probability_of_preds' : numpy.ndarray
+                  Array of maximum probability values with shape 
+                  (n_samples, _max_depth).
+              'softmax_vals_all' : list of numpy.ndarray
+                  List of softmax outputs for each hierarchical level.
+                  
+        Notes
+        -----
+        This method uses a MemoryContext context manager to handle memory
+        efficient processing, which should be imported from an appropriate
+        utility module.
         """
         string_labels_out = []
 
@@ -718,10 +1210,40 @@ class Inference():
 
 class InferenceTools():
     """
-    write: reading the tools needed for inference
-    each tool in it's own directory identified by name
-    each directory should have unique contents
-    write a test based on this(?)
+    Load and manage the necessary components required for model inference.
+    
+    This class handles loading of model artifacts from predefined locations,
+    including the trained model, label encoders, feature panel, and model
+    metadata. It supports different annotation pipelines and performs
+    validation of loaded components.
+    
+    Public Interface
+    ----------------
+    Methods
+      load_inference_model()
+          Load the trained Keras model for inference.
+      load_model_meta()
+          Load and validate model metadata containing configuration 
+          parameters.
+      load_inference_encoders()
+          Load label encoders used for decoding model predictions.
+      load_inference_feature_panel()
+          Load the feature panel for subsetting query data (supervised 
+          pipeline only).
+          
+    Private Attributes
+    -----------------
+      _inference_model_filename : str
+          Filename of the Keras model file to load.
+      _model_meta : dict
+          Dictionary containing model metadata and configuration 
+          parameters.
+      _inference_encoders_filename : str
+          Filename of the pickled label encoders.
+      _inference_feature_panel_filename : str
+          Filename of the text file containing feature names.
+      _annotation_pipeline : str
+          Type of annotation pipeline to use (e.g., 'supervised').
     """
 
     def __init__(
@@ -732,6 +1254,30 @@ class InferenceTools():
             inference_encoders_filename='inference_encoders.pkl',
             inference_feature_panel_filename='inference_feature_panel.txt'
             ):
+        """
+        Initialize the InferenceTools with file paths and configuration.
+        
+        Parameters
+        ----------
+        annotation_pipeline : str
+            Type of annotation pipeline to use (e.g., 'supervised', 
+            'self-supervised', currently the only pipeline implemented
+            is 'supervised'). Determines which components are required 
+            for inference.
+        inference_model_filename : str, optional
+            Filename of the Keras model file to load, by default 
+            'inference_model.keras'.
+        model_meta : dict
+            Dictionary containing model metadata and configuration 
+            parameters. Must include specific keys depending on the 
+            annotation pipeline.
+        inference_encoders_filename : str, optional
+            Filename of the pickled label encoders, by default 
+            'inference_encoders.pkl'.
+        inference_feature_panel_filename : str, optional
+            Filename of the text file containing feature names,
+            by default 'inference_feature_panel.txt'.
+        """
         
         self._inference_model_filename = inference_model_filename
         self._model_meta = model_meta
@@ -744,8 +1290,22 @@ class InferenceTools():
 
     def load_inference_model(self):
         """
-        to load the model,
-        inference model must be save in inference_model dir
+        Load the trained Keras model for inference.
+        
+        Loads the model from a predefined directory structure using the
+        filename specified during initialization. The model is expected
+        to be in the Keras format.
+        
+        Returns
+        -------
+        keras.Model
+            The loaded model used for inference.
+            
+        Notes
+        -----
+        The model must be saved in the 'inference_model' directory 
+        accessible via the 'files' import system. Model name must 
+        correspond to the name provided to the object at initialization.
         """
         model_dir_path = files(inference_model)
         model_path = model_dir_path / self._inference_model_filename
@@ -756,8 +1316,29 @@ class InferenceTools():
     
     def load_model_meta(self):
         """
-        read the meta corresponding to the model,
-        max_depth, depth_aug, etc
+        Load and validate model metadata containing configuration 
+        parameters.
+        
+        Validates that the model metadata dictionary contains all 
+        required keys based on the annotation pipeline type. Checks that
+         values have the expected types and enforces constraints on the 
+         metadata structure.
+
+        The model metadata dictionary is defined in the __init__ file 
+        for the package directory and is imported from there onto this 
+        module.
+        
+        Returns
+        -------
+        dict
+            Dictionary containing validated model metadata and 
+            configuration parameters.
+            
+        Raises
+        ------
+        AssertionError
+            If any required key is missing or if values have incorrect 
+            types.
         """
 
         meta_dict = self._model_meta      
@@ -809,8 +1390,26 @@ class InferenceTools():
 
     def load_inference_encoders(self):
         """
-        encoders for the inference model
-        """ 
+        Load label encoders used for decoding model predictions.
+        
+        Loads pickled label encoder objects from a predefined directory
+        structure using the filename specified during initialization.
+        These encoders are used to convert numeric predictions back to
+        string labels.
+        
+        Returns
+        -------
+        list
+            List of label encoders, typically one per hierarchical level
+            in the classification taxonomy.
+            
+        Notes
+        -----
+        The encoders must be saved as a pickle file in the 
+        'inference_encoders' directory accessible via the 'files' import
+         system, and the name of the pickled file must correspond to the
+         name provided to this object at initialization.
+        """
         encoders_dir_path = files(inference_encoders)
         encoders_path = encoders_dir_path / self._inference_encoders_filename
 
@@ -821,7 +1420,34 @@ class InferenceTools():
     
     def load_inference_feature_panel(self):
         """
-        feature panel for subsetting the query for the inference model
+        Load the feature panel for subsetting query data.
+        
+        For supervised annotation pipelines, loads a list of feature names
+        (typically gene names) from a text file. These features are used 
+        to subset the input data before inference. Validates that the 
+        feature list matches expected size from metadata and contains no
+         duplicates.
+        
+        Returns
+        -------
+        list or None
+            List of feature names (strings) if using a supervised pipeline,
+            or None for other pipeline types.
+            
+        Raises
+        ------
+        AssertionError
+            If duplicates are found in the feature list or if the number 
+            of features doesn't match the value in model metadata.
+            
+        Notes
+        -----
+        The feature panel must be saved as a text file in the 
+        'inference_feature_panel' directory accessible via the 'files' 
+        import system, with the filename matching the name passed to this
+        object at initialization. 
+        
+        For non-supervised pipelines, this method returns None.
         """
         if self._annotation_pipeline == 'supervised':
             feat_dir_path = files(inference_feature_panel)
@@ -856,8 +1482,36 @@ class InferenceTools():
 
 class AutoloadInferenceTools(InferenceTools):
     """
-    Automatically loads all inference tools on initialization
-    and stores them as attributes based on method names.
+    Enhanced version of InferenceTools that automatically loads all 
+    components on initialization.
+    
+    This subclass extends InferenceTools by automatically calling all 
+    loading methods during initialization and storing their results as 
+    instance attributes. This provides a more convenient interface where
+     components can be accessed directly as attributes rather than 
+     calling loading methods each time they are needed.
+    
+    For example, instead of calling `tools.load_inference_model()` each 
+    time, the model can be accessed directly via `tools.inference_model`.
+    
+    Attributes
+    ----------
+    inference_model : keras.Model
+        The loaded model for inference (from load_inference_model).
+    model_meta : dict
+        Dictionary of model metadata (from load_model_meta).
+    inference_encoders : list
+        List of label encoders (from load_inference_encoders).
+    inference_feature_panel : list or None
+        List of features for subsetting data, or None for non-supervised
+        pipelines (from load_inference_feature_panel).
+        
+    Notes
+    -----
+    All methods that start with 'load_' will be automatically called 
+    during initialization, and their return values will be stored as 
+    attributes. The attribute names are derived by removing the 'load_' 
+    prefix from the method name.
     """
     
     def __init__(self, annotation_pipeline, *args, **kwargs):
@@ -879,9 +1533,49 @@ class AutoloadInferenceTools(InferenceTools):
 
 class QueryObj():
     """
-    write: query should be an anndata object
+    Wrapper for AnnData objects to provide standardized access to query 
+    data.
+    
+    This class encapsulates an AnnData object and provides methods for
+    accessing its components in a consistent way for use in inference
+    pipelines. It performs validation to ensure the data structure meets
+    the requirements for inference and offers methods to extract the
+    expression matrix, feature names, and metadata.
+    
+    Attributes
+    ----------
+    query : anndata.AnnData
+        The AnnData object containing query data with expression matrix,
+        cell metadata, and feature metadata.
+        
+    Methods
+    -------
+    X_query(format='csr_matrix')
+        Extract the expression matrix in the specified format.
+    query_features(feature_names_col=None)
+        Get the list of feature names from the query data.
+    features_meta()
+        Get the feature metadata as a pandas DataFrame.
+    cells_meta()
+        Get the cell metadata as a pandas DataFrame.
     """
     def __init__(self, query):
+        """
+        Initialize a QueryObj with an AnnData object.
+        
+        Parameters
+        ----------
+        query : anndata.AnnData
+            AnnData object containing the query data, including an
+            expression matrix in the `.X` slot, cell metadata in `.obs`,
+            and feature metadata in `.var`.
+            
+        Raises
+        ------
+        ValueError
+            If the provided object is not a valid AnnData object with
+            the required components.
+        """
         if not is_valid_anndata_obj(query):
             raise ValueError(
                 "Object should be a valid anndata.AnnData object w. \n"
@@ -892,7 +1586,28 @@ class QueryObj():
 
     def X_query(self, format='csr_matrix'):
         """
-        convert type to csr_matrix
+        Extract the expression matrix in the specified format.
+        
+        The inference process typically requires the expression data in
+        a specific sparse matrix format for memory efficiency and
+        performance.
+        
+        Parameters
+        ----------
+        format : str, default='csr_matrix'
+            The desired format for the expression matrix. Currently,
+            only 'csr_matrix' is supported.
+            
+        Returns
+        -------
+        scipy.sparse.csr_matrix
+            The expression matrix in CSR format.
+            
+        Raises
+        ------
+        ValueError
+            If the requested format is not 'csr_matrix', since other
+            formats are not currently supported.
         """
 
         X_query = self.query.X
@@ -908,7 +1623,22 @@ class QueryObj():
     
     def query_features(self, feature_names_col=None):
         """
-        write
+        Get the list of feature names from the query data.
+        
+        Extracts feature names (e.g., gene identifiers) from the query
+        data, either from the index of the feature metadata DataFrame or
+        from a specified column.
+        
+        Parameters
+        ----------
+        feature_names_col : str, optional
+            Column name in var DataFrame to use for feature names.
+            If None, uses the var_names index.
+            
+        Returns
+        -------
+        list
+            List of feature names as strings.
         """
         if feature_names_col:
             features = self.query.var[feature_names_col].tolist()
@@ -919,7 +1649,21 @@ class QueryObj():
 
     def features_meta(self):
         """
-        write
+        Get the feature metadata as a pandas DataFrame.
+        
+        Provides access to the feature (gene) metadata stored in the
+        AnnData object, containing annotations or properties of each
+        feature in the expression matrix.
+        
+        Returns
+        -------
+        pandas.DataFrame
+            DataFrame containing metadata for each feature.
+            
+        Raises
+        ------
+        AssertionError
+            If the feature metadata is not a pandas DataFrame.
         """
 
         features_meta_df = self.query.var
@@ -932,7 +1676,21 @@ class QueryObj():
 
     def cells_meta(self):
         """
-        write
+        Get the cell metadata as a pandas DataFrame.
+        
+        Provides access to the cell (observation) metadata stored in the
+        AnnData object, containing annotations or properties of each
+        cell in the expression matrix.
+        
+        Returns
+        -------
+        pandas.DataFrame
+            DataFrame containing metadata for each cell.
+            
+        Raises
+        ------
+        AssertionError
+            If the cell metadata is not a pandas DataFrame.
         """
 
         cells_meta_df = self.query.obs
