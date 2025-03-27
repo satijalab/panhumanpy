@@ -675,13 +675,13 @@ def categorize_refinement_type(value):
         - "Match": if value is any other string
         - "Unknown": for any other type
     """
-        if isinstance(value, list):
-            return "Further"
-        elif value == "False":
-            return "No-match"
-        elif isinstance(value, str):
-            return "Match"
-        return "Unknown"
+    if isinstance(value, list):
+        return "Further"
+    elif value == "False":
+        return "No-match"
+    elif isinstance(value, str):
+        return "Match"
+    return "Unknown"
 
 
 def create_anndata(
