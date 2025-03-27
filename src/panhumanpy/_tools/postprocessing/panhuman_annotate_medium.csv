@@ -366,7 +366,7 @@ Immune cell|Lymphoid cell|T/NK cell|T cell|gdT cell,Immune cell|Lymphoid cell|T/
 Immune cell|Myeloid cell|Dendritic cell|cDC|cDC1,Immune cell|Myeloid cell|Dendritic cell
 Immune cell|Myeloid cell|Dendritic cell|cDC|cDC2,Immune cell|Myeloid cell|Dendritic cell
 Immune cell|Myeloid cell|Dendritic cell|pDC,Immune cell|Myeloid cell|Dendritic cell
-Immune cell|Myeloid cell|Monocyte|CD14orCD16 monocyte,Immune cell|Myeloid cell|Monocyte
+Immune cell|Myeloid cell|Monocyte|CD14/CD16 monocyte,Immune cell|Myeloid cell|Monocyte
 Endothelial cell|Tip EC,Endothelial cell
 Immune cell|Hematopoietic precursor cell|EoBaMa Progenitor,Immune cell|Hematopoietic precursor cell
 Immune cell|Hematopoietic precursor cell|GMP|Early GMP,Immune cell|Hematopoietic precursor cell
