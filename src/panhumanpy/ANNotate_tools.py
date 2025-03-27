@@ -130,18 +130,19 @@ def check_normalization(
     else:
         mat = matrix
 
+    mat = mat.toarray()
+    mat_floor = np.floor(mat)
+
+    integer_counts_detect = (not np.any((mat_floor-mat) != 0.))
+    print(
+        "Integer counts detected by panhumanpy.ANNotate : "
+        f"{integer_counts_detect}"
+        )
+
     if normalization_override:
         return True
     else:
-        mat = mat.toarray()
-        mat_floor = np.floor(mat)
-
-        if np.any((mat_floor-mat) != 0.):
-            return True
-        
-        else:
-            return False
-        
+        return not integer_counts_detect
 
 def normalize(
         matrix, 
@@ -190,11 +191,6 @@ def normalize(
         )
 
     if not check_norm:
-        warnings.warn(
-            "Raw counts data provided to Azimuth NN. "
-            "log1p normalizing data after scaling to 10000. \n"
-            "Set normalization_override=False to override normalization."
-        )
         total_counts = matrix.sum(axis=1)
         total_counts = np.array(total_counts).reshape(-1, 1)
 
@@ -208,6 +204,12 @@ def normalize(
         scaled_matrix = matrix.multiply(10000 / total_counts)
         scaled_matrix.data = np.log1p(scaled_matrix.data)
         matrix = scaled_matrix.tocsr()
+
+    print(
+        f"Log-normalization performed by panhumanpy.ANNotate: {not check_norm}"
+        )
+    if not check_norm:
+        print("To override log-normalization, set normalization_override=False")
 
         
     return matrix, check_norm
