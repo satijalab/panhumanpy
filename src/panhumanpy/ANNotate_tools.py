@@ -1705,7 +1705,37 @@ class QueryObj():
 
 class ReadQueryObj(QueryObj):
     """
-    write: to read query from file directly
+    Reads and initializes a QueryObj directly from an AnnData file.
+    
+    This class extends QueryObj to provide functionality for loading 
+    AnnData objects from disk. It validates the file type, reads the 
+    data using the anndata library, and initializes the parent QueryObj 
+    with the loaded data. This simplifies the process of creating query 
+    objects for inference pipelines by handling the file loading step.
+    
+    Parameters
+    ----------
+    query_path : str
+        Path to the AnnData file (.h5ad format) containing the query data.
+        
+    Attributes
+    ----------
+    query_path : str
+        The path to the AnnData file that was loaded.
+    query : anndata.AnnData
+        The loaded AnnData object containing query data with expression 
+        matrix, cell metadata, and feature metadata.
+        
+    Raises
+    ------
+    ValueError
+        If the provided file is not in .h5ad format.
+        
+    Examples
+    --------
+    >>> query_obj = ReadQueryObj("path/to/query_data.h5ad")
+    >>> X = query_obj.X_query()
+    >>> features = query_obj.query_features()
     """
 
     def __init__(self, query_path):
@@ -1722,7 +1752,57 @@ class ReadQueryObj(QueryObj):
 
 class InferenceInputData():
     """
-    class for processing a counts data matrix to input for inference model
+    Processes a counts data matrix into the standardized format required
+     for the inference model.
+    
+    This class handles normalization and feature alignment of single-cell 
+    expression data, preparing it for downstream inference tasks. It 
+    validates input data types, performs normalization, and can align 
+    query features with a reference feature panel template.
+    
+    Parameters
+    ----------
+    X_query : scipy.sparse.csr_matrix
+        Expression matrix in CSR format with cells as rows and features 
+        (genes) as columns.
+    query_features : list of str
+        List of feature names corresponding to the columns in X_query.
+    feature_panel_template : list of str or None
+        Optional reference feature list used for standardizing the 
+        feature space. If provided, the query data will be reordered and
+         subset to match this template.
+    normalization_override : bool, default=False
+        If True, bypasses normalization entirely regardless of whether 
+        the values are integers or not. When False, normalization will 
+        be applied based on the data characteristics.
+    norm_check_batch_size : int, default=1000
+        Batch size used for checking normalization status by checking
+        whether the values in this batch are integers or not.
+        
+    Attributes
+    ----------
+    X_query : scipy.sparse.csr_matrix
+        Normalized expression matrix.
+    query_features : list of str
+        List of feature names from the query data.
+    feature_panel_template : list of str or None
+        Reference feature list for standardization.
+    num_cells : int
+        Number of cells in the query data.
+    template_size : int
+        Number of features in the reference template (if provided).
+    common_features : set
+        Set of features common to both query and template.
+    overlap_percent : float
+        Percentage of template features present in the query data.
+        
+    Raises
+    ------
+    AssertionError
+        If inputs don't match expected types or if there are duplicates 
+        in the feature panel template.
+    UserWarning
+        If feature overlap between query and template is below 20%.
     """
     def __init__(
             self, 
@@ -1787,7 +1867,30 @@ class InferenceInputData():
 
     def reorder_subset_on_feature_template(self):
         """
-        write
+        Reorders and subsets the query data to match the feature panel 
+        template.
+        
+        Aligns the feature dimensions of the query data with the 
+        reference feature panel. Features present in the template but 
+        missing in the query will be filled with zeros. Features present
+         in the query but not in the template will be excluded.
+        
+        Returns
+        -------
+        scipy.sparse.csr_matrix
+            Expression matrix reordered padded and subset to match the 
+            feature panel template. If no template is provided, returns 
+            the original expression matrix.
+            
+        Warns
+        -----
+        UserWarning
+            If no feature panel template was provided.
+            
+        Notes
+        -----
+        This method prints a summary of the query data dimensions and 
+        feature overlap with the reference panel when successful.
         """
         if self.feature_panel_template:
             reordered_X_query = reorder_subset_data_matrix(
@@ -1821,7 +1924,30 @@ class InferenceInputData():
         
     def inference_input(self, annotation_pipeline='supervised'):
         """
-        write: to produce input matrix for passing to inference model
+        Produces the final input matrix for passing to the inference 
+        model.
+        
+        Based on the specified annotation pipeline, this method produces
+        the appropriately formatted input data matrix for the inference 
+        model. Currently only 'supervised' pipeline is supported, which 
+        reorders pads and subsets the query data according to the 
+        feature panel template.
+        
+        Parameters
+        ----------
+        annotation_pipeline : str, default='supervised'
+            The type of annotation pipeline to use. Currently only 
+            'supervised' is supported.
+            
+        Returns
+        -------
+        scipy.sparse.csr_matrix
+            Expression matrix ready for inference.
+            
+        Raises
+        ------
+        ValueError
+            If an unsupported annotation pipeline is specified.
         """
 
         if annotation_pipeline=='supervised':
@@ -1835,8 +1961,48 @@ class InferenceInputData():
 
 class OutputLabels():
     """
-    class for processing inference output labels, annotate fine/medium
-    not included here.
+    Processes and organizes hierarchical labels produced by inference 
+    models.
+    
+    This class handles the post-processing of prediction outputs from 
+    hierarchical classification models. It extracts and organizes 
+    predictions at different levels of the hierarchy, extracts
+    probabilities, and provides methods to access level-specific 
+    information.
+    
+    Parameters
+    ----------
+    labels_pred : numpy.ndarray
+        Predicted hierarchical labels, typically with shape 
+        (num_cells, max_depth).
+    labels_prob : numpy.ndarray
+        Probability scores associated with each prediction.
+    max_depth : int
+        Maximum depth of the hierarchical classification.
+    num_cells : int
+        Number of cells/samples in the query data.
+        
+    Attributes
+    ----------
+    combined_labels : list
+        Combined hierarchical labels for each cell.
+    level_zero_labels : numpy.ndarray
+        Labels at the top level (level 0) of the hierarchy.
+    final_level_labels : numpy.ndarray
+        Labels at the final level determined for each cell.
+    level_zero_softmax_prob : numpy.ndarray
+        Softmax probabilities for the top level predictions.
+    final_level_softmax_prob : numpy.ndarray
+        Softmax probabilities for the final level predictions.
+    full_consistent_hierarchy : list
+        Flags indicating whether each cell has a fully consistent 
+        hierarchy.
+    
+    Raises
+    ------
+    AssertionError
+        If the number of predicted labels doesn't match the number of 
+        cells.
     """
     def __init__(self, labels_pred, labels_prob, max_depth, num_cells):
 
@@ -1890,15 +2056,22 @@ class OutputLabels():
         """
         Get softmax probabilities for a specific hierarchical level.
         
-        Args:
-            level (int): Level to get probabilities for (1-indexed)
+        Parameters
+        ----------
+        level : int
+            Level to get probabilities for (1-indexed).
             
-        Returns:
-            numpy.ndarray: Softmax probabilities for specified level
+        Returns
+        -------
+        numpy.ndarray
+            Softmax probabilities for the specified level.
             
-        Raises:
-            TypeError: If level is not an integer
-            ValueError: If level is out of bounds
+        Raises
+        ------
+        TypeError
+            If level is not an integer.
+        ValueError
+            If level is out of bounds.
         """
         if not isinstance(level, int):
             raise TypeError("level must be an integer")
@@ -1911,14 +2084,41 @@ class OutputLabels():
 
     def level_specific_labels(self, level):
         """
-        level should be 1-indexed
+        Get predicted labels for a specific hierarchical level.
+        
+        Parameters
+        ----------
+        level : int
+            Level to get labels for (1-indexed).
+            
+        Returns
+        -------
+        numpy.ndarray
+            Predicted labels for the specified level.
+            
+        Raises
+        ------
+        IndexError
+            If level is out of bounds.
         """
         labels = self._level_specific_labels_and_final_level[level-1]
         return labels
 
     def all_level_labels(self):
         """
-        write: labels for all levels
+        Get predicted labels for all hierarchical levels.
+        
+        Returns
+        -------
+        list of numpy.ndarray
+            List containing the predicted labels for each level in the 
+            hierarchy, organized by level.
+            
+        Notes
+        -----
+        This method provides a convenient way to access all hierarchical
+         levels at once, which can be useful for comprehensive analysis 
+         or visualization of the hierarchical classification results.
         """
         all_level_labels = [
             self.level_specific_labels(level) 
@@ -1930,7 +2130,61 @@ class OutputLabels():
     
 class PostprocessingAzimuthLabels(OutputLabels):
     """
-    subclassing OutputLabels for postprocessing
+    Specialized class for refining and postprocessing Azimuth labels.
+    
+    This class extends OutputLabels to provide additional functionality 
+    for refining cell type annotations at different levels of granularity
+     (broad, medium, fine). It applies post-processing rules to improve 
+     annotation quality based on hierarchical consistency, reference 
+     annotations, and confidence scores.
+    
+    Parameters
+    ----------
+    labels_pred : numpy.ndarray
+        Predicted hierarchical labels, typically with shape 
+        (num_cells, max_depth).
+    labels_prob : numpy.ndarray
+        Probability scores associated with each prediction.
+    max_depth : int
+        Maximum depth of the hierarchical classification.
+    num_cells : int
+        Number of cells/samples in the query data.
+    softmax_probs : list of numpy.ndarray
+        Softmax probability arrays for each level of the hierarchy.
+    encoders : list
+        List of label encoders used during model training/inference.
+    refine_level : str
+        Level of refinement to apply ('broad', 'medium', or 'fine').
+        
+    Attributes
+    ----------
+    softmax_probs : list of numpy.ndarray
+        Softmax probability arrays for each level.
+    refine_level : str
+        Selected level of refinement.
+    encoders : list
+        Label encoders for each hierarchical level.
+    annotations_df : pandas.DataFrame
+        Reference annotation mapping data.
+    refined_annotations_file_name : str
+        Filename of the reference annotation file.
+        
+    Raises
+    ------
+    ValueError
+        If refine_level is not one of the valid options.
+    RuntimeError
+        If the postprocessing module cannot be found.
+    FileNotFoundError
+        If the annotation file is not found.
+    ValueError
+        If the annotation file is missing required columns.
+        
+    Notes
+    -----
+    This class uses several private methods (prefixed with double 
+    underscore) for internal processing. Users should primarily interact
+     with the public `refine_labels()` method.
     """
     VALID_REFINE_LEVELS = ['broad', 'medium', 'fine']
     
@@ -1995,6 +2249,14 @@ class PostprocessingAzimuthLabels(OutputLabels):
             )
 
     def __combined_labels_w_consistency(self):
+        """
+        Private method: Creates labels with consistency flag.
+        
+        Returns
+        -------
+        list of str
+            Combined labels with appended consistency flag.
+        """
 
         labels_w_consistency_flag = [
             f"{self.combined_labels[i]}_{self.full_consistent_hierarchy[i]}"
@@ -2004,6 +2266,14 @@ class PostprocessingAzimuthLabels(OutputLabels):
         return labels_w_consistency_flag
 
     def __encoders_dict(self):
+        """
+        Private method: Creates a dictionary mapping of label encoders.
+        
+        Returns
+        -------
+        dict
+            Dictionary mapping level numbers to label encodings.
+        """
 
         enc_dicts = {}
         for i, encoder in enumerate(self.encoders):
@@ -2015,6 +2285,14 @@ class PostprocessingAzimuthLabels(OutputLabels):
         return enc_dicts
 
     def __annotations_dict(self):
+        """
+        Private method: Creates a dictionary of annotation mappings.
+        
+        Returns
+        -------
+        dict
+            Dictionary mapping original labels to refined annotations.
+        """
 
         annot_dict = dict(
             zip(
@@ -2028,6 +2306,15 @@ class PostprocessingAzimuthLabels(OutputLabels):
         return annot_dict
 
     def __softmax_arrays_dict(self):
+        """
+        Private method: Creates a dictionary of softmax probability 
+        arrays.
+        
+        Returns
+        -------
+        dict
+            Dictionary mapping array identifiers to softmax arrays.
+        """
 
         softmax = {
             f"arr_{i}": np.array(row) for i, row 
@@ -2037,6 +2324,19 @@ class PostprocessingAzimuthLabels(OutputLabels):
         return softmax
 
     def __map_to_annotate_refine(self, label): 
+        """
+        Private method: Maps a label to its refined annotation.
+        
+        Parameters
+        ----------
+        label : str
+            Original label with consistency flag.
+            
+        Returns
+        -------
+        str or list
+            Refined label or list of potential refined labels.
+        """
         label_split = label.split("_")
         flag = label_split[-1]
         label = '_'.join(label_split[:-1])
@@ -2062,6 +2362,14 @@ class PostprocessingAzimuthLabels(OutputLabels):
         return "False"
 
     def __refinement_type(self):
+        """
+        Private method: Determines the type of refinement for each cell.
+        
+        Returns
+        -------
+        list
+            List of refinement type categories for each cell.
+        """
 
         labels_w_consistency_flag = self.__combined_labels_w_consistency()
 
@@ -2074,6 +2382,16 @@ class PostprocessingAzimuthLabels(OutputLabels):
         return refine_type
 
     def __softmax_classes_dict(self):
+        """
+        Private method: Creates a dictionary of softmax probabilities by
+         class.
+        
+        Returns
+        -------
+        dict
+            Nested dictionary mapping hierarchy levels and classes to 
+            probabilities.
+        """
 
         precomputed_softmax = {}
 
@@ -2092,6 +2410,29 @@ class PostprocessingAzimuthLabels(OutputLabels):
         return precomputed_softmax
 
     def refine_labels(self):
+        """
+        Refines raw predicted labels using reference annotations and 
+        confidence scores.
+        
+        This method applies a multi-step refinement process to improve 
+        annotation quality:
+        1. Identifies labels with consistent hierarchies
+        2. Maps consistent labels to reference annotations
+        3. For ambiguous cases, selects the annotation with highest 
+            confidence
+        4. Returns the most specific (leaf) annotation level
+        
+        Returns
+        -------
+        list of str
+            Refined cell type labels at the specified refinement level.
+            
+        Notes
+        -----
+        The refinement process prioritizes hierarchical consistency and 
+        reference annotations while using confidence scores to resolve 
+        ambiguities.
+        """
         
         labels_w_consistency_flag = self.__combined_labels_w_consistency()
         labels_options = pd.Series(labels_w_consistency_flag).apply(
@@ -2135,7 +2476,42 @@ class PostprocessingAzimuthLabels(OutputLabels):
 
 class Embeddings():
     """
-    write
+    Extracts embeddings from intermediate layers of a neural network 
+    model.
+    
+    This class facilitates the extraction of feature embeddings from a 
+    specified intermediate layer of a neural network model, which can be
+     useful for dimensionality reduction, visualization, or downstream 
+     analysis tasks.
+    
+    Parameters
+    ----------
+    model : tensorflow.keras.Model
+        The neural network model from which to extract embeddings.
+    embedding_layer_name : str
+        The name of the intermediate layer to extract embeddings from.
+        
+    Attributes
+    ----------
+    model : tensorflow.keras.Model
+        The original neural network model.
+    embedding_layer : str
+        The name of the layer used for embedding extraction.
+    embedding_model : tensorflow.keras.Model
+        A derived model that outputs the embeddings from the specified 
+        layer.
+        
+    Raises
+    ------
+    AssertionError
+        If the specified embedding layer name is not found in the model.
+        
+    Notes
+    -----
+    The class creates a new model that takes the same inputs as the 
+    original model but outputs the activations from the specified 
+    embedding layer. This approach allows for efficient extraction of 
+    embeddings without modifying the original model.
     """
     def __init__(self, model, embedding_layer_name):
         self.model = model
@@ -2153,9 +2529,31 @@ class Embeddings():
 
     def embeddings(self, X_query, batch_size):
         """
-        Returns embeddings from the specified intermediate layer of the 
-        Azimuth Neural Network model using the auxilliary model provided 
-        by the function embedding_extractor_model(model, embedding_layer).
+        Extract embeddings from the specified layer for input data.
+        
+        This method processes the input data in batches to efficiently
+        generate embeddings while managing memory usage. Each batch is
+        processed separately, and the results are concatenated.
+        
+        Parameters
+        ----------
+        X_query : scipy.sparse.csr_matrix
+            Input data matrix where each row represents a cell/sample.
+        batch_size : int
+            Number of samples to process in each batch.
+            
+        Returns
+        -------
+        numpy.ndarray
+            Array of embeddings for each input sample. The shape will be
+            (n_samples, embedding_dimensions) where embedding_dimensions
+            is determined by the size of the specified layer's output.
+            
+        Notes
+        -----
+        The method uses a `MemoryContext` context manager to help manage
+        memory usage when processing large datasets. It explicitly 
+        deletes intermediate results to minimize memory consumption.
         """
         print("Extracting azimuth embeddings:")
         embedding_batches=[]
@@ -2186,7 +2584,52 @@ class Embeddings():
 
 class Umaps():
     """
-    for creating umaps
+    Creates UMAP (Uniform Manifold Approximation and Projection) 
+    embeddings for dimensionality reduction.
+    
+    This class provides a standardized interface for creating UMAP 
+    embeddings from high-dimensional data. UMAP is a dimensionality 
+    reduction technique that can be used for visualization, 
+    preprocessing, or exploratory data analysis.
+    
+    Parameters
+    ----------
+    n_neighbors : int
+        The size of the local neighborhood used for manifold 
+        approximation. Larger values result in more global structure 
+        being preserved at the loss of detailed local structure.
+    n_components : int
+        The dimension of the embedding space. Typically 2 for 
+        visualization purposes.
+    metric : str or callable
+        The metric to use for distance computation in the input space.
+    min_dist : float
+        The minimum distance between points in the embedding space.
+        Smaller values emphasize local structure.
+    umap_lr : float
+        The learning rate for the optimization process.
+    umap_seed : int
+        Random seed for reproducibility.
+    spread : float
+        The scale of the embedding. Larger values spread points further 
+        apart.
+    verbose : bool
+        Whether to display progress information during fitting.
+    init : str
+        How to initialize the embedding. Options include 'spectral', 
+        'random', etc.
+        
+    Attributes
+    ----------
+    umap_model : umap.UMAP
+        The underlying UMAP model instance with the specified parameters.
+        
+    Notes
+    -----
+    The UMAP algorithm is a powerful dimensionality reduction technique 
+    that preserves both local and global structure in the data. It is 
+    particularly useful for visualizing high-dimensional data such as 
+    single-cell genomics data.
     """
     def __init__(
         self, 
@@ -2225,7 +2668,47 @@ class Umaps():
 
     def create_umap(self, input_data):
         """
-        write
+        Generate UMAP embeddings from input data.
+        
+        This method fits the UMAP model to the input data and returns
+        the lower-dimensional representation. It uses a memory management
+        context to help handle large datasets efficiently.
+        
+        Parameters
+        ----------
+        input_data : numpy.ndarray or scipy.sparse.csr_matrix
+            The high-dimensional input data to be embedded.
+            Each row represents a sample and each column represents a 
+            feature.
+            
+        Returns
+        -------
+        numpy.ndarray
+            The lower-dimensional embedding of the input data.
+            Shape will be (n_samples, n_components).
+            
+        Notes
+        -----
+        This method can be memory-intensive for large datasets.
+        The MemoryContext is used to help manage memory resources
+        during the UMAP transformation process.
+        
+        Examples
+        --------
+        >>> umap_obj = Umaps(
+        ...                 n_neighbors=15, 
+        ...                 n_components=2, 
+        ...                 metric='euclidean',
+        ...                 min_dist=0.1, 
+        ...                 umap_lr=1.0, 
+        ...                 umap_seed=42,
+        ...                 spread=1.0, 
+        ...                 verbose=False, 
+        ...                 init='spectral'
+        ...                 )
+        >>> embeddings = umap_obj.create_umap(high_dim_data)
+        >>> # embeddings can now be used for visualization or further 
+        >>> # analysis
         """
         
         with MemoryContext():
@@ -2236,7 +2719,60 @@ class Umaps():
 
 class EmbeddingsAndUmap(Embeddings, Umaps):
     """
-    write
+    Combined class for generating neural network embeddings and UMAP 
+    dimensionality reduction.
+    
+    This class inherits from both Embeddings and Umaps to provide a 
+    streamlined workflow for extracting intermediate layer embeddings 
+    from a neural network and then applying UMAP dimensionality 
+    reduction to these embeddings. This is particularly useful for 
+    visualization and exploration of high-dimensional
+    neural network representations.
+    
+    Parameters
+    ----------
+    model : tensorflow.keras.Model
+        The neural network model from which to extract embeddings.
+    embedding_layer_name : str
+        The name of the intermediate layer to extract embeddings from.
+    n_neighbors : int
+        The size of the local neighborhood used for manifold 
+        approximation in UMAP.
+    n_components : int
+        The dimension of the UMAP embedding space (typically 2 for 
+        visualization).
+    metric : str or callable
+        The metric to use for distance computation in the input space.
+    min_dist : float
+        The minimum distance between points in the embedding space.
+    umap_lr : float
+        The learning rate for the UMAP optimization process.
+    umap_seed : int
+        Random seed for UMAP reproducibility.
+    spread : float
+        The scale of the UMAP embedding.
+    verbose : bool
+        Whether to display progress information during UMAP fitting.
+    init : str
+        How to initialize the UMAP embedding.
+        
+    Attributes
+    ----------
+    model : tensorflow.keras.Model
+        The original neural network model.
+    embedding_layer : str
+        The name of the layer used for embedding extraction.
+    embedding_model : tensorflow.keras.Model
+        A derived model that outputs the embeddings from the specified 
+        layer.
+    umap_model : umap.UMAP
+        The UMAP model instance with the specified parameters.
+        
+    Notes
+    -----
+    This class combines the functionality of the Embeddings and Umaps 
+    classes to provide a convenient interface for the common task of 
+    visualizing neural network embeddings using UMAP.
     """
     def __init__(
         self,
@@ -2271,7 +2807,63 @@ class EmbeddingsAndUmap(Embeddings, Umaps):
 
     def create_embeddings_and_umap(self, X_query, batch_size):
         """
-        write
+        Generate both neural network embeddings and their UMAP 
+        representation.
+        
+        This method performs a two-step process:
+        1. Extract embeddings from the specified neural network layer
+        2. Apply UMAP dimensionality reduction to these embeddings
+        
+        The method also calculates and reports the sparsity of the 
+        embeddings, which can be useful diagnostic information.
+        
+        Parameters
+        ----------
+        X_query : scipy.sparse.csr_matrix
+            Input data matrix where each row represents a cell/sample.
+        batch_size : int
+            Number of samples to process in each batch when generating 
+            embeddings.
+            
+        Returns
+        -------
+        tuple
+            A tuple containing two elements:
+            - numpy.ndarray: The original embeddings from the neural 
+                                network
+            - numpy.ndarray: The UMAP embeddings derived from the 
+                                original embeddings
+            
+        Notes
+        -----
+        The combination of neural network embeddings and UMAP is 
+        commonly used in single-cell analysis to visualize 
+        high-dimensional representations in a 2D space while preserving 
+        both local and global structure.
+        
+        Examples
+        --------
+        >>> embeddings_umap = EmbeddingsAndUmap(
+        ...     model=my_model, 
+        ...     embedding_layer_name='dense_2',
+        ...     n_neighbors=15, 
+        ...     n_components=2, 
+        ...     metric='euclidean',
+        ...     min_dist=0.1, 
+        ...     umap_lr=1.0, 
+        ...     umap_seed=42,
+        ...     spread=1.0, 
+        ...     verbose=False, 
+        ...     init='spectral'
+        ... )
+        >>> (
+        ...     embeddings, 
+        ...     umap_coords
+        ...     ) = embeddings_umap.create_embeddings_and_umap(
+        ...     X_query=input_data, 
+        ...     batch_size=256
+        ... )
+        >>> # umap_coords can now be used for visualization
         """
         
         em = self.embeddings(X_query, batch_size)
