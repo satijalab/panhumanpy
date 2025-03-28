@@ -28,7 +28,57 @@ configure_once()
 
 class AzimuthNN_base(AutoloadInferenceTools):
     """
-    object for low-level interactive usage
+    Base class for low-level interactive usage of the Azimuth neural 
+    network annotation pipeline.
+    
+    This class provides a comprehensive framework for single-cell 
+    RNA-seq annotation using neural network models. It handles the 
+    complete workflow from data loading and preprocessing to inference, 
+    post-processing, and result visualization. This includes functionality 
+    for extracting embeddings, generating UMAP visualizations, and refining
+    annotations at different levels of granularity.
+    
+    Parameters
+    ----------
+    annotation_pipeline : str, default='supervised'
+        The type of annotation pipeline to use.
+    eval_batch_size : int, default=8192
+        Batch size for inference and embedding generation.
+        
+    Attributes
+    ----------
+    query : anndata.AnnData or None
+        The AnnData object if loaded.
+    X_query : scipy.sparse.csr_matrix or None
+        Expression matrix in CSR format.
+    query_features : list or None
+        List of feature names.
+    features_meta : pandas.DataFrame or None
+        Feature metadata.
+    cells_meta : pandas.DataFrame or None
+        Cell metadata.
+    num_cells : int or None
+        Number of cells in the query.
+    processed_outputs : dict or None
+        Processed inference results.
+    embeddings : dict
+        Dictionary of extracted embeddings.
+    umaps : dict
+        Dictionary of generated UMAP coordinates.
+        
+    Raises
+    ------
+    TypeError
+        If input parameters are not of the correct type.
+    RuntimeError
+        If model metadata fails to load.
+        
+    Notes
+    -----
+    This class is designed for programmatic use and provides 
+    fine-grained control over each step of the annotation pipeline. 
+    Consider using a higher-level interface for convenience if a 
+    standard workflow is sufficient for your needs.
     """
     def __init__(
         self, 
@@ -81,16 +131,32 @@ class AzimuthNN_base(AutoloadInferenceTools):
         cells_meta
         ):
         """
-        Load query data directly.
+        Load query data directly from expression matrix and metadata.
         
-        Args:
-            X_query: scipy.sparse.csr_matrix, Expression matrix
-            query_features: list of str, Feature names
-            cells_meta: pandas.DataFrame, Cell metadata
+        This method allows for direct loading of pre-processed 
+        expression data without requiring an AnnData object. This is 
+        useful for integration with custom preprocessing pipelines.
+        
+        Parameters
+        ----------
+        X_query : scipy.sparse.csr_matrix
+            Expression matrix with cells as rows and features as columns.
+        query_features : list of str
+            List of feature names corresponding to columns in X_query.
+        cells_meta : pandas.DataFrame
+            Cell metadata with rows corresponding to cells in X_query.
             
-        Raises:
-            TypeError: If inputs are not of correct type
-            ValueError: If dimensions don't match
+        Raises
+        ------
+        TypeError
+            If inputs are not of correct type.
+        ValueError
+            If dimensions of inputs don't match.
+            
+        Notes
+        -----
+        This method creates a minimal features_meta DataFrame based on 
+        the provided feature names.
         """
         if not isinstance(X_query, csr_matrix):
             raise TypeError("X_query must be a scipy.sparse.csr_matrix")
@@ -131,7 +197,20 @@ class AzimuthNN_base(AutoloadInferenceTools):
         feature_names_col=None
         ):
         """
-        reading a query AnnData obj
+        Load query data from an AnnData object.
+        
+        Parameters
+        ----------
+        query_arg : anndata.AnnData
+            AnnData object containing expression data and metadata.
+        feature_names_col : str, optional
+            Column in var DataFrame to use for feature names.
+            If None, uses the var_names index.
+            
+        Notes
+        -----
+        This method extracts the expression matrix, feature names,
+        and metadata from the provided AnnData object.
         """
         query_obj = QueryObj(query_arg)
 
@@ -149,7 +228,25 @@ class AzimuthNN_base(AutoloadInferenceTools):
         feature_names_col=None
         ):
         """
-        reading a query from disk
+        Load query data from an H5AD file on disk.
+        
+        Parameters
+        ----------
+        query_filepath : str
+            Path to the H5AD file containing the query data.
+        feature_names_col : str, optional
+            Column in var DataFrame to use for feature names.
+            If None, uses the var_names index.
+            
+        Raises
+        ------
+        ValueError
+            If the file is not in H5AD format.
+            
+        Notes
+        -----
+        This method reads the H5AD file from disk and extracts the
+        necessary components for inference.
         """
         query_obj = ReadQueryObj(query_filepath)
 
@@ -166,6 +263,39 @@ class AzimuthNN_base(AutoloadInferenceTools):
         normalization_override=False,
         norm_check_batch_size=1000
         ):
+        """
+        Process the query data to prepare it for inference.
+        
+        This method prepares the expression data for the inference model 
+        according to the specified annotation pipeline. The processing steps
+        vary depending on the pipeline type, potentially including 
+        normalization, feature selection, dimensionality reduction, or 
+        other transformations.
+        
+        Parameters
+        ----------
+        normalization_override : bool, default=False
+            If True, bypasses normalization entirely regardless of
+            whether the values are integers or not.
+        norm_check_batch_size : int, default=1000
+            Batch size for checking normalization status.
+            
+        Raises
+        ------
+        TypeError
+            If parameters are not of the correct type.
+            
+        Notes
+        -----
+        This method must be called after loading query data and before
+        running inference or extracting embeddings. The specific processing
+        steps depend on the annotation_pipeline specified during 
+        initialization.
+        
+        Currently, only the 'supervised' annotation pipeline is implemented,
+        which normalizes the expression data and aligns it with a reference
+        feature panel.
+        """
 
         if not isinstance(normalization_override, bool):
             raise TypeError("normalization override must be a bool")
@@ -187,6 +317,29 @@ class AzimuthNN_base(AutoloadInferenceTools):
         
 
     def run_inference_model(self):
+        """
+        Run the inference model on the processed query data.
+        
+        This method executes the neural network inference to generate
+        cell type predictions.
+        
+        Returns
+        -------
+        dict
+            Dictionary of raw inference outputs including hierarchical
+            label predictions and probabilities.
+            
+        Raises
+        ------
+        AssertionError
+            If input matrix has not been initialized by calling 
+            process_query().
+            
+        Notes
+        -----
+        The raw outputs should typically be processed using the 
+        process_outputs() method before further use downstream.
+        """
 
         assert self._inference_input_matrix is not None, (
             "Input matrix not initialized. Call process_query() first."
@@ -206,6 +359,33 @@ class AzimuthNN_base(AutoloadInferenceTools):
 
 
     def process_outputs(self, mode='minimal'):
+        """
+        Process raw inference outputs into usable predictions.
+        
+        This method organizes the raw inference outputs into a structured
+        dictionary of predictions at various hierarchical levels.
+        
+        Parameters
+        ----------
+        mode : str, default='minimal'
+            Processing mode: 'minimal' provides essential outputs,
+            'detailed' includes additional information for all levels.
+            
+        Returns
+        -------
+        dict
+            Dictionary of processed outputs including hierarchical labels,
+            level-specific labels, and confidence scores.
+            
+        Raises
+        ------
+        AssertionError
+            If mode is not 'minimal' or 'detailed'.
+            
+        Notes
+        -----
+        This method should be called after run_inference_model().
+        """
 
         assert mode in ['minimal','detailed'], (
             "mode for output processing should be either "
@@ -252,6 +432,34 @@ class AzimuthNN_base(AutoloadInferenceTools):
         return self.processed_outputs
 
     def refine_labels(self, refine_level):
+        """
+        Refine hierarchical labels to a consistent level of granularity.
+        
+        This method applies post-processing rules to standardize 
+        annotations at the specified level of granularity (broad, 
+        medium, or fine).
+        
+        Parameters
+        ----------
+        refine_level : str
+            Level of refinement: 'broad', 'medium', or 'fine'.
+            
+        Returns
+        -------
+        list
+            List of refined labels at the specified level.
+            
+        Raises
+        ------
+        AssertionError
+            If refine_level is not valid or inference hasn't been run.
+            
+        Notes
+        -----
+        For 'broad' level, this returns the top-level annotations.
+        For 'medium' and 'fine' levels, specialized refinement is 
+        applied.
+        """
 
         assert refine_level in ['broad','medium','fine'], (
             "refine_level should be 'broad', 'medium', or 'fine'."
@@ -299,6 +507,32 @@ class AzimuthNN_base(AutoloadInferenceTools):
         return  results
 
     def inference_model_embeddings(self, embedding_layer_name):
+        """
+        Extract embeddings from an intermediate layer of the inference 
+        model.
+        
+        Parameters
+        ----------
+        embedding_layer_name : str
+            Name of the layer to extract embeddings from.
+            
+        Returns
+        -------
+        numpy.ndarray
+            Embeddings from the specified layer for all query cells.
+            
+        Raises
+        ------
+        RuntimeError
+            If inference model is not found.
+        AssertionError
+            If input matrix has not been initialized.
+            
+        Notes
+        -----
+        The embeddings are stored in the embeddings dictionary with a 
+        key that combines the model name and layer name.
+        """
 
         if not hasattr(self, 'inference_model'):
             raise RuntimeError("inference_model not found")
@@ -334,6 +568,47 @@ class AzimuthNN_base(AutoloadInferenceTools):
         verbose=True,
         init='spectral'
         ):
+        """
+        Generate UMAP coordinates from existing embeddings.
+        
+        Parameters
+        ----------
+        embedding_layer_name : str
+            Name of the layer whose embeddings should be used.
+        n_neighbors : int, default=30
+            Number of neighbors for UMAP.
+        n_components : int, default=2
+            Number of dimensions for UMAP output.
+        metric : str, default='cosine'
+            Distance metric for UMAP.
+        min_dist : float, default=0.3
+            Minimum distance parameter for UMAP.
+        umap_lr : float, default=1.0
+            Learning rate for UMAP.
+        umap_seed : int, default=42
+            Random seed for reproducibility.
+        spread : float, default=1.0
+            Spread parameter for UMAP.
+        verbose : bool, default=True
+            Whether to display progress during UMAP calculation.
+        init : str, default='spectral'
+            Initialization method for UMAP.
+            
+        Returns
+        -------
+        numpy.ndarray
+            UMAP coordinates for all query cells.
+            
+        Raises
+        ------
+        AssertionError
+            If the specified embeddings have not been generated.
+            
+        Notes
+        -----
+        This method requires that embeddings have already been generated
+        using inference_model_embeddings().
+        """
 
         embedding_key_base = (
             f"{self.inference_model_name}_{embedding_layer_name}"
@@ -376,6 +651,53 @@ class AzimuthNN_base(AutoloadInferenceTools):
         verbose=True,
         init='spectral'
         ):
+        """
+        Generate both embeddings and UMAP coordinates in one operation.
+        
+        This is a convenience method that combines the functionality of
+        inference_model_embeddings() and inference_model_umaps().
+        
+        Parameters
+        ----------
+        embedding_layer_name : str
+            Name of the layer to extract embeddings from.
+        n_neighbors : int, default=30
+            Number of neighbors for UMAP.
+        n_components : int, default=2
+            Number of dimensions for UMAP output.
+        metric : str, default='cosine'
+            Distance metric for UMAP.
+        min_dist : float, default=0.3
+            Minimum distance parameter for UMAP.
+        umap_lr : float, default=1.0
+            Learning rate for UMAP.
+        umap_seed : int, default=42
+            Random seed for reproducibility.
+        spread : float, default=1.0
+            Spread parameter for UMAP.
+        verbose : bool, default=True
+            Whether to display progress during UMAP calculation.
+        init : str, default='spectral'
+            Initialization method for UMAP.
+            
+        Returns
+        -------
+        tuple
+            Tuple containing (embeddings, umap_coordinates).
+            
+        Raises
+        ------
+        RuntimeError
+            If inference model is not found.
+        ValueError
+            If input matrix has not been initialized.
+            
+        Notes
+        -----
+        This method may be more efficient than calling the two component
+        methods separately, depending on usage, as it avoids storing 
+        intermediate results in memory twice.
+        """
 
         if not hasattr(self, 'inference_model'):
             raise RuntimeError("inference_model not found")
@@ -414,6 +736,32 @@ class AzimuthNN_base(AutoloadInferenceTools):
         return em, umap_em
 
     def update_cells_meta(self):
+        """
+        Update cells_meta DataFrame with inference results.
+        
+        This method adds or updates columns in the cell metadata DataFrame
+        with inference results, including predictions and refined labels.
+        
+        Returns
+        -------
+        pandas.DataFrame
+            Updated cell metadata DataFrame.
+            
+        Raises
+        ------
+        TypeError
+            If cells_meta is not a pandas DataFrame.
+        RuntimeError
+            If num_cells attribute is not set.
+        ValueError
+            If the number of values doesn't match the number of cells.
+            
+        Notes
+        -----
+        If both broad level annotations and level_zero_labels exist,
+        the latter is dropped to avoid duplication.
+        """
+
         if not isinstance(self.cells_meta, pd.DataFrame):
             raise TypeError(
                 "Query cell meta is not available as pandas dataframe"
@@ -471,6 +819,30 @@ class AzimuthNN_base(AutoloadInferenceTools):
 
 
     def pack_adata(self, save_path = None):
+        """
+        Create an AnnData object with all results and optionally save to
+         disk.
+        
+        This method packages all results (expression data, metadata, 
+        embeddings, and UMAP coordinates) into a unified AnnData object 
+        for further analysis or visualization.
+        
+        Parameters
+        ----------
+        save_path : str, optional
+            Path to save the AnnData object as an H5AD file.
+            If None, the object is created but not saved.
+            
+        Returns
+        -------
+        anndata.AnnData
+            AnnData object containing all query data and results.
+            
+        Notes
+        -----
+        If the specified save_path already exists, a timestamp is 
+        appended to the filename to prevent overwriting.
+        """
 
         all_embeddings = {**self.embeddings, **self.umaps}
 
