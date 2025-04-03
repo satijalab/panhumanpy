@@ -44,7 +44,7 @@ Command-line Usage
 -----------------
 This module can be run as a standalone script to annotate h5ad files:
 
-    python -m panhumanpy.ANNotate /path/to/input.h5ad [options]
+    annotate /path/to/input.h5ad [options]
 
 Required positional argument:
     filepath               Path to input h5ad file containing 
@@ -94,7 +94,7 @@ that name already exists, a timestamp (YYYYMMDD_HHMMSS) will be
 automatically appended to prevent overwriting existing results.
 
 Example command:
-    python -m panhumanpy.ANNotate my_cells.h5ad -fn feature_name -ebs 
+    annotate my_cells.h5ad -fn feature_name -ebs 
     4096 -nc 3
 """
 
