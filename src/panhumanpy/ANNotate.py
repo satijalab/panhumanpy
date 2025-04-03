@@ -1664,13 +1664,8 @@ def arg_parse_in():
     parser.add_argument(
                         "-norm",
                         "--normalization_override", 
-                        #default=False,
                         action = "store_true",
-                        help=(
-                            "is the counts data lop1p normalized after "
-                            "scaling to 10k? defaults to False"
-                        ) 
-                        #type=bool
+                        help="Override normalisation."
                         )
 
     parser.add_argument(
@@ -1699,37 +1694,23 @@ def arg_parse_in():
     parser.add_argument(
                         "-rf",
                         "--refine_labels",
-                        #default=True,
-                        action = "store_true",
-                        help=(
-                            "do you want to refine annotations? "
-                            "default is True"
-                        )
-                        #type=bool,
+                        action = "store_false",
+                        help="Skip label refinement."
                         )
     
     parser.add_argument(
                         "-em",
                         "--extract_embeddings",
-                        #default=True,
-                        action = "store_true",
-                        help=(
-                            "extract embeddings? defaults to True"
-                        )
-                        #type=bool
+                        action = "store_false",
+                        help="Skip embedding extraction"
                         )
                         
     
     parser.add_argument(
                         "-umap",
                         "--umap_embeddings",
-                        #default=True,
-                        action = "store_true",
-                        help=(
-                            "specify if you want umap embeddings, "
-                            "defaults to True"
-                        )
-                        #type=bool
+                        action = "store_false",
+                        help="Skip UMAP creation"
                         )
     
     
@@ -1813,12 +1794,8 @@ def arg_parse_in():
     parser.add_argument(
                         "-uv",
                         "--umap_verbose",
-                        #default=True,
                         action="store_false",
-                        help=("verbose param for umaps, "
-                                "defaults to True"
-                        )
-                        #type=bool
+                        help="Hide UMAP progress"
                         )
     
     parser.add_argument(
@@ -1834,9 +1811,9 @@ def arg_parse_in():
     
     parser.set_defaults(
         normalization_override=False,
-        refine_labels=False,
-        extract_embeddings=False,
-        umap_embeddings=False,
+        refine_labels=True,
+        extract_embeddings=True,
+        umap_embeddings=True,
         umap_verbose=True
     )
     
