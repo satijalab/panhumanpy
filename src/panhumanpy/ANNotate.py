@@ -1723,7 +1723,7 @@ def arg_parse_in():
                         default=True,
                         help=(
                             "specify if you want umap embeddings, "
-                            "defaults to False"
+                            "defaults to True"
                         ),
                         type=bool
                         )
