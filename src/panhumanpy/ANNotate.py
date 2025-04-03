@@ -358,7 +358,7 @@ class AzimuthNN_base(AutoloadInferenceTools):
     def process_query(
         self,
         normalization_override=False,
-        norm_check_batch_size=1000
+        norm_check_batch_size=100
         ):
         """
         Process the query data to prepare it for inference.
@@ -522,8 +522,9 @@ class AzimuthNN_base(AutoloadInferenceTools):
         }
 
         if mode=='detailed':
-            self.processed_outputs['all_level_labels'] = (
-                output_processing_class.all_level_labels()
+            for i in range(1, self.max_depth):
+                self.processed_outputs[f'level_{i}_labels'] = (
+                output_processing_class.all_level_labels()[i]
             )
 
         return self.processed_outputs
@@ -1043,7 +1044,7 @@ class AzimuthNN(AzimuthNN_base):
         annotation_pipeline='supervised',
         eval_batch_size=8192,
         normalization_override=False,
-        norm_check_batch_size=1000,
+        norm_check_batch_size=100,
         output_mode='minimal'
         ):
 
@@ -1674,7 +1675,7 @@ def arg_parse_in():
     parser.add_argument(
                         "-ncbs",
                         "--norm_check_batch_size", 
-                        default=1000,
+                        default=100,
                         help=(
                             "enter the number of cells over which "
                             "normalization will be verified, defaults "
