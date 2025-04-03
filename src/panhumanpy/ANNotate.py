@@ -1664,12 +1664,13 @@ def arg_parse_in():
     parser.add_argument(
                         "-norm",
                         "--normalization_override", 
-                        default=False,
+                        #default=False,
+                        action = "store_true",
                         help=(
                             "is the counts data lop1p normalized after "
                             "scaling to 10k? defaults to False"
-                        ), 
-                        type=bool
+                        ) 
+                        #type=bool
                         )
 
     parser.add_argument(
@@ -1698,34 +1699,37 @@ def arg_parse_in():
     parser.add_argument(
                         "-rf",
                         "--refine_labels",
-                        default=True,
+                        #default=True,
+                        action = "store_true",
                         help=(
                             "do you want to refine annotations? "
                             "default is True"
-                        ),
-                        type=bool,
+                        )
+                        #type=bool,
                         )
     
     parser.add_argument(
                         "-em",
                         "--extract_embeddings",
-                        default=True,
+                        #default=True,
+                        action = "store_true",
                         help=(
                             "extract embeddings? defaults to True"
-                        ),
-                        type=bool
+                        )
+                        #type=bool
                         )
                         
     
     parser.add_argument(
                         "-umap",
                         "--umap_embeddings",
-                        default=True,
+                        #default=True,
+                        action = "store_true",
                         help=(
                             "specify if you want umap embeddings, "
                             "defaults to True"
-                        ),
-                        type=bool
+                        )
+                        #type=bool
                         )
     
     
@@ -1809,11 +1813,12 @@ def arg_parse_in():
     parser.add_argument(
                         "-uv",
                         "--umap_verbose",
-                        default=True,
+                        #default=True,
+                        action="store_false",
                         help=("verbose param for umaps, "
                                 "defaults to True"
-                        ),
-                        type=bool
+                        )
+                        #type=bool
                         )
     
     parser.add_argument(
@@ -1826,6 +1831,14 @@ def arg_parse_in():
                         ),
                         type=str
                         )
+    
+    parser.set_defaults(
+        normalization_override=False,
+        refine_labels=False,
+        extract_embeddings=False,
+        umap_embeddings=False,
+        umap_verbose=True
+    )
     
     
     args = parser.parse_args()
