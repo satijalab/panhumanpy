@@ -11,7 +11,6 @@ license = {text = "MIT"}
 requires-python = ">=3.9"
 dependencies = [
     "anndata",
-    "jupyter>=1.0.0",
     "numpy",
     "pandas",
     "plotly",
