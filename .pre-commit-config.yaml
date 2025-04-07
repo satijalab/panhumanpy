@@ -1,14 +1,4 @@
 repos:
-  # Some basic pre-commit checks
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
-    hooks:
-      - id: trailing-whitespace
-      - id: end-of-file-fixer
-      - id: check-yaml
-      - id: check-toml
-      - id: check-added-large-files
-
   # Run `isort` to sort imports.
   - repo: https://github.com/PyCQA/isort
     rev: 5.12.0
@@ -20,9 +10,3 @@ repos:
     rev: 23.9.1
     hooks:
       - id: black
-
-  # Run `flake8` for linting
-  - repo: https://github.com/pycqa/flake8
-    rev: 6.1.0
-    hooks:
-      - id: flake8
