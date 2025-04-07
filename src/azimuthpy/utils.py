@@ -1,6 +1,7 @@
+import numpy as np
 from scipy.sparse import csr_matrix, hstack
 
-__all__ = ["align_features"]
+__all__ = ["align_features", "normalize"]
 
 
 def align_features(
@@ -43,3 +44,31 @@ def align_features(
     indices = [query_features.index(feat) for feat in reference_features]
 
     return query[:, indices], query_features  # type: ignore [reportIndexIssue]
+
+
+def normalize(counts: csr_matrix, scale_factor: float = 10000) -> csr_matrix:
+    """Normalize a sparse count matrix by scaling and log-transforming
+    its values.
+
+    This function computes the total counts per row, scales each row so that
+    its sum equals the specified scale factor (default 10,000), applies a
+    natural logarithm transformation (log1p) to the scaled values, and returns
+    the final values in a sparse matrix.
+
+    Parameters:
+        counts (csr_matrix):
+            A sparse matrix of raw counts (rows: samples, columns: features).
+        scale_factor (float, optional):
+            The target sum for each row after scaling. Defaults to 10000.
+
+    Returns:
+        csr_matrix:
+            A normalized sparse matrix with log-transformed values.
+    """
+
+    row_sums = np.array(counts.sum(axis=1)).reshape(-1, 1)
+
+    normalized = counts.multiply(scale_factor / row_sums)
+    normalized.data = np.log1p(normalized.data)
+
+    return normalized.tocsr()
