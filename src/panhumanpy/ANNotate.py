@@ -64,17 +64,17 @@ Optional arguments:
                            Skip normalization check (default: False)
     -ncbs, --norm_check_batch_size
                            Number of cells to sample for normalization 
-                           check (default: 1000)
+                           check (default: 100)
     -om, --output_mode     Output verbosity, 'minimal' or 'detailed' 
                             (default: 'minimal')
-    -rf, --refine_labels   Perform hierarchical label refinement 
-                            (default: True)
+    -rf, --refine_labels   Skip hierarchical label refinement
+                           (default: use refinement)
     -em, --extract_embeddings
-                           Extract neural network embeddings 
-                            (default: True)
+                           Skip neural network embeddings extraction
+                           (default: extract embeddings)
     -umap, --umap_embeddings
-                           Generate UMAP projection from embeddings 
-                           (default: True)
+                           Skip UMAP projection generation
+                           (default: generate UMAP)
 
 UMAP parameters:
     -nnbrs, --n_neighbors  Neighbors per point in UMAP (default: 30)
@@ -84,7 +84,8 @@ UMAP parameters:
     -ulr, --umap_lr        UMAP learning rate (default: 1.0)
     -useed, --umap_seed    Random seed for reproducibility (default: 42)
     -sp, --spread          UMAP spread parameter (default: 1.0)
-    -uv, --umap_verbose    Show UMAP progress (default: True)
+    -uv, --umap_verbose    Hide UMAP progress
+                           (default: show progress)
     -uin, --umap_init      UMAP initialization method (default: 'spectral')
 
 Output:
@@ -94,8 +95,7 @@ that name already exists, a timestamp (YYYYMMDD_HHMMSS) will be
 automatically appended to prevent overwriting existing results.
 
 Example command:
-    annotate my_cells.h5ad -fn feature_name -ebs 
-    4096 -nc 3
+    annotate my_cells.h5ad -fn feature_name -ebs 4096 -nc 3
 """
 
 
