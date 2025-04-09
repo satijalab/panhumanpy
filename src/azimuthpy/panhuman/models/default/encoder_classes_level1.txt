@@ -1,0 +1,90 @@
+Adipocyte|
+Doublet like cell|Fibroblast/Granulosa doublet like cell
+Embryonic cell|Mesodermal cell
+Embryonic cell|Trophoblast
+Endothelial cell|
+Endothelial cell|Arterial EC
+Endothelial cell|Capillary EC
+Endothelial cell|Cycling EC
+Endothelial cell|Endocardial cell
+Endothelial cell|Endothelial‑mesenchymal transition EC
+Endothelial cell|Lymphatic EC
+Endothelial cell|Tip EC
+Endothelial cell|Venous EC
+Epithelial cell|Endocrine cell
+Epithelial cell|Epithelial cell of adrenal gland
+Epithelial cell|Epithelial cell of bladder
+Epithelial cell|Epithelial cell of breast
+Epithelial cell|Epithelial cell of eye
+Epithelial cell|Epithelial cell of gingiva
+Epithelial cell|Epithelial cell of intestine
+Epithelial cell|Epithelial cell of kidney
+Epithelial cell|Epithelial cell of liver
+Epithelial cell|Epithelial cell of lung
+Epithelial cell|Epithelial cell of ovary
+Epithelial cell|Epithelial cell of pancreas
+Epithelial cell|Epithelial cell of skin
+Epithelial cell|Epithelial cell of stomach
+Epithelial cell|Epithelial cell of testis
+Epithelial cell|Epithelial cell of thymus
+Epithelial cell|Mesothelial cell
+Fibroblast|
+Fibroblast|ANGPTL7+NRP2+ fibroblast
+Fibroblast|Adipose ITLN1 fibroblast
+Fibroblast|C2orf40+ fibroblast
+Fibroblast|C3+ fibroblast
+Fibroblast|CCL11+ fibroblast
+Fibroblast|CCL2+SFRP2+ fibroblast
+Fibroblast|CD55+SEMA3C+ fibroblast
+Fibroblast|CDCA7+ fibroblast
+Fibroblast|CFD+MGP+ fibroblast
+Fibroblast|CLU+ fibroblast
+Fibroblast|CXCL+ fibroblast
+Fibroblast|Cycling fibroblast
+Fibroblast|F3+ fibroblast
+Fibroblast|FBLN2+APOD+ fibroblast
+Fibroblast|FRZB+ fibroblast
+Fibroblast|G0S2+PPP1R14A+ fibroblast
+Fibroblast|GREB1+ fibroblast
+Fibroblast|IGFBP1+ fibroblast
+Fibroblast|IGFBP6+APOD+ fibroblast
+Fibroblast|IGFBP6+SFRP4+ fibroblast
+Fibroblast|KCNN3+ fibroblast
+Fibroblast|MDK+NREP+ fibroblast
+Fibroblast|MMP1+ fibroblast
+Fibroblast|Mesenchymal stromal cell
+Fibroblast|Metallothionein+ fibroblast
+Fibroblast|Myofibroblast
+Fibroblast|NR4A3 fibroblast
+Fibroblast|PCOLCE2 fibroblast
+Fibroblast|PLA2G2A+IGFBP4+APOC1+ fibroblast
+Fibroblast|PLAC9+ fibroblast
+Fibroblast|POSTN fibroblast
+Fibroblast|RNASE1+ fibroblast
+Fibroblast|SCN7A fibroblast
+Fibroblast|SPARCL1+ fibroblast
+Fibroblast|TCIM+NRG1+ fibroblast
+Fibroblast|THY1+ fibroblast
+Fibroblast|TNC fibroblast
+Fibroblast|WISP2+ fibroblast
+Germ cell|Oocyte
+Germ cell|Primordial germ cell
+Germ cell|Spermatocyte
+Glial cell|
+Glial cell|Glial cell of brain
+Glial cell|Glial cell of intestine
+Glial cell|Muller glia
+Immune cell|Cycling immune cell
+Immune cell|Erythrocyte/Megakaryocyte
+Immune cell|Hematopoietic precursor cell
+Immune cell|Lymphoid cell
+Immune cell|Myeloid cell
+Muscle cell|Cardiomyocyte
+Muscle cell|Skeletal muscle cell
+Neuron|
+Neuron|Neuron of brain
+Neuron|Neuron of retina
+Perivascular cell|
+Perivascular cell|Cycling perivascular cell
+Perivascular cell|Pericyte
+Perivascular cell|Vascular smooth muscle cell
