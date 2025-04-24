@@ -20,4 +20,6 @@ If you require GPU acceleration for enhanced performance on compatible hardware,
 pip install git+https://github.com/satijalab/panhumanpy.git#egg=panhumanpy[gpu]
 ```
 
+## Tutorial
 
+For an introductory tutorial eplore this [notebook](https://github.com/satijalab/panhumanpy/blob/main/tutorial_panhumanpy.ipynb).
