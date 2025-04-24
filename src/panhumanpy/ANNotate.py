@@ -1011,8 +1011,8 @@ class AzimuthNN(AzimuthNN_base):
         
     Attributes
     ----------
-    annotations : dict
-        Contains cell type predictions at various levels of granularity.
+    cells_meta : pandas.DataFrame or None
+        Cell metadata.
     embeddings : dict
         Contains embeddings extracted from the model.
     umaps : dict
@@ -1035,6 +1035,7 @@ class AzimuthNN(AzimuthNN_base):
     >>> azimuth.azimuth_refine()
     >>> embeddings = azimuth.azimuth_embed()
     >>> umap = azimuth.azimuth_umap()
+    >>> cell_metadata = azimuth.cells_meta
     """
 
     def __init__(
