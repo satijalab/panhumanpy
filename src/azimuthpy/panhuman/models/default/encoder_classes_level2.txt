@@ -1,0 +1,207 @@
+Adipocyte||
+Doublet like cell|Fibroblast/Granulosa doublet like cell|
+Embryonic cell|Mesodermal cell|
+Embryonic cell|Mesodermal cell|ZEB2+ mesoderm
+Embryonic cell|Trophoblast|Cytotrophoblast
+Embryonic cell|Trophoblast|Extravillous trophoblast
+Embryonic cell|Trophoblast|INF-activated trophoblast
+Embryonic cell|Trophoblast|Syncytiotrophoblast
+Endothelial cell|Arterial EC|
+Endothelial cell|Arterial EC|ACTA2+ arterial EC
+Endothelial cell|Arterial EC|Fetal MHC- arterial EC
+Endothelial cell|Arterial EC|SRGN+ arterial EC
+Endothelial cell|Capillary EC|
+Endothelial cell|Capillary EC|ACTA2+ capillary EC
+Endothelial cell|Capillary EC|Fetal MHC- capillary EC
+Endothelial cell|Cycling EC|
+Endothelial cell|Endocardial cell|
+Endothelial cell|Endothelial‑mesenchymal transition EC|
+Endothelial cell|Lymphatic EC|
+Endothelial cell|Tip EC|
+Endothelial cell|Venous EC|
+Endothelial cell|Venous EC|Fetal MHC- venous EC
+Endothelial cell||
+Epithelial cell|Endocrine cell|
+Epithelial cell|Epithelial cell of adrenal gland|Capsular cell
+Epithelial cell|Epithelial cell of adrenal gland|Chromaffin cell
+Epithelial cell|Epithelial cell of adrenal gland|Steroidogenic cell
+Epithelial cell|Epithelial cell of adrenal gland|Sympathoadrenal cell
+Epithelial cell|Epithelial cell of adrenal gland|Sympathoblast
+Epithelial cell|Epithelial cell of bladder|Basal cell of bladder
+Epithelial cell|Epithelial cell of breast|Lactocyte
+Epithelial cell|Epithelial cell of breast|Mammary basal cell
+Epithelial cell|Epithelial cell of breast|Mammary luminal cell
+Epithelial cell|Epithelial cell of breast|Mammary luminal progenitor
+Epithelial cell|Epithelial cell of eye|Ciliary body cell
+Epithelial cell|Epithelial cell of eye|Corneal epithelial cell
+Epithelial cell|Epithelial cell of eye|Epithelial cell of conjunctiva
+Epithelial cell|Epithelial cell of eye|Eye melanocyte
+Epithelial cell|Epithelial cell of eye|Retinal pigment epithelial cell
+Epithelial cell|Epithelial cell of gingiva|Melanocyte
+Epithelial cell|Epithelial cell of intestine|Colonocyte
+Epithelial cell|Epithelial cell of intestine|Enterocyte
+Epithelial cell|Epithelial cell of intestine|Enteroendocrine cell
+Epithelial cell|Epithelial cell of intestine|Goblet cell
+Epithelial cell|Epithelial cell of intestine|Microfold cell
+Epithelial cell|Epithelial cell of intestine|Paneth cell
+Epithelial cell|Epithelial cell of intestine|Squamous epithelial cell
+Epithelial cell|Epithelial cell of intestine|Transit-amplifying cell
+Epithelial cell|Epithelial cell of intestine|Tuft cell
+Epithelial cell|Epithelial cell of kidney|Renal epithelial cell - Loop of Henle
+Epithelial cell|Epithelial cell of kidney|Renal epithelial cell - distal tubules
+Epithelial cell|Epithelial cell of kidney|Renal epithelial cell - proximal tubules
+Epithelial cell|Epithelial cell of kidney|Renal intercalated cell
+Epithelial cell|Epithelial cell of liver|Hepatocyte
+Epithelial cell|Epithelial cell of liver|cholangiocyte
+Epithelial cell|Epithelial cell of lung|Aerocyte
+Epithelial cell|Epithelial cell of lung|Airway basal cell
+Epithelial cell|Epithelial cell of lung|Alveolar epithelial cell
+Epithelial cell|Epithelial cell of lung|Club cell
+Epithelial cell|Epithelial cell of lung|Multiciliated cell
+Epithelial cell|Epithelial cell of lung|Neuroendocrine cell
+Epithelial cell|Epithelial cell of ovary|AFP+ epithelial cell
+Epithelial cell|Epithelial cell of ovary|CLDN3+ epithelial cell
+Epithelial cell|Epithelial cell of ovary|GABRP+ epithelial cell
+Epithelial cell|Epithelial cell of ovary|Granulosa cell
+Epithelial cell|Epithelial cell of pancreas|Acinar cell
+Epithelial cell|Epithelial cell of pancreas|Alpha cell
+Epithelial cell|Epithelial cell of pancreas|Beta cell
+Epithelial cell|Epithelial cell of pancreas|Epsilon cell
+Epithelial cell|Epithelial cell of pancreas|Metallothionein+ epithelial cell
+Epithelial cell|Epithelial cell of pancreas|PP cell
+Epithelial cell|Epithelial cell of pancreas|Pancreatic ductal cell
+Epithelial cell|Epithelial cell of skin|Keratinocyte
+Epithelial cell|Epithelial cell of skin|Merkel cell carcinoma enriched epithelial cell
+Epithelial cell|Epithelial cell of stomach|Chief cell
+Epithelial cell|Epithelial cell of stomach|Delta cell
+Epithelial cell|Epithelial cell of stomach|Enterochromaffin cell
+Epithelial cell|Epithelial cell of stomach|SCGB2A1+ endocrine cell
+Epithelial cell|Epithelial cell of stomach|Surface mucous cell
+Epithelial cell|Epithelial cell of testis|Leydig cell
+Epithelial cell|Epithelial cell of testis|Luminal cell
+Epithelial cell|Epithelial cell of testis|Peritubular myoid cell
+Epithelial cell|Epithelial cell of testis|Sertoli and Interstitial cell common progenitor
+Epithelial cell|Epithelial cell of testis|Sertoli cell
+Epithelial cell|Epithelial cell of testis|Supporting-like PAX8+ cell
+Epithelial cell|Epithelial cell of thymus|Cortical thymic epithelial cell
+Epithelial cell|Epithelial cell of thymus|Cycling thymic epithelial cell
+Epithelial cell|Epithelial cell of thymus|Medullary thymic epithelial cell
+Epithelial cell|Epithelial cell of thymus|Thymic ciliated cell
+Epithelial cell|Epithelial cell of thymus|Thymic myoid cell
+Epithelial cell|Mesothelial cell|
+Epithelial cell|Mesothelial cell|CRABP1+ mesothelial cell
+Epithelial cell|Mesothelial cell|Cycling mesothelial cell
+Epithelial cell|Mesothelial cell|GATA4+ mesothelial cell
+Fibroblast|ANGPTL7+NRP2+ fibroblast|
+Fibroblast|Adipose ITLN1 fibroblast|
+Fibroblast|C2orf40+ fibroblast|
+Fibroblast|C3+ fibroblast|
+Fibroblast|CCL11+ fibroblast|
+Fibroblast|CCL2+SFRP2+ fibroblast|
+Fibroblast|CD55+SEMA3C+ fibroblast|
+Fibroblast|CDCA7+ fibroblast|Cycling CDCA7+ fibroblast
+Fibroblast|CFD+MGP+ fibroblast|
+Fibroblast|CFD+MGP+ fibroblast|APCDD1+ fibroblast
+Fibroblast|CFD+MGP+ fibroblast|APOE+ fibroblast
+Fibroblast|CFD+MGP+ fibroblast|C7+ fibroblast
+Fibroblast|CFD+MGP+ fibroblast|COCH+ fibroblast
+Fibroblast|CFD+MGP+ fibroblast|CXCL14+ fibroblast
+Fibroblast|CFD+MGP+ fibroblast|FGFBP2+ fibroblast
+Fibroblast|CLU+ fibroblast|
+Fibroblast|CXCL+ fibroblast|
+Fibroblast|CXCL+ fibroblast|CXCL1/2/3 fibroblast
+Fibroblast|Cycling fibroblast|
+Fibroblast|F3+ fibroblast|
+Fibroblast|FBLN2+APOD+ fibroblast|
+Fibroblast|FRZB+ fibroblast|
+Fibroblast|G0S2+PPP1R14A+ fibroblast|
+Fibroblast|GREB1+ fibroblast|
+Fibroblast|IGFBP1+ fibroblast|
+Fibroblast|IGFBP6+APOD+ fibroblast|
+Fibroblast|IGFBP6+SFRP4+ fibroblast|
+Fibroblast|KCNN3+ fibroblast|
+Fibroblast|MDK+NREP+ fibroblast|ADAMDEC1+ fibroblast
+Fibroblast|MMP1+ fibroblast|
+Fibroblast|Mesenchymal stromal cell|
+Fibroblast|Metallothionein+ fibroblast|
+Fibroblast|Metallothionein+ fibroblast|Metallothionein+ Collagen- fibroblast
+Fibroblast|Myofibroblast|
+Fibroblast|NR4A3 fibroblast|
+Fibroblast|PCOLCE2 fibroblast|
+Fibroblast|PLA2G2A+IGFBP4+APOC1+ fibroblast|
+Fibroblast|PLAC9+ fibroblast|
+Fibroblast|POSTN fibroblast|
+Fibroblast|RNASE1+ fibroblast|
+Fibroblast|SCN7A fibroblast|
+Fibroblast|SPARCL1+ fibroblast|
+Fibroblast|TCIM+NRG1+ fibroblast|
+Fibroblast|THY1+ fibroblast|
+Fibroblast|TNC fibroblast|
+Fibroblast|WISP2+ fibroblast|
+Fibroblast||
+Germ cell|Oocyte|
+Germ cell|Oocyte|Meiotic oocyte
+Germ cell|Oocyte|Mitotic oocyte
+Germ cell|Oocyte|Retinoid acid responsive oocyte
+Germ cell|Primordial germ cell|
+Germ cell|Primordial germ cell|Cycling primordial germ cell
+Germ cell|Spermatocyte|Early spermatocyte
+Germ cell|Spermatocyte|Late spermatocyte
+Germ cell|Spermatocyte|Spermatid
+Germ cell|Spermatocyte|Spermatogonial stem cell
+Glial cell|Glial cell of brain|Astrocyte
+Glial cell|Glial cell of brain|Oligodendrocyte
+Glial cell|Glial cell of intestine|Cycling glial cell
+Glial cell|Muller glia|
+Glial cell||
+Immune cell|Cycling immune cell|
+Immune cell|Erythrocyte/Megakaryocyte|Megakaryocyte
+Immune cell|Erythrocyte/Megakaryocyte|Red blood cell
+Immune cell|Hematopoietic precursor cell|
+Immune cell|Hematopoietic precursor cell|CLP
+Immune cell|Hematopoietic precursor cell|EoBaMa Progenitor
+Immune cell|Hematopoietic precursor cell|GMP
+Immune cell|Hematopoietic precursor cell|HSC
+Immune cell|Hematopoietic precursor cell|LMPP
+Immune cell|Hematopoietic precursor cell|MEP
+Immune cell|Hematopoietic precursor cell|MPP
+Immune cell|Hematopoietic precursor cell|MkP
+Immune cell|Hematopoietic precursor cell|Pre-cDC
+Immune cell|Hematopoietic precursor cell|Pre-pDC
+Immune cell|Lymphoid cell|
+Immune cell|Lymphoid cell|B cell
+Immune cell|Lymphoid cell|T/NK cell
+Immune cell|Myeloid cell|Cycling myeloid cell
+Immune cell|Myeloid cell|Dendritic cell
+Immune cell|Myeloid cell|Granulocyte
+Immune cell|Myeloid cell|Macrophage
+Immune cell|Myeloid cell|Monocyte
+Immune cell|Myeloid cell|Monocyte/DC
+Immune cell|Myeloid cell|Osteoclast
+Muscle cell|Cardiomyocyte|Atrial cardiomyocyte
+Muscle cell|Cardiomyocyte|Ventricular cardiomyocyte
+Muscle cell|Skeletal muscle cell|Fast-twitch skeletal muscle cell
+Muscle cell|Skeletal muscle cell|MYOM1+ skeletal muscle cell
+Muscle cell|Skeletal muscle cell|Skeletal muscle myoblast
+Muscle cell|Skeletal muscle cell|Slow-twitch skeletal muscle cell
+Neuron|Neuron of brain|Excitatory neuron
+Neuron|Neuron of brain|Inhibitory neuron
+Neuron|Neuron of brain|Miscellaneous neuron
+Neuron|Neuron of retina|Amacrine cell
+Neuron|Neuron of retina|Bipolar cell
+Neuron|Neuron of retina|Cone cell
+Neuron|Neuron of retina|Ganglion cell
+Neuron|Neuron of retina|Horizontal cell
+Neuron|Neuron of retina|Rod cell
+Neuron||
+Perivascular cell|Cycling perivascular cell|
+Perivascular cell|Pericyte|
+Perivascular cell|Pericyte|CCL19/21 pericyte
+Perivascular cell|Pericyte|CXCL+ pericyte
+Perivascular cell|Pericyte|CYGB+ pericyte
+Perivascular cell|Pericyte|SPRR2F+ pericyte
+Perivascular cell|Vascular smooth muscle cell|
+Perivascular cell|Vascular smooth muscle cell|CREB+MT1A+ vascular smooth muscle cell
+Perivascular cell|Vascular smooth muscle cell|Metallothionein+ smooth muscle cell
+Perivascular cell|Vascular smooth muscle cell|PCP4+ vascular smooth muscle cell
+Perivascular cell||

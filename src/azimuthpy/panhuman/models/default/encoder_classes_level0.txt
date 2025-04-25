@@ -1,0 +1,12 @@
+Adipocyte
+Doublet like cell
+Embryonic cell
+Endothelial cell
+Epithelial cell
+Fibroblast
+Germ cell
+Glial cell
+Immune cell
+Muscle cell
+Neuron
+Perivascular cell
