@@ -22,4 +22,4 @@ pip install git+https://github.com/satijalab/panhumanpy.git#egg=panhumanpy[gpu]
 
 ## Tutorial
 
-For an introductory tutorial eplore this [notebook](https://github.com/satijalab/panhumanpy/blob/main/tutorial_panhumanpy.ipynb).
+For an introductory tutorial, please check out this [notebook](https://github.com/satijalab/panhumanpy/blob/main/tutorial_panhumanpy.ipynb).
