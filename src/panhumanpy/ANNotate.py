@@ -603,6 +603,31 @@ class AzimuthNN_base(AutoloadInferenceTools):
          ) = results
 
         return  results
+    
+    def add_refined_score(self, medium_labels=None):
+        labels_pred = self.processed_outputs['full_hierarchical_labels']
+        labels_prob = self._inference_outputs_unprocessed['probability_of_preds']
+
+        if medium_labels is not None:
+            probs = []
+            for i, medium_label in enumerate(medium_labels):
+                full_label = labels_pred[i]
+                if medium_label not in [None, 'False']:
+                    parts = full_label.split("|")
+                    refined_level = None
+                    for level in range(1, len(parts) + 1):
+                        if parts[:level][-1] == medium_label:
+                            refined_level = level
+                            break
+                    original_level = labels_pred[i].count("|") 
+                    if refined_level is not None and refined_level <= original_level:
+                        probs.append(labels_prob[i][refined_level-1])
+                        continue
+                probs.append(None)
+
+            self.processed_outputs['azimuth_medium_prob'] = probs # Can change name of score here 
+
+        return probs
 
     def inference_model_embeddings(self, embedding_layer_name):
         """
@@ -1124,8 +1149,9 @@ class AzimuthNN(AzimuthNN_base):
         """
 
         _ = self.refine_labels(refine_level='broad')
-        _ = self.refine_labels(refine_level='medium')
+        medium_labels = self.refine_labels(refine_level='medium')
         _ = self.refine_labels(refine_level='fine')
+        _ = self.add_refined_score(medium_labels)
 
         _ = self.update_cells_meta()
 
@@ -1528,13 +1554,14 @@ def annotate_core(
         )
 
     _ = azimuth.run_inference_model()
-    _ = azimuth.process_outputs(mode=output_mode)
 
     if refine_labels:
         _ = azimuth.refine_labels(refine_level='broad')
         _ = azimuth.refine_labels(refine_level='medium')
         _ = azimuth.refine_labels(refine_level='fine')
+        _ = azimuth.add_refined_score()
 
+    _ = azimuth.process_outputs(mode=output_mode)
     _ = azimuth.update_cells_meta()
 
     if extract_embeddings:
