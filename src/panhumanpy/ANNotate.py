@@ -603,6 +603,31 @@ class AzimuthNN_base(AutoloadInferenceTools):
          ) = results
 
         return  results
+    
+    def add_refined_score(self, medium_labels=None):
+        labels_pred = self.processed_outputs['full_hierarchical_labels']
+        labels_prob = self._inference_outputs_unprocessed['probability_of_preds']
+
+        if medium_labels is not None:
+            probs = []
+            for i, medium_label in enumerate(medium_labels):
+                full_label = labels_pred[i]
+                if medium_label not in [None, 'False']:
+                    parts = full_label.split("|")
+                    refined_level = None
+                    for level in range(1, len(parts) + 1):
+                        if parts[:level][-1] == medium_label:
+                            refined_level = level
+                            break
+                    original_level = labels_pred[i].count("|") 
+                    if refined_level is not None and refined_level <= original_level:
+                        probs.append(labels_prob[i][refined_level-1])
+                        continue
+                probs.append(None)
+
+            self.processed_outputs['azimuth_medium_prob'] = probs # Can change name of score here 
+
+        return probs
 
     def inference_model_embeddings(self, embedding_layer_name):
         """
@@ -1114,7 +1139,8 @@ class AzimuthNN(AzimuthNN_base):
         This method applies a hierarchical refinement of cell type labels,
         progressing from broad to fine classifications. The results are
         stored in the annotations attribute and the cell metadata is 
-        updated.
+        updated. The softmax probability values for the medium level are 
+        also added to the cell metadata whenever applicable. 
         
         Returns
         -------
@@ -1124,8 +1150,9 @@ class AzimuthNN(AzimuthNN_base):
         """
 
         _ = self.refine_labels(refine_level='broad')
-        _ = self.refine_labels(refine_level='medium')
+        medium_labels = self.refine_labels(refine_level='medium')
         _ = self.refine_labels(refine_level='fine')
+        _ = self.add_refined_score(medium_labels)
 
         _ = self.update_cells_meta()
 
@@ -1345,23 +1372,23 @@ def annotate_core(
     X_query,
     query_features,
     cells_meta,
-    annotation_pipeline,
-    eval_batch_size,
-    normalization_override,
-    norm_check_batch_size,
-    output_mode,
-    refine_labels,
-    extract_embeddings,
-    umap_embeddings,
-    n_neighbors, 
-    n_components, 
-    metric, 
-    min_dist, 
-    umap_lr, 
-    umap_seed, 
-    spread,
-    verbose,
-    init
+    annotation_pipeline='supervised',
+    eval_batch_size=8192,
+    normalization_override=False,
+    norm_check_batch_size=1000,
+    output_mode='minimal',
+    refine_labels=True,
+    extract_embeddings=True,
+    umap_embeddings=True,
+    n_neighbors=30, 
+    n_components=2, 
+    metric='cosine', 
+    min_dist=0.3, 
+    umap_lr=1.0, 
+    umap_seed=42, 
+    spread=1.0,
+    verbose=True,
+    init='spectral'
     ):
     """
     Core function for cell type annotation using the Azimuth neural 
@@ -1528,12 +1555,14 @@ def annotate_core(
         )
 
     _ = azimuth.run_inference_model()
+
     _ = azimuth.process_outputs(mode=output_mode)
 
     if refine_labels:
         _ = azimuth.refine_labels(refine_level='broad')
-        _ = azimuth.refine_labels(refine_level='medium')
+        medium_labels = azimuth.refine_labels(refine_level='medium')
         _ = azimuth.refine_labels(refine_level='fine')
+        _ = azimuth.add_refined_score(medium_labels)
 
     _ = azimuth.update_cells_meta()
 
