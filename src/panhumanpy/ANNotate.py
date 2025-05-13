@@ -607,7 +607,7 @@ class AzimuthNN_base(AutoloadInferenceTools):
     def add_refined_score(self, medium_labels=None):
         labels_pred = self.processed_outputs['full_hierarchical_labels']
         labels_prob = self._inference_outputs_unprocessed['probability_of_preds']
-        
+
         if medium_labels is not None:
             probs = []
             for i, medium_label in enumerate(medium_labels):
@@ -1372,23 +1372,23 @@ def annotate_core(
     X_query,
     query_features,
     cells_meta,
-    annotation_pipeline='supervised',
-    eval_batch_size=8192,
-    normalization_override=False,
-    norm_check_batch_size=1000,
-    output_mode='minimal',
-    refine_labels=True,
-    extract_embeddings=True,
-    umap_embeddings=True,
-    n_neighbors=30, 
-    n_components=2, 
-    metric='cosine', 
-    min_dist=0.3, 
-    umap_lr=1.0, 
-    umap_seed=42, 
-    spread=1.0,
-    verbose=True,
-    init='spectral'
+    annotation_pipeline,
+    eval_batch_size,
+    normalization_override,
+    norm_check_batch_size,
+    output_mode,
+    refine_labels,
+    extract_embeddings,
+    umap_embeddings,
+    n_neighbors, 
+    n_components, 
+    metric, 
+    min_dist, 
+    umap_lr, 
+    umap_seed, 
+    spread,
+    verbose,
+    init
     ):
     """
     Core function for cell type annotation using the Azimuth neural 
