@@ -607,7 +607,7 @@ class AzimuthNN_base(AutoloadInferenceTools):
     def add_refined_score(self, medium_labels=None):
         labels_pred = self.processed_outputs['full_hierarchical_labels']
         labels_prob = self._inference_outputs_unprocessed['probability_of_preds']
-
+        
         if medium_labels is not None:
             probs = []
             for i, medium_label in enumerate(medium_labels):
@@ -619,7 +619,7 @@ class AzimuthNN_base(AutoloadInferenceTools):
                         if parts[:level][-1] == medium_label:
                             refined_level = level
                             break
-                    original_level = labels_pred[i].count("|") 
+                    original_level = full_label.count("|") + 1
                     if refined_level is not None and refined_level <= original_level:
                         probs.append(labels_prob[i][refined_level-1])
                         continue
