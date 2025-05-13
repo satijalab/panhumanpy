@@ -2342,24 +2342,26 @@ class PostprocessingAzimuthLabels(OutputLabels):
         label = '_'.join(label_split[:-1])
         annot_dict = self.__annotations_dict()
 
-        if flag == "True":  
-            refined_label = annot_dict.get(label)
-            if pd.isna(refined_label):
-                matching_df = self.annotations_df[
-                    self.annotations_df['Orig_Label'].str.startswith(
-                        label, na=False
-                        )
-                ]
-                matching_refined_labels = matching_df[
-                    f'Annotate_{self.refine_level}'
-                ].tolist()
-                matching_refined_labels = list(set(matching_refined_labels))
-                return matching_refined_labels
-            if refined_label == label:
-                return refined_label
-            elif refined_label in label:
-                return refined_label
-        return "False"
+        # if flag == "True":  # SKYLAR: Flag is currently broken and not reliable, commented out until debugged. 
+        refined_label = annot_dict.get(label)
+        if pd.isna(refined_label):
+            matching_df = self.annotations_df[
+                self.annotations_df['Orig_Label'].str.startswith(
+                    label, na=False
+                    )
+            ]
+            matching_refined_labels = matching_df[
+                f'Annotate_{self.refine_level}'
+            ].tolist()
+            matching_refined_labels = list(set(matching_refined_labels))
+            return matching_refined_labels
+        if refined_label == label:
+            return refined_label
+        elif refined_label in label:
+            return refined_label
+        else:
+            return "False"
+        # return "False"
 
     def __refinement_type(self):
         """
