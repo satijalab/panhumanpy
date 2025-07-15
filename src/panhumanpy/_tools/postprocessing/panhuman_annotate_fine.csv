@@ -86,6 +86,7 @@ Epithelial cell|Epithelial cell of lung|Alveolar epithelial cell|AT2|Cycling AT2
 Epithelial cell|Epithelial cell of lung|Club cell,Epithelial cell|Epithelial cell of lung|Club cell
 Epithelial cell|Epithelial cell of lung|Multiciliated cell|CDC20B+ Multiciliated cell,Epithelial cell|Epithelial cell of lung|Multiciliated cell
 Epithelial cell|Epithelial cell of lung|Neuroendocrine cell,Epithelial cell|Epithelial cell of lung|Neuroendocrine cell
+Epithelial cell|Epithelial cell of lung|Pulmonary ionocyte,Epithelial cell|Epithelial cell of lung|Pulmonary ionocyte
 Epithelial cell|Epithelial cell of ovary|AFP+ epithelial cell,Epithelial cell|Epithelial cell of ovary|AFP+ epithelial cell
 Epithelial cell|Epithelial cell of ovary|CLDN3+ epithelial cell,Epithelial cell|Epithelial cell of ovary|CLDN3+ epithelial cell
 Epithelial cell|Epithelial cell of ovary|GABRP+ epithelial cell,Epithelial cell|Epithelial cell of ovary|GABRP+ epithelial cell
@@ -358,7 +359,6 @@ Perivascular cell|Vascular smooth muscle cell|ACTG2+ contractile VSMC,Perivascul
 Perivascular cell|Vascular smooth muscle cell|CREB+MT1A+ vascular smooth muscle cell,Perivascular cell|Vascular smooth muscle cell
 Perivascular cell|Vascular smooth muscle cell|PCP4+ vascular smooth muscle cell,Perivascular cell|Vascular smooth muscle cell
 Perivascular cell|Vascular smooth muscle cell|Metallothionein+ smooth muscle cell,Perivascular cell|Vascular smooth muscle cell
---,--
 Immune cell|Hematopoietic precursor cell|CLP,Immune cell|Hematopoietic precursor cell|CLP
 Immune cell|Hematopoietic precursor cell|HSC,Immune cell|Hematopoietic precursor cell|HSC
 Immune cell|Hematopoietic precursor cell|MEP,Immune cell|Hematopoietic precursor cell|MEP

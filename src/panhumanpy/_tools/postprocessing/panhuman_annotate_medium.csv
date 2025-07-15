@@ -86,6 +86,7 @@ Epithelial cell|Epithelial cell of lung|Alveolar epithelial cell|AT2|Cycling AT2
 Epithelial cell|Epithelial cell of lung|Club cell,Epithelial cell|Epithelial cell of lung
 Epithelial cell|Epithelial cell of lung|Multiciliated cell|CDC20B+ Multiciliated cell,Epithelial cell|Epithelial cell of lung
 Epithelial cell|Epithelial cell of lung|Neuroendocrine cell,Epithelial cell|Epithelial cell of lung
+Epithelial cell|Epithelial cell of lung|Pulmonary ionocyte,Epithelial cell|Epithelial cell of lung
 Epithelial cell|Epithelial cell of ovary|AFP+ epithelial cell,Epithelial cell|Epithelial cell of ovary
 Epithelial cell|Epithelial cell of ovary|CLDN3+ epithelial cell,Epithelial cell|Epithelial cell of ovary
 Epithelial cell|Epithelial cell of ovary|GABRP+ epithelial cell,Epithelial cell|Epithelial cell of ovary
@@ -226,9 +227,9 @@ Glial cell|Glial cell of intestine|MBP+MAL+AATK+ glial cell,Glial cell
 Glial cell|Muller glia,Glial cell
 Glial cell|Schwann cell,Glial cell
 Immune cell|Erythrocyte/Megakaryocyte|Megakaryocyte|Platelet,Immune cell|Erythrocyte/Megakaryocyte|Megakaryocyte|Platelet
-Immune cell|Erythrocyte/Megakaryocyte|Red blood cell|Erythroblast|Early SOX4+ erythroblast,Immune cell|Erythrocyte/Megakaryocyte|Red blood cell|Early SOX4+ erythroblast
-Immune cell|Erythrocyte/Megakaryocyte|Red blood cell|Erythroblast|Intermediate EPCAM+ erythroblast,Immune cell|Erythrocyte/Megakaryocyte|Red blood cell|Intermediate EPCAM+ erythroblast
-Immune cell|Erythrocyte/Megakaryocyte|Red blood cell|Erythroblast|Late hemoglobin+ erythroblast|Cycling late hemoglobin+ erythroblast,Immune cell|Erythrocyte/Megakaryocyte|Red blood cell|Late hemoglobin+ erythroblast
+Immune cell|Erythrocyte/Megakaryocyte|Red blood cell|Erythroblast|Early SOX4+ erythroblast,Immune cell|Erythrocyte/Megakaryocyte|Red blood cell|Erythroblast|Early SOX4+ erythroblast
+Immune cell|Erythrocyte/Megakaryocyte|Red blood cell|Erythroblast|Intermediate EPCAM+ erythroblast,Immune cell|Erythrocyte/Megakaryocyte|Red blood cell|Erythroblast|Intermediate EPCAM+ erythroblast
+Immune cell|Erythrocyte/Megakaryocyte|Red blood cell|Erythroblast|Late hemoglobin+ erythroblast|Cycling late hemoglobin+ erythroblast,Immune cell|Erythrocyte/Megakaryocyte|Red blood cell|Erythroblast|Late hemoglobin+ erythroblast
 Immune cell|Erythrocyte/Megakaryocyte|Red blood cell|Fetal HBG+ erythrocyte,Immune cell|Erythrocyte/Megakaryocyte|Red blood cell
 Immune cell|Lymphoid cell|B cell|B cell precursor|PreB cell|Cycling preB cell,Immune cell|Lymphoid cell|B cell|PreB cell
 Immune cell|Lymphoid cell|B cell|B cell precursor|ProB cell|Cycling proB cell,Immune cell|Lymphoid cell|B cell|ProB cell
