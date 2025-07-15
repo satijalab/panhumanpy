@@ -48,3 +48,23 @@ Alternatively, you can run them individually:
 pixi run flake8
 pixi run pyright
 ```
+
+### Versioning Protocol
+
+This project follows a generalised semantic versioning where major versions are associated with a constellation as a codename. 
+
+**Format:** `MAJOR.MINOR.PATCH (Constellation Name)`
+
+#### Version Types:
+- **MAJOR (X.0.0):** New model added, and/or breaking changes to the API → New constellation name
+- **MINOR (X.Y.0):** New features/functionality 
+- **PATCH (X.Y.Z):** Bug fixes, small improvements
+
+#### Current Version:
+- 0.1.0 (Andromeda)
+
+#### Version Philosophy:
+- **New models, and/or breaking changes to API = Major versions** because they represent ("soft") breaking changes.
+- **Version bumps are at maintainer discretion** - not every PR requires a version change.
+- When versions are updated, `pyproject.toml`, `src/panhumanpy/__init__.py`, and `README.md` must be kept in sync.
+- Use versioning script for version bumps executed in a consistent fashion.

@@ -46,6 +46,9 @@ env/
 venv/
 ENV/
 
+# Pixi environments
+.pixi/
+
 # IDE
 .idea/
 .vscode/
