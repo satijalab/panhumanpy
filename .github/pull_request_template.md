@@ -1,5 +1,5 @@
 ## Description
-Brief description of what this PR does
+Checklist of guidelines to go through when making a PR.
 
 ## Type of Change
 - [ ] Bug fix (patch version)
