@@ -13,4 +13,15 @@ __all__ = [
 ]
 
 __version__ = '0.1.0'
+__version_name__ = 'Andromeda'
+__version_full__ = f'{__version__} ({__version_name__})'
 __author__ = 'SatijaLab'
+
+
+def get_version():
+    """Get version information"""
+    return {
+        'version': __version__,
+        'name': __version_name__, 
+        'full': __version_full__
+    }
