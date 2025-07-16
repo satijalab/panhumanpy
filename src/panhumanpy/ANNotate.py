@@ -522,8 +522,8 @@ class AzimuthNN_base(AutoloadInferenceTools):
         }
 
         if mode=='detailed':
-            for i in range(1, self.max_depth):
-                self.processed_outputs[f'level_{i}_labels'] = (
+            for i in range(self.max_depth):
+                self.processed_outputs[f'level_{i+1}_labels'] = (
                 output_processing_class.all_level_labels()[i]
             )
 

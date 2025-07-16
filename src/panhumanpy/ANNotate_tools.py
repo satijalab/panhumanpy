@@ -2101,7 +2101,7 @@ class OutputLabels():
         IndexError
             If level is out of bounds.
         """
-        labels = self._level_specific_labels_and_final_level[level-1]
+        labels = self._level_specific_labels_and_final_level[level]
         return labels
 
     def all_level_labels(self):
