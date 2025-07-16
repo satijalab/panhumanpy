@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "panhumanpy"
 version = "0.1.0"
-description = "..."
+description = "A Python package for automated cell type annotation in scRNA-seq using Azimuth Neural Network."
 readme = "README.md"
 license = {text = "MIT"}
 requires-python = ">=3.9"
