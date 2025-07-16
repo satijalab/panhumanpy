@@ -93,8 +93,8 @@ def test_azimuthnn_base_with_h5ad():
                 "inference outputs"
             )
         
-        # Process outputs
-        processed_outputs = azimuth_base.process_outputs()
+        # Process outputs, detailed mode is more general
+        processed_outputs = azimuth_base.process_outputs(mode = 'detailed')
         
         # Verify processed outputs
         assert isinstance(processed_outputs, dict), (
@@ -102,13 +102,20 @@ def test_azimuthnn_base_with_h5ad():
             "a dictionary"
         )
         
-        expected_keys = [
+        expected_keys_minimal_mode = [
             'full_hierarchical_labels',
             'level_zero_labels',
             'final_level_labels',
             'final_level_softmax_prob',
             'full_consistent_hierarchy'
         ]
+
+        extra_keys_detailed_mode = [
+            f'level_{i+1}_labels' for i in range azimuth_base.max_depth
+        ]
+        
+        expected_keys = expected_keys_minimal_mode+extra_keys_detailed_mode
+
         for key in expected_keys:
             assert key in processed_outputs, (
                 f"test_azimuthnn_base_with_h5ad: Missing key '{key}' in "
