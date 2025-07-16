@@ -66,7 +66,7 @@ This project follows a generalised semantic versioning where major versions are 
 #### Version Philosophy:
 - **New models, and/or breaking changes to API = Major versions** because they represent ("soft") breaking changes.
 - **Version bumps are at maintainer discretion** - not every PR requires a version change.
-- When versions are updated, `pyproject.toml`, `src/panhumanpy/__init__.py`, and `README.md` must be kept in sync.
+- When versions are updated, `pyproject.toml`, `src/panhumanpy/__init__.py`, `README.md`, and `CONTRIBUTING.md` must be kept in sync.
 - Use versioning script for version bumps executed in a consistent fashion.
 
 
@@ -89,4 +89,10 @@ python scripts/bump_version.py minor
 
 # New models or breaking changes (major)
 python scripts/bump_version.py major Cassiopeia
+
+# Push changes and tags on git
+git diff
+git add . && git commit -m 'Bump version to 0.2.0'
+git tag v0.2.0-andromeda
+git push --follow-tags 
 ```
