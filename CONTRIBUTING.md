@@ -68,3 +68,25 @@ This project follows a generalised semantic versioning where major versions are 
 - **Version bumps are at maintainer discretion** - not every PR requires a version change.
 - When versions are updated, `pyproject.toml`, `src/panhumanpy/__init__.py`, and `README.md` must be kept in sync.
 - Use versioning script for version bumps executed in a consistent fashion.
+
+
+### Using the Version Bump Script
+
+For consistent version updates, use the provided script:
+
+```bash
+# Check current version
+python scripts/bump_version.py current
+
+# Check version consistency across files
+python scripts/bump_version.py check
+
+# Bug fixes (patch)
+python scripts/bump_version.py patch
+
+# New features (minor)
+python scripts/bump_version.py minor
+
+# New models or breaking changes (major)
+python scripts/bump_version.py major Cassiopeia
+```
