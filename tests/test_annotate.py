@@ -111,7 +111,7 @@ def test_azimuthnn_base_with_h5ad():
         ]
 
         extra_keys_detailed_mode = [
-            f'level_{i+1}_labels' for i in range azimuth_base.max_depth
+            f'level_{i+1}_labels' for i in range(azimuth_base.max_depth)
         ]
         
         expected_keys = expected_keys_minimal_mode+extra_keys_detailed_mode
