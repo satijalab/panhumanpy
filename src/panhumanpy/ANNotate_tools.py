@@ -292,12 +292,21 @@ def if_full_consistent_hierarchy(cell_label, max_depth):
     predictions returned by the model for a given cell form an 
     internally consistent hierarchy or not.
     '''
+    if max_depth==1:
+        return True
+        
     for i in range(max_depth-1):
         res = (
-            cell_label[i].split("|")[-1] == (
-                cell_label[i+1].split("|")[-2]
+            cell_label[i].split("|") == (
+                cell_label[i+1].split("|")[:-1]
             )
         )
+
+        # Note that the hierarchical ontology of cell labels does not 
+        # have closed faces, but as soon as we tree the empty label ''
+        # as a node, as we do the empty '' between two pipes '||' in this
+        # function, we are introducing a node that can be shared by
+        # multiple parents including itself.
 
         if res==False:
             break
