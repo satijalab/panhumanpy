@@ -48,6 +48,4 @@ Checklist of guidelines to go through when making a PR.
 How was this change tested?
 
 ## Additional Notes
-Semantic versioning typically reserves major version updates for breaking changes in the API. We'll generalise this slightly to also include
-updates where we are adding a new model to the package even though we aim to ensure backwards compatibility with previous models. This is
-because by default the API will point to the latest model and thus this represents a "soft" breaking change. 
+
