@@ -94,5 +94,6 @@ python scripts/bump_version.py major Cassiopeia
 git diff
 git add . && git commit -m 'Bump version to 0.2.0'
 git tag v0.2.0-andromeda
-git push --follow-tags 
+git push --follow-tags # if on branch main
+git push origin version_bump_branch --tags # if on a separate branch
 ```
