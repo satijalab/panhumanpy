@@ -120,11 +120,11 @@ def update_file(file_path, old_version_str, new_version_str, new_name=None):
     elif file_path == README_FILE:
         #old_version_str is being used to build the regex string for robustness
         pattern = re.compile(rf'(\*\*Current version: )({re.escape(old_version_str)}) \(([^)]+)\)\*\*')
-        content = pattern.sub(rf'\1{new_version_str} ({new_name})**', content)
+        content = pattern.sub(f'**Current version: {new_version_str} ({new_name})**', content)
     
     elif file_path == CONTRIBUTING_FILE:
-        pattern = re.compile(rf'(- )({re.escape(old_version_str)}\s*\()([^)]+)\)')
-        content = pattern.sub(rf'\1{new_version_str} ({new_name})`', content)
+        pattern = re.compile(rf'- {re.escape(old_version_str)} \([^)]+\)')
+        content = pattern.sub(f'- {new_version_str} ({new_name})', content)
         
     file_path.write_text(content)
 
