@@ -2178,6 +2178,8 @@ class PostprocessingAzimuthLabels(OutputLabels):
         List of label encoders used during model training/inference.
     refine_level : str
         Level of refinement to apply ('broad', 'medium', or 'fine').
+    model_version: str
+          Model version to use for inference (e.g., 'v0').
         
     Attributes
     ----------
@@ -2219,7 +2221,8 @@ class PostprocessingAzimuthLabels(OutputLabels):
         num_cells,
         softmax_probs,
         encoders,
-        refine_level
+        refine_level,
+        model_version
         ):
         
         if refine_level not in self.VALID_REFINE_LEVELS:
@@ -2239,10 +2242,11 @@ class PostprocessingAzimuthLabels(OutputLabels):
         self.encoders = encoders
 
         try:
-            postprocessing_dir_path = files(postprocessing)
+            version_path = files(model_version)
+            postprocessing_dir_path = version_path/postprocessing
         except (ImportError, ModuleNotFoundError) as e:
             raise RuntimeError(
-                "postprocessing module not found. Please ensure it is installed"
+                "postprocessing module not found. Please ensure it is installed."
             ) from e
 
         self.refined_annotations_file_name = (
