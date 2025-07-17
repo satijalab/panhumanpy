@@ -22,6 +22,13 @@ def test_version():
     assert isinstance(panhumanpy.__version__, str)
     assert panhumanpy.__version__ != ""
 
+def test_version_name():
+    """Test that the package has a version name."""
+    import panhumanpy
+    assert hasattr(panhumanpy, "__version_name__")
+    assert isinstance(panhumanpy.__version_name__, str)
+    assert panhumanpy.__version_name__ != ""
+
 
 def test_exposed_classes_and_functions():
     """Test that all expected classes and functions are exposed."""
