@@ -2,11 +2,111 @@
 Test annotation functionality in panhumanpy.
 """
 
+import re
 import os
 import pytest
 import anndata
 import numpy as np
 from scipy.sparse import csr_matrix
+from pathlib import Path
+
+
+
+###### test consistency in model version ###############################
+
+def test_model_version_default_format():
+    """
+    Test that model_version_default in ANNotate.py exists and follows v{i} format.
+    """
+    annotate_file = Path(__file__).parent.parent / "src" / "panhumanpy" / "ANNotate.py"
+    
+    with open(annotate_file, 'r') as f:
+        content = f.read()
+    
+    pattern = r"model_version_default\s*=\s*['\"]([^'\"]+)['\"]"
+    match = re.search(pattern, content)
+    
+    assert match, "model_version_default variable not found in ANNotate.py"
+    
+    model_version_default = match.group(1)
+    version_pattern = re.compile(r'^v\d+$')
+    
+    assert version_pattern.match(model_version_default), (
+        f"model_version_default '{model_version_default}' does not follow v{{i}} format"
+    )
+
+
+def test_model_version_directory_exists():
+    """
+    Test that the directory corresponding to model_version_default exists in _tools.
+    """
+    annotate_file = Path(__file__).parent.parent / "src" / "panhumanpy" / "ANNotate.py"
+    
+    with open(annotate_file, 'r') as f:
+        content = f.read()
+    
+    pattern = r"model_version_default\s*=\s*['\"]([^'\"]+)['\"]"
+    match = re.search(pattern, content)
+    
+    assert match, "model_version_default variable not found in ANNotate.py"
+    model_version_default = match.group(1)
+    
+    tools_dir = Path(__file__).parent.parent / "src" / "panhumanpy" / "_tools"
+    version_dir = tools_dir / model_version_default
+    
+    assert version_dir.exists(), (
+        f"Directory {model_version_default} not found in _tools directory"
+    )
+    assert version_dir.is_dir(), (
+        f"{model_version_default} exists but is not a directory"
+    )
+
+
+def test_model_version_matches_package_major_version():
+    """
+    Test that the version number in model_version_default matches the major version 
+    of the package as defined in __init__.py.
+    """
+    annotate_file = Path(__file__).parent.parent / "src" / "panhumanpy" / "ANNotate.py"
+    
+    with open(annotate_file, 'r') as f:
+        content = f.read()
+    
+    pattern = r"model_version_default\s*=\s*['\"]([^'\"]+)['\"]"
+    match = re.search(pattern, content)
+    
+    assert match, "model_version_default variable not found in ANNotate.py"
+    model_version_default = match.group(1)
+    
+    version_match = re.match(r'v(\d+)', model_version_default)
+    assert version_match, f"Could not extract version number from {model_version_default}"
+    model_major_version = int(version_match.group(1))
+    
+    init_file = Path(__file__).parent.parent / "src" / "panhumanpy" / "__init__.py"
+    
+    with open(init_file, 'r') as f:
+        init_content = f.read()
+    
+    version_pattern = r'__version__\s*=\s*["\']([^"\']+)["\']'
+    version_match = re.search(version_pattern, init_content)
+    
+    assert version_match, "__version__ not found in __init__.py"
+    package_version = version_match.group(1)
+    
+    package_major_version = int(package_version.split('.')[0])
+    
+    assert model_major_version == package_major_version, (
+        f"Model version major number ({model_major_version}) does not match "
+        f"package major version ({package_major_version}). "
+        f"model_version_default='{model_version_default}', package __version__='{package_version}'"
+    )
+
+
+
+
+
+
+####### functionality tests ############################################
 
 
 def test_azimuthnn_class():

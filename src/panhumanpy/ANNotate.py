@@ -102,6 +102,8 @@ Example command:
 
 from panhumanpy.ANNotate_tools import *
 
+model_version_default = 'v0'
+
 _gpu_configured = False
 
 def configure_once():
@@ -139,6 +141,8 @@ class AzimuthNN_base(AutoloadInferenceTools):
     ----------
     annotation_pipeline : str, default='supervised'
         The type of annotation pipeline to use.
+    model_version: str, default set to match package major version.
+        Model version to use.
     eval_batch_size : int, default=8192
         Batch size for inference and embedding generation.
         
@@ -180,11 +184,15 @@ class AzimuthNN_base(AutoloadInferenceTools):
     def __init__(
         self, 
         annotation_pipeline='supervised',
+        model_version=model_version_default,
         eval_batch_size=8192
         ):
 
         if not isinstance(annotation_pipeline, str):
             raise TypeError("annotation_pipeline must be a string")
+
+        if not isinstance(model_version, str):
+            raise TypeError("model_version must be a string")
             
         if not isinstance(eval_batch_size, int):
             raise TypeError("eval_batch_size must be an integer")
@@ -192,10 +200,11 @@ class AzimuthNN_base(AutoloadInferenceTools):
         
 
         self._annotation_pipeline = annotation_pipeline
+        self._model_version = model_version
         self._eval_batch_size = eval_batch_size
 
        
-        super().__init__(annotation_pipeline)
+        super().__init__(annotation_pipeline, model_version)
 
         if not hasattr(self, 'model_meta'):
             raise RuntimeError("Failed to load model metadata")
@@ -590,7 +599,8 @@ class AzimuthNN_base(AutoloadInferenceTools):
                 self.num_cells,
                 softmax_probs,
                 self.inference_encoders,
-                refine_level
+                refine_level,
+                self._model_version
             )
 
             results = refine_class.refine_labels()
@@ -998,6 +1008,8 @@ class AzimuthNN(AzimuthNN_base):
         are already the correct gene identifiers.
     annotation_pipeline : str, default='supervised'
         Type of annotation pipeline to use for cell type prediction.
+    model_version: str, default set to match package major version.
+        Model version to use.
     eval_batch_size : int, default=8192
         Batch size to use during model inference.
     normalization_override : bool, default=False
@@ -1043,6 +1055,7 @@ class AzimuthNN(AzimuthNN_base):
         query_arg,
         feature_names_col=None,
         annotation_pipeline='supervised',
+        model_version=model_version_default,
         eval_batch_size=8192,
         normalization_override=False,
         norm_check_batch_size=100,
@@ -1076,15 +1089,14 @@ class AzimuthNN(AzimuthNN_base):
             )
 
         self._query_arg = query_arg
-        self._annotation_pipeline = annotation_pipeline
-        self._eval_batch_size = eval_batch_size
         self._normalization_override = normalization_override
         self._norm_check_batch_size = norm_check_batch_size
         self._output_mode = output_mode
 
         super().__init__(
-            self._annotation_pipeline,
-            self._eval_batch_size
+            annotation_pipeline,
+            model_version,
+            eval_batch_size
         )
 
         if isinstance(self._query_arg, anndata.AnnData):
@@ -1361,7 +1373,9 @@ def annotate_core(
     umap_seed, 
     spread,
     verbose,
-    init
+    init,
+    model_version=model_version_default   
+    # adding a default here, so the R script does not need mods to access the default.
     ):
     """
     Core function for cell type annotation using the Azimuth neural 
@@ -1504,6 +1518,7 @@ def annotate_core(
 
     azimuth = AzimuthNN_base(
         annotation_pipeline = annotation_pipeline,
+        model_version = model_version,
         eval_batch_size = eval_batch_size
     )
 
@@ -1647,6 +1662,16 @@ def arg_parse_in():
                         default='supervised',
                         help=(
                             "enter annotation pipeline"
+                        ), 
+                        type=str
+                        )
+
+    parser.add_argument(
+                        "-mv",
+                        "--model_version", 
+                        default=model_version_default,
+                        help=(
+                            "enter model version to use"
                         ), 
                         type=str
                         )
@@ -1851,6 +1876,7 @@ def arg_parse_out(args):
     query_filepath = args.filepath
     feature_names_col = args.feature_names_col
     annotation_pipeline = args.annotation_pipeline
+    model_version = args.model_version
     eval_batch_size = args.eval_batch_size
     normalization_override = args.normalization_override
     norm_check_batch_size = args.norm_check_batch_size
@@ -1872,6 +1898,7 @@ def arg_parse_out(args):
         'query_filepath' : query_filepath,
         'feature_names_col' : feature_names_col,
         'annotation_pipeline' : annotation_pipeline,
+        'model_version': model_version,
         'eval_batch_size' : eval_batch_size,
         'normalization_override' : normalization_override,
         'norm_check_batch_size' : norm_check_batch_size,
@@ -1948,7 +1975,8 @@ def annotate():
         umap_seed, 
         spread,
         verbose,
-        init
+        init,
+        model_version
         )
 
     azimuth_object = core_outputs['azimuth_object']

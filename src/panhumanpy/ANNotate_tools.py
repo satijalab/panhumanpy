@@ -21,10 +21,6 @@ from datetime import datetime
 import sys
 import importlib
 from importlib.resources import files
-from panhumanpy._tools import inference_model, inference_encoders
-from panhumanpy._tools.inference_model import model_meta
-from panhumanpy._tools import inference_feature_panel
-from panhumanpy._tools import postprocessing
 from panhumanpy.loss_fn import *
 
 import warnings
@@ -1255,13 +1251,19 @@ class InferenceTools():
           Filename of the text file containing feature names.
       _annotation_pipeline : str
           Type of annotation pipeline to use (e.g., 'supervised').
+      _model_version: str
+          Model version to use for inference (e.g., 'v0'). 
+      _version_path: str
+          Traversable directory path to the specified version.
+      _version_model: module
+          Model version directory imported as module.
     """
 
     def __init__(
             self, 
             annotation_pipeline,
+            model_version,
             inference_model_filename='inference_model.keras',
-            model_meta= model_meta, 
             inference_encoders_filename='inference_encoders.pkl',
             inference_feature_panel_filename='inference_feature_panel.txt'
             ):
@@ -1275,13 +1277,12 @@ class InferenceTools():
             'self-supervised', currently the only pipeline implemented
             is 'supervised'). Determines which components are required 
             for inference.
+        model_version: str
+            Model version to be used. Model version naming convention:
+            f"v{i}" for panhumanpy i.x.y .
         inference_model_filename : str, optional
             Filename of the Keras model file to load, by default 
             'inference_model.keras'.
-        model_meta : dict
-            Dictionary containing model metadata and configuration 
-            parameters. Must include specific keys depending on the 
-            annotation pipeline.
         inference_encoders_filename : str, optional
             Filename of the pickled label encoders, by default 
             'inference_encoders.pkl'.
@@ -1291,21 +1292,27 @@ class InferenceTools():
         """
         
         self._inference_model_filename = inference_model_filename
-        self._model_meta = model_meta
         self._inference_encoders_filename = inference_encoders_filename
         self._inference_feature_panel_filename = (
             inference_feature_panel_filename
         )
 
         self._annotation_pipeline = annotation_pipeline
+        self._model_version = model_version
+
+        self._version_module = importlib.import_module(
+            f"panhumanpy._tools.{model_version}"
+        )
+        self._model_meta = self._version_module.model_meta
+        self._version_path = files(self._version_module)
 
     def load_inference_model(self):
         """
         Load the trained Keras model for inference.
         
         Loads the model from a predefined directory structure using the
-        filename specified during initialization. The model is expected
-        to be in the Keras format.
+        version and filename specified during initialization. The model 
+        is expected to be in .keras format.
         
         Returns
         -------
@@ -1314,11 +1321,12 @@ class InferenceTools():
             
         Notes
         -----
-        The model must be saved in the 'inference_model' directory 
-        accessible via the 'files' import system. Model name must 
-        correspond to the name provided to the object at initialization.
+        The model must be saved in the 'inference_model' directory in the
+        version directory (for e.g. "v0"). This should be accessible via 
+        the 'files' import system. Model name must correspond to the name 
+        provided at initialization.
         """
-        model_dir_path = files(inference_model)
+        model_dir_path = self._version_path/"inference_model"
         model_path = model_dir_path / self._inference_model_filename
 
         model= load_model(model_path)
@@ -1404,9 +1412,9 @@ class InferenceTools():
         Load label encoders used for decoding model predictions.
         
         Loads pickled label encoder objects from a predefined directory
-        structure using the filename specified during initialization.
-        These encoders are used to convert numeric predictions back to
-        string labels.
+        structure using the version and filename specified during 
+        initialization. These encoders are used to convert numeric 
+        predictions back to string labels.
         
         Returns
         -------
@@ -1417,11 +1425,12 @@ class InferenceTools():
         Notes
         -----
         The encoders must be saved as a pickle file in the 
-        'inference_encoders' directory accessible via the 'files' import
+        'inference_encoders' directory within the version directory 
+        (for e.g. "v0") that is accessible via the 'files' import
          system, and the name of the pickled file must correspond to the
          name provided to this object at initialization.
         """
-        encoders_dir_path = files(inference_encoders)
+        encoders_dir_path = self._version_path/"inference_encoders"
         encoders_path = encoders_dir_path / self._inference_encoders_filename
 
         with open(encoders_path, 'rb') as f:
@@ -1454,14 +1463,14 @@ class InferenceTools():
         Notes
         -----
         The feature panel must be saved as a text file in the 
-        'inference_feature_panel' directory accessible via the 'files' 
-        import system, with the filename matching the name passed to this
-        object at initialization. 
+        'inference_feature_panel' directory within the version directory
+        that should be accessible via the 'files' import system, with 
+        the filename matching the name passed at initialization. 
         
         For non-supervised pipelines, this method returns None.
         """
         if self._annotation_pipeline == 'supervised':
-            feat_dir_path = files(inference_feature_panel)
+            feat_dir_path = self._version_path/"inference_feature_panel"
             feat_path = feat_dir_path / self._inference_feature_panel_filename
 
             with open(feat_path, "r") as f:
@@ -1525,8 +1534,8 @@ class AutoloadInferenceTools(InferenceTools):
     prefix from the method name.
     """
     
-    def __init__(self, annotation_pipeline, *args, **kwargs):
-        super().__init__(annotation_pipeline, *args, **kwargs)
+    def __init__(self, annotation_pipeline, model_version, *args, **kwargs):
+        super().__init__(annotation_pipeline, model_version, *args, **kwargs)
         
         methods = [method for method in dir(self) 
                   if callable(getattr(self, method)) and 
@@ -2164,6 +2173,8 @@ class PostprocessingAzimuthLabels(OutputLabels):
         List of label encoders used during model training/inference.
     refine_level : str
         Level of refinement to apply ('broad', 'medium', or 'fine').
+    model_version: str
+          Model version to use for inference (e.g., 'v0').
         
     Attributes
     ----------
@@ -2205,7 +2216,8 @@ class PostprocessingAzimuthLabels(OutputLabels):
         num_cells,
         softmax_probs,
         encoders,
-        refine_level
+        refine_level,
+        model_version
         ):
         
         if refine_level not in self.VALID_REFINE_LEVELS:
@@ -2225,10 +2237,14 @@ class PostprocessingAzimuthLabels(OutputLabels):
         self.encoders = encoders
 
         try:
-            postprocessing_dir_path = files(postprocessing)
+            version_module = importlib.import_module(
+                f"panhumanpy._tools.{model_version}"
+            )
+            version_path = files(version_module)
+            postprocessing_dir_path = version_path/"postprocessing"
         except (ImportError, ModuleNotFoundError) as e:
             raise RuntimeError(
-                "postprocessing module not found. Please ensure it is installed"
+                "postprocessing module not found. Please ensure it is installed."
             ) from e
 
         self.refined_annotations_file_name = (
