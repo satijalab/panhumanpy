@@ -1543,6 +1543,42 @@ class InferenceTools():
         else:
             return None
 
+    def load_calibrators(self):
+        """
+        Load the trained Keras models for calibration.
+        
+        Loads the models from a predefined directory structure using the
+        version and the calibration filenames pre-defined for that version. 
+        The models are expected to be in .keras format.
+        
+        Returns
+        -------
+        list of keras.Model
+            List of loaded keras models with length = max_depth, if 
+            calibrators are available.
+            
+        Notes
+        -----
+        The models must be saved in the 'calibration' directory in the
+        version directory (for e.g. "v0"). This should be accessible via 
+        the 'files' import system. Model names must correspond to the names 
+        provided in model_meta for the specific version.
+        """
+        calib_dir_path = self._version_path/"calibration"
+        calibrator_names = self._model_meta['calibrators']
+        if len(calibrator_names) > 0:
+            calib_paths = [
+                calib_dir_path / name for name in calibrator_names
+                ]
+
+            calibrators = [
+                load_model(path) for path in calib_paths
+            ] 
+        else:
+            calibrators = None
+
+        return calibrators
+
 
 class AutoloadInferenceTools(InferenceTools):
     """
