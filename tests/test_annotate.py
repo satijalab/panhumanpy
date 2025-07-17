@@ -2,11 +2,13 @@
 Test annotation functionality in panhumanpy.
 """
 
+import re
 import os
 import pytest
 import anndata
 import numpy as np
 from scipy.sparse import csr_matrix
+from pathlib import Path
 
 
 
