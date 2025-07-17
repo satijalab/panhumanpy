@@ -1255,11 +1255,16 @@ class InferenceTools():
           Filename of the text file containing feature names.
       _annotation_pipeline : str
           Type of annotation pipeline to use (e.g., 'supervised').
+      _model_version: str
+          Model version to use for inference (e.g., 'v0'). 
+      _version_path: str
+          Traversable directory path to the specified version.
     """
 
     def __init__(
             self, 
             annotation_pipeline,
+            model_version,
             inference_model_filename='inference_model.keras',
             model_meta= model_meta, 
             inference_encoders_filename='inference_encoders.pkl',
@@ -1275,6 +1280,9 @@ class InferenceTools():
             'self-supervised', currently the only pipeline implemented
             is 'supervised'). Determines which components are required 
             for inference.
+        model_version: str
+            Model version to be used. Model version naming convention:
+            f"v{i}" for panhumanpy i.x.y .
         inference_model_filename : str, optional
             Filename of the Keras model file to load, by default 
             'inference_model.keras'.
@@ -1298,6 +1306,8 @@ class InferenceTools():
         )
 
         self._annotation_pipeline = annotation_pipeline
+        self._model_version = model_version
+        self._version_path = files(model_version)
 
     def load_inference_model(self):
         """
@@ -1318,7 +1328,7 @@ class InferenceTools():
         accessible via the 'files' import system. Model name must 
         correspond to the name provided to the object at initialization.
         """
-        model_dir_path = files(inference_model)
+        model_dir_path = self._version_path/"inference_model"
         model_path = model_dir_path / self._inference_model_filename
 
         model= load_model(model_path)
