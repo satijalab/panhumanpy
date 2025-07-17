@@ -139,6 +139,9 @@ class AzimuthNN_base(AutoloadInferenceTools):
     ----------
     annotation_pipeline : str, default='supervised'
         The type of annotation pipeline to use.
+    model_version: str, default='v0'
+        Model version to use, changing this corresponds to a major version
+        bump.
     eval_batch_size : int, default=8192
         Batch size for inference and embedding generation.
         
@@ -180,11 +183,15 @@ class AzimuthNN_base(AutoloadInferenceTools):
     def __init__(
         self, 
         annotation_pipeline='supervised',
+        model_version='v0',
         eval_batch_size=8192
         ):
 
         if not isinstance(annotation_pipeline, str):
             raise TypeError("annotation_pipeline must be a string")
+
+        if not isinstance(model_version, str):
+            raise TypeError("model_version must be a string")
             
         if not isinstance(eval_batch_size, int):
             raise TypeError("eval_batch_size must be an integer")
@@ -192,10 +199,11 @@ class AzimuthNN_base(AutoloadInferenceTools):
         
 
         self._annotation_pipeline = annotation_pipeline
+        self._model_version = model_version
         self._eval_batch_size = eval_batch_size
 
        
-        super().__init__(annotation_pipeline)
+        super().__init__(annotation_pipeline, model_version)
 
         if not hasattr(self, 'model_meta'):
             raise RuntimeError("Failed to load model metadata")
@@ -590,7 +598,8 @@ class AzimuthNN_base(AutoloadInferenceTools):
                 self.num_cells,
                 softmax_probs,
                 self.inference_encoders,
-                refine_level
+                refine_level,
+                self._model_version
             )
 
             results = refine_class.refine_labels()
