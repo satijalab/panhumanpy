@@ -1977,7 +1977,8 @@ def annotate():
         umap_seed, 
         spread,
         verbose,
-        init
+        init,
+        model_version
         )
 
     azimuth_object = core_outputs['azimuth_object']
