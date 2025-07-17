@@ -1667,6 +1667,16 @@ def arg_parse_in():
                         ), 
                         type=str
                         )
+
+    parser.add_argument(
+                        "-mv",
+                        "--model_version", 
+                        default=model_version_default,
+                        help=(
+                            "enter model version to use"
+                        ), 
+                        type=str
+                        )
     
     parser.add_argument(
                         "-ebs",
@@ -1868,6 +1878,7 @@ def arg_parse_out(args):
     query_filepath = args.filepath
     feature_names_col = args.feature_names_col
     annotation_pipeline = args.annotation_pipeline
+    model_version = args.model_version
     eval_batch_size = args.eval_batch_size
     normalization_override = args.normalization_override
     norm_check_batch_size = args.norm_check_batch_size
@@ -1889,6 +1900,7 @@ def arg_parse_out(args):
         'query_filepath' : query_filepath,
         'feature_names_col' : feature_names_col,
         'annotation_pipeline' : annotation_pipeline,
+        'model_version': model_version,
         'eval_batch_size' : eval_batch_size,
         'normalization_override' : normalization_override,
         'norm_check_batch_size' : norm_check_batch_size,
