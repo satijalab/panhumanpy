@@ -1537,8 +1537,8 @@ class AutoloadInferenceTools(InferenceTools):
     prefix from the method name.
     """
     
-    def __init__(self, annotation_pipeline, *args, **kwargs):
-        super().__init__(annotation_pipeline, *args, **kwargs)
+    def __init__(self, annotation_pipeline, model_version, *args, **kwargs):
+        super().__init__(annotation_pipeline, model_version, *args, **kwargs)
         
         methods = [method for method in dir(self) 
                   if callable(getattr(self, method)) and 
