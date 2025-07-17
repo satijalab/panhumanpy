@@ -1403,7 +1403,46 @@ class InferenceTools():
             assert isinstance(meta_dict['feature_panel_size'], int),(
                 "feature_panel_size must be an integer."
             )
-        # enforce existence of certain key:vals here
+        
+        assert 'calibration' in meta_dict.keys(), (
+            "model metadata dict must have a key 'calibration'."
+        )
+        
+        assert 'calibrators' in meta_dict.keys(), (
+            "model metadata dict must have a key 'calibrators'."
+        )
+
+        if meta_dict['calibration'] is not None:
+            assert isinstance(meta_dict['calibration'], str), (
+                "calibration must be a string or None."
+            )
+        
+        assert isinstance(meta_dict['calibrators'], list), (
+            "calibrators must be a list."
+        )
+
+        if meta_dict['calibration'] is None:
+            assert len(meta_dict['calibrators'])==0, (
+                "'calibration' and 'calibrators' entries mutually inconsistent." 
+            )
+        else:
+            assert len(meta_dict['calibrators'])>0, (
+                "calibrator model names should be provided when calibration \
+                not None."
+            )
+
+        if len(meta_dict['calibrators']) > 0:
+            calibration_dir_path = self._version_path / "calibration"
+            for calibrator_filename in meta_dict['calibrators']:
+                calibrator_path = calibration_dir_path / calibrator_filename
+                assert calibrator_path.exists(), (
+                    f"Calibrator file '{calibrator_filename}' not found in calibration "
+                    f"directory. Expected at: {calibrator_path}"
+                )
+                assert calibrator_path.is_file(), (
+                    f"Calibrator '{calibrator_filename}' exists but is not a file. "
+                    f"Path: {calibrator_path}"
+                )
 
         return meta_dict
 
