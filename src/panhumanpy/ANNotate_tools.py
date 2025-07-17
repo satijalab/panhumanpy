@@ -1417,9 +1417,9 @@ class InferenceTools():
         Load label encoders used for decoding model predictions.
         
         Loads pickled label encoder objects from a predefined directory
-        structure using the filename specified during initialization.
-        These encoders are used to convert numeric predictions back to
-        string labels.
+        structure using the version and filename specified during 
+        initialization. These encoders are used to convert numeric 
+        predictions back to string labels.
         
         Returns
         -------
@@ -1430,11 +1430,12 @@ class InferenceTools():
         Notes
         -----
         The encoders must be saved as a pickle file in the 
-        'inference_encoders' directory accessible via the 'files' import
+        'inference_encoders' directory within the version directory 
+        (for e.g. "v0") that is accessible via the 'files' import
          system, and the name of the pickled file must correspond to the
          name provided to this object at initialization.
         """
-        encoders_dir_path = files(inference_encoders)
+        encoders_dir_path = files(self._version_path)/"inference_encoders"
         encoders_path = encoders_dir_path / self._inference_encoders_filename
 
         with open(encoders_path, 'rb') as f:
@@ -1467,14 +1468,14 @@ class InferenceTools():
         Notes
         -----
         The feature panel must be saved as a text file in the 
-        'inference_feature_panel' directory accessible via the 'files' 
-        import system, with the filename matching the name passed to this
-        object at initialization. 
+        'inference_feature_panel' directory within the version directory
+        that should be accessible via the 'files' import system, with 
+        the filename matching the name passed at initialization. 
         
         For non-supervised pipelines, this method returns None.
         """
         if self._annotation_pipeline == 'supervised':
-            feat_dir_path = files(inference_feature_panel)
+            feat_dir_path = files(self._version_path)/"inference_feature_panel"
             feat_path = feat_dir_path / self._inference_feature_panel_filename
 
             with open(feat_path, "r") as f:
