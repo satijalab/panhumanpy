@@ -1096,9 +1096,9 @@ class AzimuthNN(AzimuthNN_base):
         self._output_mode = output_mode
 
         super().__init__(
-            self._annotation_pipeline,
-            self._model_version,
-            self._eval_batch_size
+            annotation_pipeline,
+            model_version,
+            eval_batch_size
         )
 
         if isinstance(self._query_arg, anndata.AnnData):
