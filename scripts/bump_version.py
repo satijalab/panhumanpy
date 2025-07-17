@@ -209,7 +209,8 @@ def bump_version(bump_type, constellation=None):
         print("1. Review the changes: git diff")
         print("2. Commit the changes: git add . && git commit -m 'Bump version to {}'".format(new_version_str))
         print("3. Tag the release: git tag v{}-{}".format(new_version_str, new_constellation.lower())) 
-        print("4. Push changes and tags: git push --follow-tags") 
+        print("4. Push changes and tags: git push --follow-tags  # if on branch main") 
+        print("..else git push origin version_bump_branch --tags # if on a separate branch")
         
         return 0
     except Exception as e:
