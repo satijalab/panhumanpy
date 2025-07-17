@@ -1237,6 +1237,8 @@ class InferenceTools():
       load_inference_feature_panel()
           Load the feature panel for subsetting query data (supervised 
           pipeline only).
+      load_calibrators()
+          Load calibration models, if any.
           
     Private Attributes
     -----------------
@@ -1426,9 +1428,9 @@ class InferenceTools():
                 "'calibration' and 'calibrators' entries mutually inconsistent." 
             )
         else:
-            assert len(meta_dict['calibrators'])>0, (
-                "calibrator model names should be provided when calibration \
-                not None."
+            assert len(meta_dict['calibrators'])==meta_dict['max_depth'], (
+                "calibrator model names should be provided for each \
+                hierarchical level when calibration is not None."
             )
 
         if len(meta_dict['calibrators']) > 0:
