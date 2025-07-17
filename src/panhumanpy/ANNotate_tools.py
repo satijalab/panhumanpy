@@ -1605,6 +1605,9 @@ class AutoloadInferenceTools(InferenceTools):
     inference_feature_panel : list or None
         List of features for subsetting data, or None for non-supervised
         pipelines (from load_inference_feature_panel).
+    calibrators: list of keras.Model or None
+        List of keras Models (if any) that is max_depth long for 
+        calibration.
         
     Notes
     -----
