@@ -26,7 +26,7 @@ pip install git+https://github.com/satijalab/panhumanpy.git#egg=panhumanpy[gpu]
 
 ## Model Versions
 
-panhumanpy uses versioned models corresponding to major package releases. The package defaults to model v0 (compatible with the package version 0.2.1 (Andromeda)). For most users, the default model version is recommended. The user can also choose to use a different model version as outlined in the tutorial mentioned below. 
+panhumanpy uses versioned models corresponding to major package releases. The package defaults to model 'v{i}' where i is the major package version. For example for panhumanpy 0.2.1 (Andromeda), the model version is 'v0'. For most users, the default model version is recommended. The user can also choose to use a different model version as outlined in the tutorial mentioned below. 
 
 ## Tutorial
 
