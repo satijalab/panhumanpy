@@ -24,6 +24,10 @@ If you require GPU acceleration for enhanced performance on compatible hardware,
 pip install git+https://github.com/satijalab/panhumanpy.git#egg=panhumanpy[gpu]
 ```
 
+## Model Versions
+
+panhumanpy uses versioned models corresponding to major package releases. The package defaults to model v0 (compatible with the package version 0.2.1 (Andromeda)). For most users, the default model version is recommended. The user can also choose to use a different model version as outlined in the tutorial mentioned below. 
+
 ## Tutorial
 
 For an introductory tutorial, please check out this [notebook](https://github.com/satijalab/panhumanpy/blob/main/tutorial_panhumanpy.ipynb).
