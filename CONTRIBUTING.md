@@ -69,6 +69,22 @@ This project follows a generalised semantic versioning where major versions are 
 - When versions are updated, `pyproject.toml`, `src/panhumanpy/__init__.py`, `README.md`, and `CONTRIBUTING.md` must be kept in sync.
 - Use versioning script for version bumps executed in a consistent fashion.
 
+#### Rules:
+1. The model version major number must match the package major version
+   - Package `0.2.1` → Model `v0`
+   - Package `1.3.2` → Model `v1`
+2. Model artifacts are stored in `src/panhumanpy/_tools/v{i}/`
+3. When bumping major package version, create new `v{i}` directory with updated models and set default version in ANNotate.py appropriately.
+
+#### Example:
+```python
+# In __init__.py
+__version__ = "0.2.1"
+
+# In ANNotate.py  
+model_version_default = 'v0'  # Must match major version (0)
+```
+
 
 ### Using the Version Bump Script
 
@@ -89,6 +105,9 @@ python scripts/bump_version.py minor
 
 # New models or breaking changes (major)
 python scripts/bump_version.py major Cassiopeia
+
+# Run tests that will ensure version consistency across scripts and docs
+pytest
 
 # Push changes and tags on git
 git diff
