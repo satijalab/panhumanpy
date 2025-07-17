@@ -21,9 +21,6 @@ from datetime import datetime
 import sys
 import importlib
 from importlib.resources import files
-from panhumanpy._tools import inference_model, inference_encoders
-from panhumanpy._tools import inference_feature_panel
-from panhumanpy._tools import postprocessing
 from panhumanpy.loss_fn import *
 
 import warnings
@@ -1435,7 +1432,7 @@ class InferenceTools():
          system, and the name of the pickled file must correspond to the
          name provided to this object at initialization.
         """
-        encoders_dir_path = files(self._version_path)/"inference_encoders"
+        encoders_dir_path = self._version_path/"inference_encoders"
         encoders_path = encoders_dir_path / self._inference_encoders_filename
 
         with open(encoders_path, 'rb') as f:
@@ -1475,7 +1472,7 @@ class InferenceTools():
         For non-supervised pipelines, this method returns None.
         """
         if self._annotation_pipeline == 'supervised':
-            feat_dir_path = files(self._version_path)/"inference_feature_panel"
+            feat_dir_path = self._version_path/"inference_feature_panel"
             feat_path = feat_dir_path / self._inference_feature_panel_filename
 
             with open(feat_path, "r") as f:
@@ -2243,7 +2240,7 @@ class PostprocessingAzimuthLabels(OutputLabels):
 
         try:
             version_path = files(model_version)
-            postprocessing_dir_path = version_path/postprocessing
+            postprocessing_dir_path = version_path/"postprocessing"
         except (ImportError, ModuleNotFoundError) as e:
             raise RuntimeError(
                 "postprocessing module not found. Please ensure it is installed."
