@@ -102,6 +102,8 @@ Example command:
 
 from panhumanpy.ANNotate_tools import *
 
+model_version_default = 'v0'
+
 _gpu_configured = False
 
 def configure_once():
@@ -139,7 +141,7 @@ class AzimuthNN_base(AutoloadInferenceTools):
     ----------
     annotation_pipeline : str, default='supervised'
         The type of annotation pipeline to use.
-    model_version: str, default='v0'
+    model_version: str, default set globally for this script.
         Model version to use, changing this corresponds to a major version
         bump.
     eval_batch_size : int, default=8192
@@ -183,7 +185,7 @@ class AzimuthNN_base(AutoloadInferenceTools):
     def __init__(
         self, 
         annotation_pipeline='supervised',
-        model_version='v0',
+        model_version=model_version_default,
         eval_batch_size=8192
         ):
 
@@ -1007,7 +1009,7 @@ class AzimuthNN(AzimuthNN_base):
         are already the correct gene identifiers.
     annotation_pipeline : str, default='supervised'
         Type of annotation pipeline to use for cell type prediction.
-    model_version: str, default='v0'
+    model_version: str, default set globally for this script.
         Model version to use, changing this corresponds to a major version
         bump.
     eval_batch_size : int, default=8192
@@ -1055,7 +1057,7 @@ class AzimuthNN(AzimuthNN_base):
         query_arg,
         feature_names_col=None,
         annotation_pipeline='supervised',
-        model_version='v0',
+        model_version=model_version_default,
         eval_batch_size=8192,
         normalization_override=False,
         norm_check_batch_size=100,
@@ -1373,7 +1375,9 @@ def annotate_core(
     umap_seed, 
     spread,
     verbose,
-    init
+    init,
+    model_version=model_version_default   
+    # adding a default here, so the R script does not need mods to access the default.
     ):
     """
     Core function for cell type annotation using the Azimuth neural 
@@ -1516,6 +1520,7 @@ def annotate_core(
 
     azimuth = AzimuthNN_base(
         annotation_pipeline = annotation_pipeline,
+        model_version = model_version,
         eval_batch_size = eval_batch_size
     )
 
