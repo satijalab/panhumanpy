@@ -76,7 +76,8 @@ def test_version_directory_structure():
            "inference_encoders": ["__init__.py", "inference_encoders.pkl"],
            "inference_feature_panel": ["__init__.py", "inference_feature_panel.txt"],
            "inference_model": ["__init__.py", "inference_model.keras"],
-           "postprocessing": ["__init__.py", "panhuman_annotate_fine.csv", "panhuman_annotate_medium.csv"]
+           "postprocessing": ["__init__.py", "panhuman_annotate_fine.csv", "panhuman_annotate_medium.csv"],
+           "calibration":["__init__.py"]
        }
        
        # Check each required subdirectory and its contents
@@ -104,7 +105,9 @@ def test_version_directory_structure():
            'inference_model_loss_function', 
            'max_depth',
            'inference_model_embedding_layer',
-           'feature_panel_size'
+           'feature_panel_size',
+           'calibration',
+           'calibrators'
        ]
        
        for key in required_keys:
