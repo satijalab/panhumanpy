@@ -1007,6 +1007,9 @@ class AzimuthNN(AzimuthNN_base):
         are already the correct gene identifiers.
     annotation_pipeline : str, default='supervised'
         Type of annotation pipeline to use for cell type prediction.
+    model_version: str, default='v0'
+        Model version to use, changing this corresponds to a major version
+        bump.
     eval_batch_size : int, default=8192
         Batch size to use during model inference.
     normalization_override : bool, default=False
@@ -1052,6 +1055,7 @@ class AzimuthNN(AzimuthNN_base):
         query_arg,
         feature_names_col=None,
         annotation_pipeline='supervised',
+        model_version='v0',
         eval_batch_size=8192,
         normalization_override=False,
         norm_check_batch_size=100,
@@ -1085,14 +1089,13 @@ class AzimuthNN(AzimuthNN_base):
             )
 
         self._query_arg = query_arg
-        self._annotation_pipeline = annotation_pipeline
-        self._eval_batch_size = eval_batch_size
         self._normalization_override = normalization_override
         self._norm_check_batch_size = norm_check_batch_size
         self._output_mode = output_mode
 
         super().__init__(
             self._annotation_pipeline,
+            self._model_version,
             self._eval_batch_size
         )
 
