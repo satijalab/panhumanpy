@@ -1237,6 +1237,8 @@ class InferenceTools():
       load_inference_feature_panel()
           Load the feature panel for subsetting query data (supervised 
           pipeline only).
+      load_calibrators()
+          Load calibration models, if any.
           
     Private Attributes
     -----------------
@@ -1426,9 +1428,9 @@ class InferenceTools():
                 "'calibration' and 'calibrators' entries mutually inconsistent." 
             )
         else:
-            assert len(meta_dict['calibrators'])>0, (
-                "calibrator model names should be provided when calibration \
-                not None."
+            assert len(meta_dict['calibrators'])==meta_dict['max_depth'], (
+                "calibrator model names should be provided for each \
+                hierarchical level when calibration is not None."
             )
 
         if len(meta_dict['calibrators']) > 0:
@@ -1442,6 +1444,9 @@ class InferenceTools():
                 assert calibrator_path.is_file(), (
                     f"Calibrator '{calibrator_filename}' exists but is not a file. "
                     f"Path: {calibrator_path}"
+                )
+                assert calibrator_path.suffix == '.keras', (
+                    f"Expected .keras file, got: {calibrator_path}"
                 )
 
         return meta_dict
@@ -1537,6 +1542,42 @@ class InferenceTools():
             return feat_list
         else:
             return None
+
+    def load_calibrators(self):
+        """
+        Load the trained Keras models for calibration.
+        
+        Loads the models from a predefined directory structure using the
+        version and the calibration filenames pre-defined for that version. 
+        The models are expected to be in .keras format.
+        
+        Returns
+        -------
+        list of keras.Model
+            List of loaded keras models with length = max_depth, if 
+            calibrators are available.
+            
+        Notes
+        -----
+        The models must be saved in the 'calibration' directory in the
+        version directory (for e.g. "v0"). This should be accessible via 
+        the 'files' import system. Model names must correspond to the names 
+        provided in model_meta for the specific version.
+        """
+        calib_dir_path = self._version_path/"calibration"
+        calibrator_names = self._model_meta['calibrators']
+        if len(calibrator_names) > 0:
+            calib_paths = [
+                calib_dir_path / name for name in calibrator_names
+                ]
+
+            calibrators = [
+                load_model(path) for path in calib_paths
+            ] 
+        else:
+            calibrators = None
+
+        return calibrators
 
 
 class AutoloadInferenceTools(InferenceTools):
