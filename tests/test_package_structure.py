@@ -150,9 +150,9 @@ def test_version_directory_structure():
                 f"Found: {calibrators_list}"
             )
         else:
-            assert len(calibrators_list) > 0, (
+            assert len(calibrators_list) == model_meta['max_depth'], (
                 f"{version_name}: When calibration is not None ('{calibration_type}'), "
-                f"calibrators list must not be empty."
+                f"calibrators list must be max_depth long."
             )
 
         if len(calibrators_list) > 0:
@@ -166,6 +166,7 @@ def test_version_directory_structure():
                 assert calibrator_path.is_file(), (
                     f"{version_name}: Calibrator '{calibrator_filename}' exists but is not a file"
                 )
+                assert calibrator_path.suffix == '.keras', f"Expected .keras file, got: {calibrator_path}"
         
 
 
