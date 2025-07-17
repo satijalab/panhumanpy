@@ -31,7 +31,7 @@ def test_deep_consistent_hierarchy():
     assert result, "Deep consistent hierarchy should return True"
 
 def test_shared_node_path_jump_bug():
-    """Test the main bug case - jumping between different paths to shared node"""
+    """Test an important bug case - jumping between different paths to shared node"""
     cell_label = ['A', 'A|B', 'A|B|X', 'A|C|X|Y']
     result = if_full_consistent_hierarchy(cell_label, 4)
     assert not result, "Jumping from A|B|X to A|C|X|Y should be inconsistent"
