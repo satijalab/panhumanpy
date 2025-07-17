@@ -1445,6 +1445,9 @@ class InferenceTools():
                     f"Calibrator '{calibrator_filename}' exists but is not a file. "
                     f"Path: {calibrator_path}"
                 )
+                assert calibrator_path.suffix == '.keras', (
+                    f"Expected .keras file, got: {calibrator_path}"
+                )
 
         return meta_dict
 
