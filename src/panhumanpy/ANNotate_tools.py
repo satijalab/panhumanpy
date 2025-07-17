@@ -1299,15 +1299,12 @@ class InferenceTools():
 
         self._annotation_pipeline = annotation_pipeline
         self._model_version = model_version
-        assert files(model_version).is_dir(), (
-                f"Model version '{model_version}' does not exist."
-        )
-        self._version_path = files(model_version)
 
         self._version_module = importlib.import_module(
             f"panhumanpy._tools.{model_version}"
         )
         self._model_meta = self._version_module.model_meta
+        self._version_path = files(self._version_module)
 
     def load_inference_model(self):
         """
