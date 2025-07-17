@@ -2237,7 +2237,10 @@ class PostprocessingAzimuthLabels(OutputLabels):
         self.encoders = encoders
 
         try:
-            version_path = files(model_version)
+            version_module = importlib.import_module(
+                f"panhumanpy._tools.{model_version}"
+            )
+            version_path = files(version_module)
             postprocessing_dir_path = version_path/"postprocessing"
         except (ImportError, ModuleNotFoundError) as e:
             raise RuntimeError(
