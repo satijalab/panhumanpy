@@ -22,7 +22,6 @@ import sys
 import importlib
 from importlib.resources import files
 from panhumanpy._tools import inference_model, inference_encoders
-from panhumanpy._tools.inference_model import model_meta
 from panhumanpy._tools import inference_feature_panel
 from panhumanpy._tools import postprocessing
 from panhumanpy.loss_fn import *
@@ -1259,6 +1258,8 @@ class InferenceTools():
           Model version to use for inference (e.g., 'v0'). 
       _version_path: str
           Traversable directory path to the specified version.
+      _version_model: module
+          Model version directory imported as module.
     """
 
     def __init__(
@@ -1266,7 +1267,6 @@ class InferenceTools():
             annotation_pipeline,
             model_version,
             inference_model_filename='inference_model.keras',
-            model_meta= model_meta, 
             inference_encoders_filename='inference_encoders.pkl',
             inference_feature_panel_filename='inference_feature_panel.txt'
             ):
@@ -1286,10 +1286,6 @@ class InferenceTools():
         inference_model_filename : str, optional
             Filename of the Keras model file to load, by default 
             'inference_model.keras'.
-        model_meta : dict
-            Dictionary containing model metadata and configuration 
-            parameters. Must include specific keys depending on the 
-            annotation pipeline.
         inference_encoders_filename : str, optional
             Filename of the pickled label encoders, by default 
             'inference_encoders.pkl'.
@@ -1299,7 +1295,6 @@ class InferenceTools():
         """
         
         self._inference_model_filename = inference_model_filename
-        self._model_meta = model_meta
         self._inference_encoders_filename = inference_encoders_filename
         self._inference_feature_panel_filename = (
             inference_feature_panel_filename
@@ -1310,6 +1305,11 @@ class InferenceTools():
         assert files(model_version).is_dir(), 
                 f"Model version '{model_version}' does not exist."
         self._version_path = files(model_version)
+
+        self._version_module = importlib.import_module(
+            f"panhumanpy._tools.{model_version}"
+        )
+        self._model_meta = self._version_module.model_meta
 
     def load_inference_model(self):
         """
