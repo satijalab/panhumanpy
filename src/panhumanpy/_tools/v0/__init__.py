@@ -8,5 +8,7 @@ model_meta = {
     'inference_model_loss_function': 'level_wt_focal_loss',
     'max_depth': 8,
     'inference_model_embedding_layer': 'dense_3',
-    'feature_panel_size': 5039
+    'feature_panel_size': 5039,
+    'calibration': None,
+    'calibrators':[]
 }
