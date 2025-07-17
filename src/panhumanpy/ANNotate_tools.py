@@ -1299,8 +1299,9 @@ class InferenceTools():
 
         self._annotation_pipeline = annotation_pipeline
         self._model_version = model_version
-        assert files(model_version).is_dir(), 
+        assert files(model_version).is_dir(), (
                 f"Model version '{model_version}' does not exist."
+        )
         self._version_path = files(model_version)
 
         self._version_module = importlib.import_module(
