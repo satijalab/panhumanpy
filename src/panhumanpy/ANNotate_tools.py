@@ -1307,6 +1307,8 @@ class InferenceTools():
 
         self._annotation_pipeline = annotation_pipeline
         self._model_version = model_version
+        assert files(model_version).is_dir(), 
+                f"Model version '{model_version}' does not exist."
         self._version_path = files(model_version)
 
     def load_inference_model(self):
@@ -1314,8 +1316,8 @@ class InferenceTools():
         Load the trained Keras model for inference.
         
         Loads the model from a predefined directory structure using the
-        filename specified during initialization. The model is expected
-        to be in the Keras format.
+        version and filename specified during initialization. The model 
+        is expected to be in .keras format.
         
         Returns
         -------
@@ -1324,9 +1326,10 @@ class InferenceTools():
             
         Notes
         -----
-        The model must be saved in the 'inference_model' directory 
-        accessible via the 'files' import system. Model name must 
-        correspond to the name provided to the object at initialization.
+        The model must be saved in the 'inference_model' directory in the
+        version directory (for e.g. "v0"). This should be accessible via 
+        the 'files' import system. Model name must correspond to the name 
+        provided at initialization.
         """
         model_dir_path = self._version_path/"inference_model"
         model_path = model_dir_path / self._inference_model_filename
