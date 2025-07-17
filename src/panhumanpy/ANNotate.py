@@ -141,9 +141,8 @@ class AzimuthNN_base(AutoloadInferenceTools):
     ----------
     annotation_pipeline : str, default='supervised'
         The type of annotation pipeline to use.
-    model_version: str, default set globally for this script.
-        Model version to use, changing this corresponds to a major version
-        bump.
+    model_version: str, default set to match package major version.
+        Model version to use.
     eval_batch_size : int, default=8192
         Batch size for inference and embedding generation.
         
@@ -1009,9 +1008,8 @@ class AzimuthNN(AzimuthNN_base):
         are already the correct gene identifiers.
     annotation_pipeline : str, default='supervised'
         Type of annotation pipeline to use for cell type prediction.
-    model_version: str, default set globally for this script.
-        Model version to use, changing this corresponds to a major version
-        bump.
+    model_version: str, default set to match package major version.
+        Model version to use.
     eval_batch_size : int, default=8192
         Batch size to use during model inference.
     normalization_override : bool, default=False
