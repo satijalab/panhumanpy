@@ -2,7 +2,7 @@
 Tests for functions and classes in ANNotate_tools.
 """
 
-from ANNotate_tools import if_full_consistent_hierarchy
+from panhumanpy.ANNotate_tools import if_full_consistent_hierarchy
 
 ##### test the concordance detection fn if_full_consistent_hierarchy under different conditions
 
