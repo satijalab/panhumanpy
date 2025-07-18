@@ -56,7 +56,7 @@ This project follows a generalised semantic versioning where major versions are 
 **Format:** `MAJOR.MINOR.PATCH (Constellation Name)`
 
 #### Version Types:
-- **MAJOR (X.0.0):** New model added, and/or breaking changes to the API → New constellation name
+- **MAJOR (X.0.0):** New default model added, and/or breaking changes to the API → New constellation name
 - **MINOR (X.Y.0):** New features/functionality 
 - **PATCH (X.Y.Z):** Bug fixes, small improvements
 
@@ -64,17 +64,17 @@ This project follows a generalised semantic versioning where major versions are 
 - 0.2.1 (Andromeda)
 
 #### Version Philosophy:
-- **New models, and/or breaking changes to API = Major versions** because they represent ("soft") breaking changes.
+- **New default models, and/or breaking changes to API = Major versions** because they represent ("soft") breaking changes.
 - **Version bumps are at maintainer discretion** - not every PR requires a version change.
 - When versions are updated, `pyproject.toml`, `src/panhumanpy/__init__.py`, `README.md`, and `CONTRIBUTING.md` must be kept in sync.
 - Use versioning script for version bumps executed in a consistent fashion.
 
 #### Rules:
-1. The model version major number must match the package major version
-   - Package `0.2.1` → Model `v0`
-   - Package `1.3.2` → Model `v1`
+1. The default model version number must match the package major version
+   - Package `0.2.1` → Model `v0` as default
+   - Package `1.3.2` → Model `v1` as default
 2. Model artifacts are stored in `src/panhumanpy/_tools/v{i}/`
-3. When bumping major package version, create new `v{i}` directory with updated models and set default version in ANNotate.py appropriately.
+3. When bumping major package version, create new `v{i}` directory with updated models and set default model version in ANNotate.py appropriately.
 
 #### Example:
 ```python
