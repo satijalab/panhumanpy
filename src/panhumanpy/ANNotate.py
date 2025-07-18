@@ -1551,6 +1551,7 @@ def annotate_core(
         )
 
     _ = azimuth.run_inference_model()
+    _ = azimuth.calibrate_predictions()
     _ = azimuth.process_outputs(mode=output_mode)
 
     if refine_labels:
