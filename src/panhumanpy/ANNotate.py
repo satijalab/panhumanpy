@@ -463,6 +463,13 @@ class AzimuthNN_base(AutoloadInferenceTools):
 
         return self._inference_outputs_unprocessed
 
+    def calibrate_predictions(self):
+        '''
+        write
+        '''
+        if self.calibrators is not None:
+            print("Calibrators haven't been added yet, this is a bug.")
+
 
     def process_outputs(self, mode='minimal'):
         """
