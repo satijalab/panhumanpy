@@ -29,7 +29,8 @@ Interactive usage with high-level interface:
     >>> import anndata
     >>> from panhumanpy import AzimuthNN
     >>> adata = anndata.read_h5ad('my_data.h5ad')
-    >>> azimuth = AzimuthNN(adata) # Run minimal annotation pipeline
+    >>> # Run minimal annotation pipeline with calibration
+    >>> azimuth = AzimuthNN(adata) 
     >>> azimuth.azimuth_refine()  # Refine annotations
     >>> embeddings = azimuth.azimuth_embed()  # Extract embeddings
     >>> umap = azimuth.azimuth_umap()  # Generate UMAP
@@ -132,10 +133,12 @@ class AzimuthNN_base(AutoloadInferenceTools):
     
     This class provides a comprehensive framework for single-cell 
     RNA-seq annotation using neural network models. It handles the 
-    complete workflow from data loading and preprocessing to inference, 
-    post-processing, and result visualization. This includes functionality 
-    for extracting embeddings, generating UMAP visualizations, and refining
-    annotations at different levels of granularity.
+    complete workflow from data loading and preprocessing to inference,
+    confidence calibration, post-processing, and result visualization. 
+    
+    This includes functionality for extracting embeddings, generating 
+    UMAP visualizations, and refining annotations at different levels of
+     granularity.
     
     Parameters
     ----------
@@ -443,8 +446,12 @@ class AzimuthNN_base(AutoloadInferenceTools):
             
         Notes
         -----
-        The raw outputs should typically be processed using the 
-        process_outputs() method before further use downstream.
+        The raw outputs should be calibrated using calibrate_predictions() 
+        and then processed using process_outputs() before further use 
+        downstream. The typical workflow is:
+        1. run_inference_model()
+        2. calibrate_predictions() 
+        3. process_outputs()
         """
 
         assert self._inference_input_matrix is not None, (
@@ -520,7 +527,7 @@ class AzimuthNN_base(AutoloadInferenceTools):
         (high probabilities for uncertain predictions or vice-versa)
         - After calibration: Probabilities better reflect true prediction
         confidence and uncertainty
-        
+
         """
         calibration_method = self.model_meta['calibration']
         if calibration_method is not None:
@@ -597,7 +604,10 @@ class AzimuthNN_base(AutoloadInferenceTools):
             
         Notes
         -----
-        This method should be called after run_inference_model().
+        This method should be called after run_inference_model() and 
+        calibrate_predictions(). The calibration step improves confidence 
+        score reliability by correcting for model overconfidence or 
+        underconfidence using trained calibration models.
         """
 
         assert mode in ['minimal','detailed'], (
@@ -1111,6 +1121,10 @@ class AzimuthNN(AzimuthNN_base):
     simplified workflow for hierarchical cell type annotation based on 
     single-cell RNA-seq data, handling data loading, preprocessing, 
     model inference, and visualization in a streamlined manner. 
+
+    The pipeline automatically applies confidence calibration to improve 
+    the reliability of prediction confidence scores using trained 
+    calibration models.
     
     For more fine-grained control over the annotation process, users 
     should directly use the AzimuthNN_base class.
@@ -1179,6 +1193,16 @@ class AzimuthNN(AzimuthNN_base):
         norm_check_batch_size=100,
         output_mode='minimal'
         ):
+
+        """
+        Initialize AzimuthNN with automatic annotation pipeline execution.
+
+        This constructor automatically runs the complete annotation workflow:
+        1. Data loading and preprocessing
+        2. Model inference 
+        3. Confidence calibration using trained calibration models
+        4. Output processing and metadata updating
+        """
 
         if (
             not isinstance(query_arg, str) and 
@@ -1504,8 +1528,9 @@ def annotate_core(
     functionality for exploratory analysis, this function offers a 
     one-step method for automated annotation via Python or R scripts. It
       performs the complete annotation workflow in a single function 
-      call: data preprocessing, model inference, label generation, 
-    optional label refinement, and optional embedding/UMAP generation.
+      call: data preprocessing, model inference, confidence calibration,
+      label generation, optional label refinement, and optional 
+      embedding/UMAP generation.
     
     Parameters
     ----------
@@ -2049,9 +2074,9 @@ def annotate():
     annotation pipeline.
     
     Parses command line arguments, loads the specified h5ad file, runs 
-    the annotation pipeline via annotate_core(), and saves the results 
-    as a new h5ad file in the same directory as the input file with 
-    '_ANN' appended to the filename.
+    the annotation pipeline including confidence calibration via 
+    annotate_core(), and saves the results as a new h5ad file in the 
+    same directory as the input file with '_ANN' appended to the filename.
     
     This function is intended to be called when the module is executed 
     directly as a script and provides a complete workflow from argument 
