@@ -463,6 +463,13 @@ class AzimuthNN_base(AutoloadInferenceTools):
 
         return self._inference_outputs_unprocessed
 
+    def calibrate_predictions(self):
+        '''
+        write
+        '''
+        if self.calibrators is not None:
+            print("Calibrators haven't been added yet, this is a bug.")
+
 
     def process_outputs(self, mode='minimal'):
         """
@@ -1116,6 +1123,7 @@ class AzimuthNN(AzimuthNN_base):
         )
 
         _ = self.run_inference_model()
+        _ = self.calibrate_predictions()
         self.annotations = self.process_outputs(mode=self._output_mode)
         _ = self.update_cells_meta()
 
@@ -1543,6 +1551,7 @@ def annotate_core(
         )
 
     _ = azimuth.run_inference_model()
+    _ = azimuth.calibrate_predictions()
     _ = azimuth.process_outputs(mode=output_mode)
 
     if refine_labels:
