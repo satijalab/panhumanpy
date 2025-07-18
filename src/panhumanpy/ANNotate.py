@@ -464,11 +464,111 @@ class AzimuthNN_base(AutoloadInferenceTools):
         return self._inference_outputs_unprocessed
 
     def calibrate_predictions(self):
-        '''
-        write
-        '''
-        if self.calibrators is not None:
-            print("Calibrators haven't been added yet, this is a bug.")
+        """
+        Apply calibration to softmax outputs using trained calibrators.
+        
+        This method calibrates the softmax probability outputs from each 
+        hierarchical level using the corresponding trained calibration models, 
+        if available. Calibration improves the reliability and trustworthiness 
+        of prediction confidence scores by adjusting for overconfidence or 
+        underconfidence in the original model outputs.
+        
+        Returns
+        -------
+        dict
+            Updated inference outputs dictionary with calibrated results. 
+            Contains the same keys as the original inference outputs but with
+            calibrated values:
+            
+            - 'softmax_vals_all': List of calibrated softmax probability arrays,
+            one per hierarchical level
+            - 'probability_of_preds': Updated maximum probability values from
+            the calibrated softmax distributions
+            - Other keys remain unchanged from the original inference outputs
+            
+        Notes
+        -----
+        - Only applies calibration if calibration method is specified in model 
+        metadata and calibrator models are available
+        - If no calibration is configured (calibration method is None), the 
+        method returns the original inference outputs unchanged
+        - Each hierarchical level is calibrated independently using its own
+        trained calibrator model
+        - Memory management is applied during processing to handle large datasets
+        efficiently by cleaning up intermediate results after each level
+        
+        Raises
+        ------
+        AssertionError
+            If calibration method is not None but the number of available
+            calibrator models doesn't match the expected number of hierarchical
+            levels (max_depth).
+            
+        Examples
+        --------
+        The method is typically called as part of the inference pipeline:
+        
+        >>> azimuth = AzimuthNN_base()
+        >>> # ... load data and run inference ...
+        >>> raw_outputs = azimuth.run_inference_model()
+        >>> calibrated_outputs = azimuth.calibrate_predictions()
+        >>> # Calibrated outputs now have adjusted confidence scores
+        
+        The calibration process transforms prediction confidence scores:
+        
+        - Before calibration: Model might be over(/under)-confident 
+        (high probabilities for uncertain predictions or vice-versa)
+        - After calibration: Probabilities better reflect true prediction
+        confidence and uncertainty
+        
+        """
+        calibration_method = self.model_meta['calibration']
+        if calibration_method is not None:
+            assert len(self.calibrators)==self.max_depth, (
+                "Calibration method is not None, expected number of "
+                f"calibrator models: {self.max_depth}, number of "
+                f"calibrator models found: {len(self.calibrators)}"
+            )
+
+            softmax_all = self._inference_outputs_unprocessed[
+                'softmax_vals_all'
+            ]
+
+            calibrated_levels_cache = []
+            max_probs_levels_cache = []
+
+            for level in range(self.max_depth):
+                with MemoryContext():
+                    sm_array = softmax_all[level]
+                    calibrator_model = self.calibrators[level]
+
+                    calibration_obj = CalibrationSingleClassifier(
+                        softmax = sm_array,
+                        eval_batch_size = self._eval_batch_size
+                    )
+
+                    calibrated_sm = calibration_obj.calibrate(
+                        calibration_method,
+                        calibrator_model
+                    )
+
+                    calibrated_levels_cache.append(calibrated_sm)
+                    max_probs_levels_cache.append(
+                        np.max(calibrated_sm, axis=-1)
+                    )
+
+            max_probs = np.column_stack(max_probs_levels_cache)
+
+            self._inference_outputs_unprocessed[
+                'softmax_vals_all'
+            ] = calibrated_levels_cache
+
+            self._inference_outputs_unprocessed[
+                'probability_of_preds'
+            ] = max_probs
+
+        return self._inference_outputs_unprocessed
+
 
 
     def process_outputs(self, mode='minimal'):
