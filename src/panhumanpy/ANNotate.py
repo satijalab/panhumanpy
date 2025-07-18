@@ -1123,6 +1123,7 @@ class AzimuthNN(AzimuthNN_base):
         )
 
         _ = self.run_inference_model()
+        _ = self.calibrate_predictions()
         self.annotations = self.process_outputs(mode=self._output_mode)
         _ = self.update_cells_meta()
 
