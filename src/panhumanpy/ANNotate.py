@@ -587,34 +587,31 @@ class AzimuthNN_base(AutoloadInferenceTools):
             "Interpreting label predictions for consistent granularity "
             f"at {refine_level} level.\n")
 
-        if refine_level in ['medium', 'fine']:
-
-            labels_pred = self._inference_outputs_unprocessed[
-                'hierarchical_label_preds'
-            ]
-            labels_prob = self._inference_outputs_unprocessed[
-                'probability_of_preds'
-            ]
-            softmax_probs = self._inference_outputs_unprocessed[
-                'softmax_vals_all'
-            ]
-
-            refine_class = PostprocessingAzimuthLabels(
-                labels_pred,
-                labels_prob,
-                self.max_depth,
-                self.num_cells,
-                softmax_probs,
-                self.inference_encoders,
-                refine_level,
-                self._model_version
-            )
-
-            results = refine_class.refine_labels()
         
-        else:
-            results = self.processed_outputs['level_zero_labels']
+        labels_pred = self._inference_outputs_unprocessed[
+            'hierarchical_label_preds'
+        ]
+        labels_prob = self._inference_outputs_unprocessed[
+            'probability_of_preds'
+        ]
+        softmax_probs = self._inference_outputs_unprocessed[
+            'softmax_vals_all'
+        ]
 
+        refine_class = PostprocessingAzimuthLabels(
+            labels_pred,
+            labels_prob,
+            self.max_depth,
+            self.num_cells,
+            softmax_probs,
+            self.inference_encoders,
+            refine_level,
+            self._model_version
+        )
+
+        results = refine_class.refine_labels()
+        
+        
         (
             self._azimuth_refined_labels[f'azimuth_{refine_level}']
          ) = results
