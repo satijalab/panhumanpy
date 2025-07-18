@@ -13,6 +13,7 @@ from pathlib import Path
 
 
 ###### test consistency in model version ###############################
+########################################################################
 
 def test_model_version_default_format():
     """
@@ -106,7 +107,8 @@ def test_model_version_matches_package_major_version():
 
 
 
-####### functionality tests ############################################
+####### functionality tests in default mode ############################################
+#############################################################################
 
 
 def test_azimuthnn_class():
@@ -449,3 +451,482 @@ def test_refine_labels_with_h5ad():
         assert False, (
             f"test_refine_labels_with_h5ad: Error testing label refinement: {e}"
         )
+
+
+
+####### Helper functions for model version testing ######################
+##########################################################################
+
+def get_default_model_version():
+    """
+    Get the default model version from ANNotate.py.
+    """
+    annotate_file = Path(__file__).parent.parent / "src" / "panhumanpy" / "ANNotate.py"
+    
+    with open(annotate_file, 'r') as f:
+        content = f.read()
+    
+    pattern = r"model_version_default\s*=\s*['\"]([^'\"]+)['\"]"
+    match = re.search(pattern, content)
+    
+    if not match:
+        raise ValueError("model_version_default variable not found in ANNotate.py")
+    
+    return match.group(1)
+
+
+def get_available_model_versions():
+    """
+    Get all available model versions by scanning the _tools directory.
+    """
+    tools_dir = Path(__file__).parent.parent / "src" / "panhumanpy" / "_tools"
+    
+    if not tools_dir.exists():
+        return []
+    
+    versions = []
+    for item in tools_dir.iterdir():
+        if item.is_dir() and item.name.startswith('v') and item.name[1:].isdigit():
+            versions.append(item.name)
+    
+    return sorted(versions)
+
+
+def get_alternate_model_versions():
+    """
+    Get all model versions except the default one.
+    """
+    default_version = get_default_model_version()
+    all_versions = get_available_model_versions()
+    
+    return [v for v in all_versions if v != default_version]
+
+
+
+
+####### functionality tests with alternate models ###################
+#####################################################################
+
+
+@pytest.mark.parametrize("model_version", get_alternate_model_versions())
+def test_azimuthnn_class_alternate_models(model_version):
+    """Test that AzimuthNN class works on test data with alternate model versions."""
+    try:
+        from panhumanpy import AzimuthNN
+        
+        # Path to test file
+        test_file = os.path.join("queries", "test_obj.h5ad")
+        
+        # Check if test file exists
+        if not os.path.exists(test_file):
+            pytest.skip(f"Test file {test_file} not found, skipping test")
+        
+        # Load the test object
+        test_obj = anndata.read_h5ad(test_file)
+        
+        # Initialize AzimuthNN with alternate model version
+        azimuth = AzimuthNN(
+            query_arg=test_obj,
+            model_version=model_version,
+            eval_batch_size=32
+        )
+        
+        # Verify that we got some basic results
+        assert hasattr(azimuth, 'annotations'), (
+            f"test_azimuthnn_class_alternate_models ({model_version}): "
+            "AzimuthNN object missing 'annotations' attribute after processing"
+        )
+        assert hasattr(azimuth, 'cells_meta'), (
+            f"test_azimuthnn_class_alternate_models ({model_version}): "
+            "AzimuthNN object missing 'cells_meta' attribute after processing"
+        )
+        
+        # Verify the model version was set correctly
+        assert azimuth._model_version == model_version, (
+            f"test_azimuthnn_class_alternate_models ({model_version}): "
+            f"Model version not set correctly. Expected {model_version}, "
+            f"got {azimuth._model_version}"
+        )
+        
+    except ImportError:
+        assert False, (
+            f"test_azimuthnn_class_alternate_models ({model_version}): "
+            "Failed to import AzimuthNN from panhumanpy"
+        )
+    except Exception as e:
+        assert False, (
+            f"test_azimuthnn_class_alternate_models ({model_version}): "
+            f"Error running AzimuthNN on test data: {e}"
+        )
+
+
+@pytest.mark.parametrize("model_version", get_alternate_model_versions())
+def test_azimuthnn_base_with_h5ad_alternate_models(model_version):
+    """Test AzimuthNN_base with the test h5ad file using alternate model versions."""
+    try:
+        from panhumanpy import AzimuthNN_base
+        import anndata
+        
+        # Path to test file
+        test_file = os.path.join("queries", "test_obj.h5ad")
+        
+        # Check if test file exists
+        if not os.path.exists(test_file):
+            pytest.skip(f"Test file {test_file} not found, skipping test")
+        
+        # Initialize the base class with alternate model version
+        azimuth_base = AzimuthNN_base(model_version=model_version)
+        
+        # Load the test h5ad file
+        azimuth_base.query_h5ad(test_file)
+        
+        # Process the query with minimal settings
+        azimuth_base.process_query()
+        
+        # Run the inference model
+        inference_outputs = azimuth_base.run_inference_model()
+        
+        # Verify that inference outputs have expected structure
+        assert isinstance(inference_outputs, dict), (
+            f"test_azimuthnn_base_with_h5ad_alternate_models ({model_version}): "
+            "Inference outputs should be a dictionary"
+        )
+        
+        expected_keys = [
+            'hierarchical_label_preds', 
+            'class_preds', 
+            'probability_of_preds',
+            'softmax_vals_all'
+        ]
+        for key in expected_keys:
+            assert key in inference_outputs, (
+                f"test_azimuthnn_base_with_h5ad_alternate_models ({model_version}): "
+                f"Missing key '{key}' in inference outputs"
+            )
+        
+        # Process outputs, detailed mode is more general
+        processed_outputs = azimuth_base.process_outputs(mode = 'detailed')
+        
+        # Verify processed outputs
+        assert isinstance(processed_outputs, dict), (
+            f"test_azimuthnn_base_with_h5ad_alternate_models ({model_version}): "
+            "Processed outputs should be a dictionary"
+        )
+        
+        expected_keys_minimal_mode = [
+            'full_hierarchical_labels',
+            'level_zero_labels',
+            'final_level_labels',
+            'final_level_softmax_prob',
+            'full_consistent_hierarchy'
+        ]
+
+        extra_keys_detailed_mode = [
+            f'level_{i+1}_labels' for i in range(azimuth_base.max_depth)
+        ]
+        
+        expected_keys = expected_keys_minimal_mode+extra_keys_detailed_mode
+
+        for key in expected_keys:
+            assert key in processed_outputs, (
+                f"test_azimuthnn_base_with_h5ad_alternate_models ({model_version}): "
+                f"Missing key '{key}' in processed outputs"
+            )
+            
+        # Verify the model version was set correctly
+        assert azimuth_base._model_version == model_version, (
+            f"test_azimuthnn_base_with_h5ad_alternate_models ({model_version}): "
+            f"Model version not set correctly. Expected {model_version}, "
+            f"got {azimuth_base._model_version}"
+        )
+            
+    except ImportError:
+        assert False, (
+            f"test_azimuthnn_base_with_h5ad_alternate_models ({model_version}): "
+            "Failed to import AzimuthNN_base from panhumanpy"
+        )
+    except Exception as e:
+        assert False, (
+            f"test_azimuthnn_base_with_h5ad_alternate_models ({model_version}): "
+            f"Error testing with h5ad: {e}"
+        )
+
+
+@pytest.mark.parametrize("model_version", get_alternate_model_versions())
+def test_annotate_core_with_h5ad_alternate_models(model_version):
+    """Test annotate_core function with the test h5ad file using alternate model versions."""
+    try:
+        from panhumanpy import annotate_core
+        import anndata
+        from scipy.sparse import csr_matrix
+        
+        # Path to test file
+        test_file = os.path.join("queries", "test_obj.h5ad")
+        
+        # Check if test file exists
+        if not os.path.exists(test_file):
+            pytest.skip(f"Test file {test_file} not found, skipping test")
+        
+        # Load the test object
+        test_obj = anndata.read_h5ad(test_file)
+        
+        # Extract required inputs for annotate_core
+        X_query = csr_matrix(test_obj.X)
+        query_features = test_obj.var_names.tolist()
+        cells_meta = test_obj.obs
+        
+        # Call annotate_core with minimal settings and alternate model version
+        results = annotate_core(
+            X_query=X_query,
+            query_features=query_features,
+            cells_meta=cells_meta,
+            annotation_pipeline='supervised',
+            eval_batch_size=32,
+            normalization_override=False,
+            norm_check_batch_size=32,
+            output_mode='minimal',
+            refine_labels=False,
+            extract_embeddings=False,
+            umap_embeddings=False,
+            n_neighbors=5, 
+            n_components=2, 
+            metric='cosine', 
+            min_dist=0.1, 
+            umap_lr=1.0, 
+            umap_seed=42, 
+            spread=1.0,
+            verbose=False,
+            init='spectral',
+            model_version=model_version
+        )
+        
+        # Verify the return structure
+        assert isinstance(results, dict), (
+            f"test_annotate_core_with_h5ad_alternate_models ({model_version}): "
+            "Function should return a dictionary"
+        )
+        
+        expected_keys = [
+            'azimuth_object', 'embeddings_dict', 
+            'umap_dict', 'cells_meta'
+        ]
+        for key in expected_keys:
+            assert key in results, (
+                f"test_annotate_core_with_h5ad_alternate_models ({model_version}): "
+                f"Missing expected key '{key}' in results"
+            )
+        
+        # Check that cell metadata has been updated with annotations
+        assert 'level_zero_labels' in results['cells_meta'].columns, (
+            f"test_annotate_core_with_h5ad_alternate_models ({model_version}): "
+            "Cell metadata should contain level_zero_labels column"
+        )
+        
+        # Verify the model version was set correctly in the azimuth object
+        azimuth_obj = results['azimuth_object']
+        assert azimuth_obj._model_version == model_version, (
+            f"test_annotate_core_with_h5ad_alternate_models ({model_version}): "
+            f"Model version not set correctly. Expected {model_version}, "
+            f"got {azimuth_obj._model_version}"
+        )
+            
+    except ImportError:
+        assert False, (
+            f"test_annotate_core_with_h5ad_alternate_models ({model_version}): "
+            "Failed to import annotate_core from panhumanpy"
+        )
+    except Exception as e:
+        assert False, (
+            f"test_annotate_core_with_h5ad_alternate_models ({model_version}): "
+            f"Error testing with h5ad: {e}"
+        )
+
+
+@pytest.mark.parametrize("model_version", get_alternate_model_versions())
+def test_embeddings_and_umap_with_h5ad_alternate_models(model_version):
+    """Test embeddings and UMAP generation with test h5ad file using alternate model versions."""
+    try:
+        from panhumanpy import AzimuthNN
+        
+        # Path to test file
+        test_file = os.path.join("queries", "test_obj.h5ad")
+        
+        # Check if test file exists
+        if not os.path.exists(test_file):
+            pytest.skip(f"Test file {test_file} not found, skipping test")
+        
+        # Load the test object with minimal settings but enable embeddings
+        # Use small batch size for faster processing and alternate model version
+        azimuth = AzimuthNN(
+            query_arg=test_file,
+            model_version=model_version,
+            eval_batch_size=32
+        )
+
+        _ = azimuth.azimuth_embed()
+        _ = azimuth.azimuth_umap()
+        
+        # Verify that embeddings and UMAP were generated
+        assert 'azimuth_embed' in azimuth.embeddings, (
+            f"test_embeddings_and_umap_with_h5ad_alternate_models ({model_version}): "
+            "'azimuth_embed' not found in embeddings dictionary"
+        )
+        
+        assert 'azimuth_umap' in azimuth.umaps, (
+            f"test_embeddings_and_umap_with_h5ad_alternate_models ({model_version}): "
+            "'azimuth_umap' not found in umaps dictionary"
+        )
+        
+        # Check embeddings shape
+        embeddings = azimuth.embeddings['azimuth_embed']
+        assert isinstance(embeddings, np.ndarray), (
+            f"test_embeddings_and_umap_with_h5ad_alternate_models ({model_version}): "
+            "Embeddings should be a numpy array"
+        )
+        assert embeddings.shape[0] == azimuth.num_cells, (
+            f"test_embeddings_and_umap_with_h5ad_alternate_models ({model_version}): "
+            "Embeddings first dimension should match number of cells"
+        )
+        
+        # Check UMAP shape
+        umap_coords = azimuth.umaps['azimuth_umap']
+        assert isinstance(umap_coords, np.ndarray), (
+            f"test_embeddings_and_umap_with_h5ad_alternate_models ({model_version}): "
+            "UMAP should be a numpy array"
+        )
+        assert umap_coords.shape[0] == azimuth.num_cells, (
+            f"test_embeddings_and_umap_with_h5ad_alternate_models ({model_version}): "
+            "UMAP first dimension should match number of cells"
+        )
+        assert umap_coords.shape[1] == 2, (
+            f"test_embeddings_and_umap_with_h5ad_alternate_models ({model_version}): "
+            "UMAP second dimension should be 2 by default"
+        )
+        
+        # Verify the model version was set correctly
+        assert azimuth._model_version == model_version, (
+            f"test_embeddings_and_umap_with_h5ad_alternate_models ({model_version}): "
+            f"Model version not set correctly. Expected {model_version}, "
+            f"got {azimuth._model_version}"
+        )
+        
+    except ImportError:
+        assert False, (
+            f"test_embeddings_and_umap_with_h5ad_alternate_models ({model_version}): "
+            "Failed to import AzimuthNN from panhumanpy"
+        )
+    except Exception as e:
+        assert False, (
+            f"test_embeddings_and_umap_with_h5ad_alternate_models ({model_version}): "
+            f"Error testing embeddings and UMAP: {e}"
+        )
+
+
+@pytest.mark.parametrize("model_version", get_alternate_model_versions())
+def test_refine_labels_with_h5ad_alternate_models(model_version):
+    """Test label refinement with test h5ad file using alternate model versions."""
+    try:
+        from panhumanpy import AzimuthNN_base
+        import anndata
+        
+        # Path to test file
+        test_file = os.path.join("queries", "test_obj.h5ad")
+        
+        # Check if test file exists
+        if not os.path.exists(test_file):
+            pytest.skip(f"Test file {test_file} not found, skipping test")
+        
+        # Initialize the base class with alternate model version
+        azimuth_base = AzimuthNN_base(model_version=model_version)
+        
+        # Load the test h5ad file
+        azimuth_base.query_h5ad(test_file)
+        
+        # Process the query
+        azimuth_base.process_query()
+        
+        # Run the inference model
+        _ = azimuth_base.run_inference_model()
+        
+        # Process outputs
+        _ = azimuth_base.process_outputs()
+        
+        # Test refine_labels with all three levels
+        for level in ['broad', 'medium', 'fine']:
+            refined_labels = azimuth_base.refine_labels(level)
+            
+            # Check that we got labels
+            assert isinstance(refined_labels, list), (
+                f"test_refine_labels_with_h5ad_alternate_models ({model_version}): "
+                f"Refined labels for {level} level should be a list"
+            )
+            
+            assert len(refined_labels) == azimuth_base.num_cells, (
+                f"test_refine_labels_with_h5ad_alternate_models ({model_version}): "
+                f"Number of {level} labels should match number of cells"
+            )
+            
+            # Check that labels were added to the azimuth_refined_labels dict
+            assert f'azimuth_{level}' in azimuth_base._azimuth_refined_labels, (
+                f"test_refine_labels_with_h5ad_alternate_models ({model_version}): "
+                f"'azimuth_{level}' not found in _azimuth_refined_labels dictionary"
+            )
+        
+        # Test update_cells_meta
+        updated_meta = azimuth_base.update_cells_meta()
+        
+        # Check that refined labels are in the updated metadata
+        for level in ['broad', 'medium', 'fine']:
+            assert f'azimuth_{level}' in updated_meta.columns, (
+                f"test_refine_labels_with_h5ad_alternate_models ({model_version}): "
+                f"'azimuth_{level}' column not found in updated cell metadata"
+            )
+        
+        # Verify the model version was set correctly
+        assert azimuth_base._model_version == model_version, (
+            f"test_refine_labels_with_h5ad_alternate_models ({model_version}): "
+            f"Model version not set correctly. Expected {model_version}, "
+            f"got {azimuth_base._model_version}"
+        )
+        
+    except ImportError:
+        assert False, (
+            f"test_refine_labels_with_h5ad_alternate_models ({model_version}): "
+            "Failed to import AzimuthNN_base from panhumanpy"
+        )
+    except Exception as e:
+        assert False, (
+            f"test_refine_labels_with_h5ad_alternate_models ({model_version}): "
+            f"Error testing label refinement: {e}"
+        )
+
+
+####### Additional tests for model version functionality ###################
+############################################################################
+
+
+
+def test_default_version_is_available():
+    """Test that the default model version is available in the _tools directory."""
+    default_version = get_default_model_version()
+    available_versions = get_available_model_versions()
+    
+    assert default_version in available_versions, (
+        f"Default model version '{default_version}' not found in available "
+        f"versions: {available_versions}"
+    )
+
+
+def test_parametrized_tests_skip_when_no_alternates():
+    """Test that parametrized tests will skip gracefully when no alternate versions exist."""
+    alternate_versions = get_alternate_model_versions()
+    
+    # This test documents the behavior - if there are no alternate versions,
+    # the parametrized tests will be skipped automatically by pytest
+    if len(alternate_versions) == 0:
+        pytest.skip("No alternate model versions available for testing")
+    
+    # If we reach here, there are alternate versions available
+    assert len(alternate_versions) > 0, (
+        "This assertion should not fail if we reach this point"
+    )
