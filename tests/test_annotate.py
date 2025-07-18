@@ -175,7 +175,10 @@ def test_azimuthnn_base_with_h5ad():
         azimuth_base.process_query()
         
         # Run the inference model
-        inference_outputs = azimuth_base.run_inference_model()
+        _ = azimuth_base.run_inference_model()
+        _ = azimuth_base.calibrate_predictions()
+
+        inference_outputs = azimuth_base._inference_outputs_unprocessed
         
         # Verify that inference outputs have expected structure
         assert isinstance(inference_outputs, dict), (
@@ -407,6 +410,7 @@ def test_refine_labels_with_h5ad():
         
         # Run the inference model
         _ = azimuth_base.run_inference_model()
+        _ = azimuth_base.calibrate_predictions()
         
         # Process outputs
         _ = azimuth_base.process_outputs()
@@ -584,7 +588,10 @@ def test_azimuthnn_base_with_h5ad_alternate_models(model_version):
         azimuth_base.process_query()
         
         # Run the inference model
-        inference_outputs = azimuth_base.run_inference_model()
+        _ = azimuth_base.run_inference_model()
+        _ = azimuth_base.calibrate_predictions()
+
+        inference_outputs = azimuth_base._inference_outputs_unprocessed
         
         # Verify that inference outputs have expected structure
         assert isinstance(inference_outputs, dict), (
@@ -847,6 +854,7 @@ def test_refine_labels_with_h5ad_alternate_models(model_version):
         
         # Run the inference model
         _ = azimuth_base.run_inference_model()
+        _ = azimuth_base.calibrate_predictions()
         
         # Process outputs
         _ = azimuth_base.process_outputs()
