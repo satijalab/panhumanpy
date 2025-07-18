@@ -598,6 +598,20 @@ class AzimuthNN_base(AutoloadInferenceTools):
             'softmax_vals_all'
         ]
 
+        # this conditional block is to specifically handle refinement
+        # of empty cell calls at medium and fine levels.
+        if refine_level in ['medium', 'fine']:
+            labels_pred = np.array(labels_pred, dtype=object).copy()
+            prev_labels = self._azimuth_refined_labels.get(
+                'azimuth_broad', None
+                )
+            if prev_labels is not None:
+                for i, label in enumerate(labels_pred):
+                    labels_pred[i] = [
+                        prev_labels[i] + l[len('Empty'):] 
+                        if l.startswith('Empty') else l for l in label
+                        ]
+
         refine_class = PostprocessingAzimuthLabels(
             labels_pred,
             labels_prob,
