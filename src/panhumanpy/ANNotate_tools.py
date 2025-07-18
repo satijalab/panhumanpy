@@ -797,6 +797,51 @@ def insert_col(df, loc, col_name, col_vals):
     df.insert(loc, col_name, col_vals)
 
     return df
+
+
+def compute_entropy(softmax):
+    """
+    Compute entropy from softmax outputs.
+    
+    Args:
+        softmax_outputs: A softmax array
+        
+    Returns:
+        entropy_values: Array of entropy values
+    """
+    entropy_values = []
+    
+    # Clip probabilities to avoid log(0)
+    probs_clipped = np.clip(softmax, 1e-8, 1.0)
+    
+    # Compute entropy: H = -sum(p * log(p))
+    entropy_vals = -np.sum(probs_clipped * np.log(probs_clipped), axis=1)
+    
+    return entropy_vals
+
+
+def softmax_to_logits(softmax_probs, temperature=1.0):
+    """
+    Convert softmax probabilities back to logits
+    
+    Args:
+        softmax_probs: numpy array of softmax probabilities
+        temperature: temperature parameter (default=1.0)
+    
+    Returns:
+        logits: numpy array of logits
+    """
+    # Clip probabilities to avoid log(0)
+    probs_clipped = np.clip(softmax_probs, 1e-8, 1.0)
+    
+    # Convert to logits using inverse softmax (log probabilities)
+    logits = np.log(probs_clipped) * temperature
+    
+    # Normalize by subtracting the mean (softmax is invariant to constant shifts)
+    # This helps with numerical stability and follows standard practice
+    logits = logits - np.mean(logits, axis=1, keepdims=True)
+    
+    return logits
         
     
 
@@ -1213,7 +1258,282 @@ class Inference():
             'softmax_vals_all':softmax_vals_all
             }
         )
+
+
+class CalibrationSingleClassifier():
+    """
+    Calibrate softmax outputs. Can accommodate different calibration 
+    methods.
     
+    This class provides functionality to apply calibration techniques to 
+    softmax probability outputs from neural network classifiers. It supports 
+    dynamic method selection for different calibration approaches.
+    Currently, it hosts a entropy-informed temperature scaling method for 
+    calibration.
+    
+    The calibration process operates on batches of softmax outputs to 
+    manage memory usage efficiently, making it suitable for large datasets.
+    
+    Parameters
+    ----------
+    softmax : numpy.ndarray or scipy.sparse matrix
+        Softmax probability outputs from a neural network model, with 
+        shape (n_samples, n_classes).
+    eval_batch_size : int
+        Batch size for processing softmax outputs. Controls memory usage 
+        during calibration.
+        
+    Attributes
+    ----------
+    _softmax : numpy.ndarray or scipy.sparse matrix
+        Original softmax probability outputs.
+    _calibrated_softmax : numpy.ndarray
+        Calibrated softmax outputs after applying calibration method.
+        Initially set to original softmax values.
+    _eval_batch_size : int
+        Batch size used for processing.
+    _eval_steps : int
+        Number of complete evaluation batches, computed as 
+        softmax.shape[0] // eval_batch_size.
+        
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from tensorflow.keras.models import load_model
+    >>> 
+    >>> # Get softmax outputs from a Keras model
+    >>> main_model = load_model('classifier_model.keras')
+    >>> softmax_outputs = main_model.predict(X_data)  
+    >>> # Shape: (n_samples, n_classes)
+    >>> 
+    >>> # Load a trained temperature scaling model
+    >>> calibrator = load_model('temperature_scaling_model.keras')
+    >>> 
+    >>> # Initialize calibration object
+    >>> calibration = CalibrationSingleClassifier(
+    ...     softmax=softmax_outputs,
+    ...     eval_batch_size=256
+    ... )
+    >>> 
+    >>> # Apply entropy-informed temperature scaling
+    >>> calibrated_probs = calibration.calibrate(
+    ...     'temperature_scaling_entropy_informed',
+    ...     calibrator
+    ... )
+    
+    Notes
+    -----
+    The class uses a dynamic method calling approach via the `calibrate()` 
+    method, allowing for flexible selection of calibration techniques. 
+    New calibration methods can be added by implementing them as class 
+    methods and calling them through `calibrate()`.
+    
+    The entropy-informed temperature scaling method computes entropy from 
+    the softmax outputs and uses it along with converted logits as input 
+    to the calibration model.
+    """
+    def __init__(
+        self,
+        softmax,
+        eval_batch_size
+    ):
+        """
+        Initialize the CalibrationSingleClassifier.
+        
+        Parameters
+        ----------
+        softmax : numpy.ndarray or scipy.sparse matrix
+            Softmax probability outputs with shape (n_samples, n_classes).
+        eval_batch_size : int
+            Batch size for processing softmax outputs.
+        """
+        self._softmax = softmax
+        self._calibrated_softmax = softmax
+        self._eval_batch_size = eval_batch_size
+        self._eval_steps = softmax.shape[0]//self._eval_batch_size
+
+    def calibrate(self, name, *args, **kwargs):
+        """
+        Dynamically call a calibration method by name with error 
+        handling to verify that said method has been implemented.
+        
+        Parameters
+        ----------
+        name : str
+            Name of the calibration method to execute.
+        *args : tuple
+            Positional arguments to pass to the calibration method.
+        **kwargs : dict
+            Keyword arguments to pass to the calibration method.
+            
+        Returns
+        -------
+        numpy.ndarray
+            Calibrated softmax probabilities returned by the specified 
+            calibration method.
+            
+        Raises
+        ------
+        AttributeError
+            If the specified calibration method is not found in the class.
+        TypeError
+            If the specified attribute exists but is not callable.
+        """
+        if not hasattr(self, name):
+            raise AttributeError(
+                f"Calibration method '{name}' not found."
+                )
+        
+        attr = getattr(self, name)
+        if not callable(attr):
+            raise TypeError(f"'{name}' is not callable")
+        
+        return attr(*args, **kwargs)
+
+    def temperature_scaling_entropy_informed_minibatch(
+        self, 
+        softmax_minibatch,
+        calibrator
+        ):
+        """
+        Apply entropy-informed temperature scaling to a single minibatch.
+        
+        This method processes a single batch of softmax outputs by:
+        1. Computing entropy from the softmax probabilities
+        2. Converting softmax probabilities back to logits
+        3. Applying the calibration model using both logits and entropy
+        
+        Parameters
+        ----------
+        softmax_minibatch : numpy.ndarray
+            A batch of softmax probability outputs with shape 
+            (batch_size, n_classes).
+        calibrator : callable
+            Calibration model or function that takes (logits, entropy) 
+            as input and returns calibrated probabilities.
+            
+        Returns
+        -------
+        numpy.ndarray
+            Calibrated softmax probabilities for the minibatch with 
+            the same shape as input.
+            
+        Notes
+        -----
+        This method expects the calibrator to accept a tuple of 
+        (logits, entropy) as input. The entropy is computed using 
+        the Shannon entropy formula: H = -sum(p * log(p)).
+        """
+        ent = compute_entropy(softmax_minibatch)
+        ent = np.array(ent, dtype=np.float32).reshape(-1, 1)
+
+        logits = softmax_to_logits(softmax_minibatch)
+
+        out_minibatch = calibrator((logits, ent))
+
+        return out_minibatch
+
+    def temperature_scaling_entropy_informed(
+        self,
+        calibrator
+        ):
+        """
+        Apply entropy-informed temperature scaling to all softmax outputs.
+        
+        This method processes the complete set of softmax outputs in 
+        batches, applying entropy-informed temperature scaling to each 
+        batch and concatenating the results. It handles the final 
+        incomplete batch automatically.
+        
+        The calibration process:
+        1. Divides softmax outputs into batches based on eval_batch_size
+        2. For each batch, computes entropy and converts to logits
+        3. Applies the calibration model to get temperature-scaled outputs
+        4. Concatenates all calibrated batches into final result
+        
+        Parameters
+        ----------
+        calibrator : callable
+            Calibration model or function that takes (logits, entropy) 
+            as input and returns calibrated probabilities.
+            
+        Returns
+        -------
+        numpy.ndarray
+            Calibrated softmax probabilities for all samples with shape 
+            (n_samples, n_classes). Also updates the internal 
+            _calibrated_softmax attribute.
+            
+        Notes
+        -----
+        This method modifies the internal state by updating 
+        _calibrated_softmax with the calibrated results. It handles 
+        both sparse matrices and numpy arrays by checking for the 
+        .toarray() method.
+        
+        The method prints progress information including the number of 
+        batches being processed.
+        """
+        print(
+            f"Splitting softmax outputs into {self._eval_steps+1} "
+            "batches.\n"
+            )
+
+        calibrated_softmax_cache = []
+
+        for i in range(self._eval_steps):
+            start_idx = i*self._eval_batch_size
+            end_idx = (i+1)*self._eval_batch_size
+            if start_idx >= self._softmax.shape[0]:
+                break
+
+            # Handle both sparse matrices and numpy arrays
+            minibatch_source = self._softmax[start_idx:end_idx]
+            if hasattr(minibatch_source, 'toarray'):
+                minibatch = minibatch_source.toarray()
+            else:
+                minibatch = minibatch_source
+                
+            if minibatch.size == 0:
+                continue
+
+            calibrated_softmax_cache.append(
+                self.temperature_scaling_entropy_informed_minibatch(
+                    minibatch,
+                    calibrator
+                )
+            )
+
+        final_start = self._eval_steps * self._eval_batch_size
+        if final_start < self._softmax.shape[0]:
+            final_batch_source = self._softmax[final_start:]
+            if hasattr(final_batch_source, 'toarray'):
+                final_batch = final_batch_source.toarray()
+            else:
+                final_batch = final_batch_source
+                
+            if final_batch.size > 0:
+                calibrated_softmax_cache.append(
+                    self.temperature_scaling_entropy_informed_minibatch(
+                        final_batch,
+                        calibrator
+                    )
+                )
+
+        self._calibrated_softmax = np.concatenate(
+            calibrated_softmax_cache, 
+            axis=0
+        )
+
+        return self._calibrated_softmax
+            
+
+
+
+        
+
+
+
 
 class InferenceTools():
     """
