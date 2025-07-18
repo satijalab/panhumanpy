@@ -4,7 +4,7 @@ Checklist of guidelines to go through when making a PR.
 ## Type of Change
 - [ ] Bug fix (patch version)
 - [ ] New or updated feature (minor version)  
-- [ ] New model (major version + new constellation for version name)
+- [ ] New default model (major version + new constellation for version name)
 - [ ] Documentation update
 - [ ] Internal refactoring
 
@@ -42,7 +42,7 @@ Checklist of guidelines to go through when making a PR.
 - [ ] Should trigger version bump:
   - [ ] Patch (bug fix)
   - [ ] Minor (new or updated feature)  
-  - [ ] Major (breaking change to existing API, **or a new model** which is a "soft" breaking change) - change constellation for version name
+  - [ ] Major (breaking change to existing API, **or a new default model** which is a "soft" breaking change) - change constellation for version name
 
 ## Testing
 How was this change tested?
