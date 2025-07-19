@@ -1891,9 +1891,45 @@ class InferenceTools():
                 calib_dir_path / name for name in calibrator_names
                 ]
 
+            
+            custom_objects_module = importlib.import_module(
+                f"{self._version_module.__name__}.calibration.custom_objects"
+            )
+
+            custom_calibration_objects = (
+                custom_objects_module.custom_calibration_objects
+            )
+
+            calibration_method = self._model_meta['calibration']
+            assert calibration_method in custom_calibration_objects.keys(), (
+                f"Calibration method {calibration_method} as specified "
+                f"in metadata for version {self._model_version} not found"
+                " in custom_calibration_objects dictionary in calibration tools." 
+            )
+
+            custom_obj_names = [
+                val.__name__ for val in custom_calibration_objects.values()
+                ]
+
+            custom_obj_dict = {
+                obj_name: getattr(custom_objects_module, obj_name)
+                for obj_name in custom_obj_names
+            }        
+
             calibrators = [
-                load_model(path) for path in calib_paths
+                load_model(path, custom_objects=custom_obj_dict) 
+                for path in calib_paths
             ] 
+            assert len(calibrators) == self._model_meta['max_depth'], (
+                f"Expected {self._model_meta['max_depth']} calibrators, "
+                f"got {len(calibrators)}"
+            )
+
+            # DEBUG: Add these lines before return
+            print(f"DEBUG load_calibrators: calibrators type = {type(calibrators)}")
+            print(f"DEBUG load_calibrators: calibrators[0] type = {type(calibrators[0])}")
+            print(f"DEBUG load_calibrators: returning {len(calibrators)} models")
+
         else:
             calibrators = None
 
