@@ -1730,8 +1730,8 @@ class InferenceTools():
             "model metadata dict must have a key 'calibration'."
         )
         
-        assert 'calibrators' in meta_dict.keys(), (
-            "model metadata dict must have a key 'calibrators'."
+        assert 'calibrator_filenames' in meta_dict.keys(), (
+            "model metadata dict must have a key 'calibrator_filenames'."
         )
 
         if meta_dict['calibration'] is not None:
@@ -1739,23 +1739,23 @@ class InferenceTools():
                 "calibration must be a string or None."
             )
         
-        assert isinstance(meta_dict['calibrators'], list), (
+        assert isinstance(meta_dict['calibrator_filenames'], list), (
             "calibrators must be a list."
         )
 
         if meta_dict['calibration'] is None:
-            assert len(meta_dict['calibrators'])==0, (
-                "'calibration' and 'calibrators' entries mutually inconsistent." 
+            assert len(meta_dict['calibrator_filenames'])==0, (
+                "'calibration' and 'calibrator_filenames' entries mutually inconsistent." 
             )
         else:
-            assert len(meta_dict['calibrators'])==meta_dict['max_depth'], (
+            assert len(meta_dict['calibrator_filenames'])==meta_dict['max_depth'], (
                 "calibrator model names should be provided for each \
                 hierarchical level when calibration is not None."
             )
 
-        if len(meta_dict['calibrators']) > 0:
+        if len(meta_dict['calibrator_filenames']) > 0:
             calibration_dir_path = self._version_path / "calibration"
-            for calibrator_filename in meta_dict['calibrators']:
+            for calibrator_filename in meta_dict['calibrator_filenames']:
                 calibrator_path = calibration_dir_path / calibrator_filename
                 assert calibrator_path.exists(), (
                     f"Calibrator file '{calibrator_filename}' not found in calibration "
@@ -1885,7 +1885,7 @@ class InferenceTools():
         provided in model_meta for the specific version.
         """
         calib_dir_path = self._version_path/"calibration"
-        calibrator_names = self._model_meta['calibrators']
+        calibrator_names = self._model_meta['calibrator_filenames']
         if len(calibrator_names) > 0:
             calib_paths = [
                 calib_dir_path / name for name in calibrator_names
