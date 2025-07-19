@@ -10,5 +10,5 @@ model_meta = {
     'inference_model_embedding_layer': 'dense_3',
     'feature_panel_size': 5055,
     'calibration': 'temperature_scaling_entropy_informed',
-    'calibrators':[f"temp_scaler_L_{i+1}.keras" for i in range(8)]
+    'calibrator_filenames':[f"temp_scaler_L_{i+1}.keras" for i in range(8)]
 }
