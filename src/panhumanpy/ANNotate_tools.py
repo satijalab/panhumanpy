@@ -1925,11 +1925,7 @@ class InferenceTools():
                 f"got {len(calibrators)}"
             )
 
-            # DEBUG: Add these lines before return
-            print(f"DEBUG load_calibrators: calibrators type = {type(calibrators)}")
-            print(f"DEBUG load_calibrators: calibrators[0] type = {type(calibrators[0])}")
-            print(f"DEBUG load_calibrators: returning {len(calibrators)} models")
-
+            
         else:
             calibrators = None
 
