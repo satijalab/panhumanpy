@@ -529,6 +529,11 @@ class AzimuthNN_base(AutoloadInferenceTools):
         confidence and uncertainty
 
         """
+        print(f"DEBUG calibrate_predictions start: self.calibrators type = {type(self.calibrators)}")
+        if self.calibrators:
+            print(f"DEBUG calibrate_predictions start: self.calibrators[0] type = {type(self.calibrators[0])}")
+            print(f"DEBUG calibrate_predictions start: self.calibrators[0] = {self.calibrators[0]}")
+
         calibration_method = self.model_meta['calibration']
         if calibration_method is not None:
             assert len(self.calibrators)==self.max_depth, (
@@ -548,6 +553,10 @@ class AzimuthNN_base(AutoloadInferenceTools):
                 with MemoryContext():
                     sm_array = softmax_all[level]
                     calibrator_model = self.calibrators[level]
+
+                    # DEBUG: Add these lines
+                    print(f"DEBUG Level {level}: calibrator_model type = {type(calibrator_model)}")
+                    print(f"DEBUG Level {level}: calibrator_model = {calibrator_model}")
 
                     calibration_obj = CalibrationSingleClassifier(
                         softmax = sm_array,
