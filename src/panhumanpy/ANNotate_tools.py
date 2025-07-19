@@ -1869,7 +1869,9 @@ class InferenceTools():
         
         Loads the models from a predefined directory structure using the
         version and the calibration filenames pre-defined for that version. 
-        The models are expected to be in .keras format.
+        The models are expected to be in .keras format. If available, custom
+        objects required for model loading are imported from the version's
+        calibration.custom_objects module.
         
         Returns
         -------
@@ -1883,49 +1885,66 @@ class InferenceTools():
         version directory (for e.g. "v0"). This should be accessible via 
         the 'files' import system. Model names must correspond to the names 
         provided in model_meta for the specific version.
+        
+        If a custom_objects module exists at 
+        {version_module}.calibration.custom_objects, it will be used to load
+        any custom calibration objects required by the models. If this module
+        is not found, models will be loaded without custom objects.
         """
         calib_dir_path = self._version_path/"calibration"
         calibrator_names = self._model_meta['calibrator_filenames']
+        
         if len(calibrator_names) > 0:
             calib_paths = [
                 calib_dir_path / name for name in calibrator_names
+            ]
+
+            # Try to load custom objects if the module exists
+            custom_obj_dict = None
+            try:
+                custom_objects_module = importlib.import_module(
+                    f"{self._version_module.__name__}.calibration.custom_objects"
+                )
+                
+                custom_calibration_objects = (
+                    custom_objects_module.custom_calibration_objects
+                )
+
+                calibration_method = self._model_meta['calibration']
+                assert calibration_method in custom_calibration_objects.keys(), (
+                    f"Calibration method {calibration_method} as specified "
+                    f"in metadata for version {self._model_version} not found"
+                    " in custom_calibration_objects dictionary in calibration tools." 
+                )
+
+                custom_obj_names = [
+                    val.__name__ for val in custom_calibration_objects.values()
                 ]
 
-            
-            custom_objects_module = importlib.import_module(
-                f"{self._version_module.__name__}.calibration.custom_objects"
-            )
+                custom_obj_dict = {
+                    obj_name: getattr(custom_objects_module, obj_name)
+                    for obj_name in custom_obj_names
+                }
+                
+            except (ImportError, ModuleNotFoundError):
+                # Custom objects module doesn't exist, load models without custom objects
+                custom_obj_dict = None
 
-            custom_calibration_objects = (
-                custom_objects_module.custom_calibration_objects
-            )
-
-            calibration_method = self._model_meta['calibration']
-            assert calibration_method in custom_calibration_objects.keys(), (
-                f"Calibration method {calibration_method} as specified "
-                f"in metadata for version {self._model_version} not found"
-                " in custom_calibration_objects dictionary in calibration tools." 
-            )
-
-            custom_obj_names = [
-                val.__name__ for val in custom_calibration_objects.values()
+            if custom_obj_dict is not None:
+                calibrators = [
+                    load_model(path, custom_objects=custom_obj_dict) 
+                    for path in calib_paths
                 ]
-
-            custom_obj_dict = {
-                obj_name: getattr(custom_objects_module, obj_name)
-                for obj_name in custom_obj_names
-            }        
-
-            calibrators = [
-                load_model(path, custom_objects=custom_obj_dict) 
-                for path in calib_paths
-            ] 
+            else:
+                calibrators = [
+                    load_model(path) 
+                    for path in calib_paths
+                ]
+                
             assert len(calibrators) == self._model_meta['max_depth'], (
                 f"Expected {self._model_meta['max_depth']} calibrators, "
                 f"got {len(calibrators)}"
             )
-
-            
         else:
             calibrators = None
 
