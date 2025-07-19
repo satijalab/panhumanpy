@@ -107,7 +107,7 @@ def test_version_directory_structure():
             'inference_model_embedding_layer',
             'feature_panel_size',
             'calibration',
-            'calibrators'
+            'calibrator_filenames'
         ]
         
         for key in required_keys:
@@ -142,7 +142,7 @@ def test_version_directory_structure():
 
         # Verify calibration consistency
         calibration_type = model_meta['calibration']
-        calibrators_list = model_meta['calibrators']
+        calibrators_list = model_meta['calibrator_filenames']
 
         if calibration_type is None:
             assert len(calibrators_list) == 0, (

@@ -10,5 +10,5 @@ model_meta = {
     'inference_model_embedding_layer': 'dense_3',
     'feature_panel_size': 5039,
     'calibration': None,
-    'calibrators':[]
+    'calibrator_filenames':[]
 }
