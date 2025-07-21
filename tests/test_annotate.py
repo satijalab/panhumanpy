@@ -211,7 +211,7 @@ def test_azimuthnn_base_with_h5ad():
             'full_hierarchical_labels',
             'level_zero_labels',
             'final_level_labels',
-            'final_level_softmax_prob',
+            'final_level_confidence',
             'full_consistent_hierarchy'
         ]
 
@@ -624,7 +624,7 @@ def test_azimuthnn_base_with_h5ad_alternate_models(model_version):
             'full_hierarchical_labels',
             'level_zero_labels',
             'final_level_labels',
-            'final_level_softmax_prob',
+            'final_level_confidence',
             'full_consistent_hierarchy'
         ]
 
