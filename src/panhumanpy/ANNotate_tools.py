@@ -2449,6 +2449,7 @@ class OutputLabels():
         (num_cells, max_depth).
     labels_prob : numpy.ndarray
         Probability scores associated with each prediction.
+        These scores could be pre or post-calibration.
     max_depth : int
         Maximum depth of the hierarchical classification.
     num_cells : int
@@ -2462,10 +2463,14 @@ class OutputLabels():
         Labels at the top level (level 0) of the hierarchy.
     final_level_labels : numpy.ndarray
         Labels at the final level determined for each cell.
-    level_zero_softmax_prob : numpy.ndarray
-        Softmax probabilities for the top level predictions.
-    final_level_softmax_prob : numpy.ndarray
-        Softmax probabilities for the final level predictions.
+    level_zero_prob : numpy.ndarray
+        Probabilities for the top level predictions.
+        Could be calibrated confidence scores or uncalibrated softmax
+        values (depending on the specific pipeline implemented).
+    final_level_prob : numpy.ndarray
+        Probabilities for the final level predictions.
+        Could be calibrated confidence scores or uncalibrated softmax
+        values (depending on the specific pipeline implemented).
     full_consistent_hierarchy : list
         Flags indicating whether each cell has a fully consistent 
         hierarchy.
@@ -2510,8 +2515,8 @@ class OutputLabels():
             self._max_depth+1
         ]
 
-        self.level_zero_softmax_prob = self._labels_prob[:,0]
-        self.final_level_softmax_prob = self._labels_prob[
+        self.level_zero_prob = self._labels_prob[:,0]
+        self.final_level_prob = self._labels_prob[
             np.arange(self._num_cells), 
             self._final_levels_array
             ]
@@ -2524,9 +2529,11 @@ class OutputLabels():
         self.full_consistent_hierarchy = full_consistent_hierarchy
 
        
-    def level_specific_softmax_prob(self, level):
+    def level_specific_prob(self, level):
         """
-        Get softmax probabilities for a specific hierarchical level.
+        Get probabilities for a specific hierarchical level.
+        These could be calibrated confidence scores or raw softmax values,
+        depending on the specific pipeline that has been implemented.
         
         Parameters
         ----------
@@ -2536,7 +2543,7 @@ class OutputLabels():
         Returns
         -------
         numpy.ndarray
-            Softmax probabilities for the specified level.
+            Probabilities for the specified level.
             
         Raises
         ------
@@ -2550,8 +2557,8 @@ class OutputLabels():
         if level < 1 or level > self._max_depth:
             raise ValueError(f"level must be between 1 and {self._max_depth}")
         
-        softmax_probs = self._labels_prob[:,level-1]
-        return softmax_probs
+        probs = self._labels_prob[:,level-1]
+        return probs
         
 
     def level_specific_labels(self, level):
@@ -2621,8 +2628,10 @@ class PostprocessingAzimuthLabels(OutputLabels):
         Maximum depth of the hierarchical classification.
     num_cells : int
         Number of cells/samples in the query data.
-    softmax_probs : list of numpy.ndarray
-        Softmax probability arrays for each level of the hierarchy.
+    probs : list of numpy.ndarray
+        Probability arrays for each level of the hierarchy.
+        These values could be calibrated confidence scores or 
+        uncalibrated softmax values depending on the pipeline implemented.
     encoders : list
         List of label encoders used during model training/inference.
     refine_level : str
@@ -2632,8 +2641,11 @@ class PostprocessingAzimuthLabels(OutputLabels):
         
     Attributes
     ----------
-    softmax_probs : list of numpy.ndarray
-        Softmax probability arrays for each level.
+    probs : list of numpy.ndarray
+        Probability arrays for each level.
+        These values could be calibrated confidence scores, or 
+        uncalibrated softmax values depending on the pipeline that has 
+        been implemented.
     refine_level : str
         Selected level of refinement.
     encoders : list
@@ -2668,7 +2680,7 @@ class PostprocessingAzimuthLabels(OutputLabels):
         labels_prob, 
         max_depth, 
         num_cells,
-        softmax_probs,
+        probs,
         encoders,
         refine_level,
         model_version
@@ -2686,7 +2698,7 @@ class PostprocessingAzimuthLabels(OutputLabels):
             num_cells
             )
 
-        self.softmax_probs = softmax_probs
+        self.probs = probs
         self.refine_level = refine_level
         self.encoders = encoders
 
@@ -2797,7 +2809,7 @@ class PostprocessingAzimuthLabels(OutputLabels):
 
         softmax = {
             f"arr_{i}": np.array(row) for i, row 
-            in enumerate(self.softmax_probs)
+            in enumerate(self.probs)
             }
 
         return softmax
