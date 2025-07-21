@@ -634,8 +634,8 @@ class AzimuthNN_base(AutoloadInferenceTools):
         combined_labels = output_processing_class.combined_labels
         level_zero_labels = output_processing_class.level_zero_labels
         final_level_labels = output_processing_class.final_level_labels
-        final_level_softmax_prob = (
-            output_processing_class.final_level_softmax_prob
+        final_level_prob = (
+            output_processing_class.final_level_prob
         )
         full_consistent_hierarchy = (
             output_processing_class.full_consistent_hierarchy
@@ -645,7 +645,7 @@ class AzimuthNN_base(AutoloadInferenceTools):
             'full_hierarchical_labels': combined_labels,
             'level_zero_labels': level_zero_labels,
             'final_level_labels': final_level_labels,
-            'final_level_softmax_prob': final_level_softmax_prob,
+            'final_level_confidence': final_level_prob,
             'full_consistent_hierarchy': full_consistent_hierarchy
         }
 
@@ -706,7 +706,7 @@ class AzimuthNN_base(AutoloadInferenceTools):
         labels_prob = self._inference_outputs_unprocessed[
             'probability_of_preds'
         ]
-        softmax_probs = self._inference_outputs_unprocessed[
+        probs = self._inference_outputs_unprocessed[
             'softmax_vals_all'
         ]
 
@@ -729,7 +729,7 @@ class AzimuthNN_base(AutoloadInferenceTools):
             labels_prob,
             self.max_depth,
             self.num_cells,
-            softmax_probs,
+            probs,
             self.inference_encoders,
             refine_level,
             self._model_version
