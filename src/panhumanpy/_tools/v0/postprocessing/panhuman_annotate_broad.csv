@@ -300,6 +300,7 @@ Immune cell|Myeloid cell|Macrophage|Tissue resident macrophage|Microglia,Immune 
 Immune cell|Myeloid cell|Macrophage|DIAPH3+ macrophage,Immune cell
 Immune cell|Myeloid cell|Monocyte|CD14 monocyte|MHCII high CD14 monocyte,Immune cell
 Immune cell|Myeloid cell|Monocyte|CD14 monocyte|MHCII low CD14 monocyte,Immune cell
+Immune cell|Myeloid cell|Monocyte|CD14/CD16 monocyte,Immune cell
 Immune cell|Myeloid cell|Monocyte|CD16 monocyte,Immune cell
 Immune cell|Myeloid cell|Monocyte|Cycling monocyte,Immune cell
 Immune cell|Myeloid cell|Monocyte|Placenta CAMP+ monocyte,Immune cell
