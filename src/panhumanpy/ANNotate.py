@@ -2123,7 +2123,7 @@ def annotate():
         spread,
         verbose,
         init,
-        model_version
+        model_version = model_version
         )
 
     azimuth_object = core_outputs['azimuth_object']
