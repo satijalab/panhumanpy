@@ -1080,14 +1080,20 @@ class AzimuthNN_base(AutoloadInferenceTools):
         -----
         If the specified save_path already exists, a timestamp is 
         appended to the filename to prevent overwriting.
+        Metadata is automatically coerced to h5ad-compatible types.
         """
+
+
+        cells_meta_coerced = coerce_metadata_types(self.cells_meta)
+        features_meta_coerced = coerce_metadata_types(self.features_meta)
+
 
         all_embeddings = {**self.embeddings, **self.umaps}
 
         adata_obj = create_anndata(
             self.X_query,
-            self.cells_meta,
-            self.features_meta,
+            cells_meta_coerced,
+            features_meta_coerced,
             embeddings = all_embeddings
         )
 
