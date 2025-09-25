@@ -290,6 +290,9 @@ class AzimuthNN_base(AutoloadInferenceTools):
                 f"({X_query.shape[0]})"
                 )
 
+        if X_query.dtype != np.float64:
+            X_query = X_query.astype(np.float64)
+
         self.X_query = X_query
         self.query_features = query_features
         self.features_meta = pd.DataFrame(
@@ -324,6 +327,9 @@ class AzimuthNN_base(AutoloadInferenceTools):
         query_obj = QueryObj(query_arg)
 
         self.X_query = query_obj.X_query()
+        if self.X_query.dtype != np.float64:
+            self.X_query = self.X_query.astype(np.float64)
+
         self.query_features = query_obj.query_features(
             feature_names_col=feature_names_col
         )
@@ -360,6 +366,9 @@ class AzimuthNN_base(AutoloadInferenceTools):
         query_obj = ReadQueryObj(query_filepath)
 
         self.X_query = query_obj.X_query()
+        if self.X_query.dtype != np.float64:
+            self.X_query = self.X_query.astype(np.float64)
+
         self.query_features = query_obj.query_features(
             feature_names_col=feature_names_col
         )
