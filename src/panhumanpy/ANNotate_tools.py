@@ -842,6 +842,27 @@ def softmax_to_logits(softmax_probs, temperature=1.0):
     logits = logits - np.mean(logits, axis=1, keepdims=True)
     
     return logits
+
+
+
+def coerce_metadata_types(df):
+    """Coerce DataFrame columns to h5ad-compatible types."""
+    df_coerced = df.copy()
+    
+    for col in df_coerced.columns:
+        col_data = df_coerced[col]
+        
+        if pd.api.types.is_numeric_dtype(col_data):
+            continue
+        if pd.api.types.is_bool_dtype(col_data):
+            continue
+            
+        if col_data.isna().any():
+            df_coerced[col] = col_data.fillna('NA').astype(str)
+        else:
+            df_coerced[col] = col_data.astype(str)
+                 
+    return df_coerced
         
     
 
