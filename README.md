@@ -1,6 +1,6 @@
 # panhumanpy
 
-**Current version: 0.2.1 (Andromeda)**
+**Current version: 0.2.2 (Andromeda)**
 
 A package for cell annotation using Azimuth Neural Network.
 
