@@ -858,9 +858,12 @@ def coerce_metadata_types(df):
             continue
             
         if col_data.isna().any():
-            df_coerced[col] = col_data.fillna('NA').astype(str)
-        else:
-            df_coerced[col] = col_data.astype(str)
+            col_data_str = col_data.astype(str)        
+            
+            if col_data_str.str.contains('nan').any():
+                df_coerced[col] = col_data_str.str.replace('nan', 'NA', regex=False)
+            else:
+                df_coerced[col] = col_data_str
                  
     return df_coerced
         
