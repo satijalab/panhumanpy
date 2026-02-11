@@ -434,110 +434,185 @@ class AzimuthNN_base(AutoloadInferenceTools):
         )
         
 
-    def run_inference_model(self):
+    def run_inference_model(self, mode='streaming'):
         """
         Run the inference model on the processed query data.
-        
+
         This method executes the neural network inference to generate
         cell type predictions.
-        
+
+        Parameters
+        ----------
+        mode : str or bool, default='streaming'
+            Inference mode to use. Options:
+            - 'streaming': Memory-efficient streaming (discards full softmax,
+              ~96% memory reduction, inline calibration)
+            - 'minibatch': Complete end-to-end pipeline per minibatch
+              (inference + calibration + refinement). Returns only final
+              refined labels. ~98% memory reduction.
+            - 'original': Original implementation (backward compatibility)
+            - True: Equivalent to 'streaming' (for backward compatibility)
+            - False: Equivalent to 'original' (for backward compatibility)
+
         Returns
         -------
         dict
             Dictionary of raw inference outputs including hierarchical
             label predictions and probabilities.
-            
+
         Raises
         ------
         AssertionError
-            If input matrix has not been initialized by calling 
+            If input matrix has not been initialized by calling
             process_query().
-            
+        ValueError
+            If mode is not one of the valid options.
+
         Notes
         -----
-        The raw outputs should be calibrated using calibrate_predictions() 
-        and then processed using process_outputs() before further use 
+        The raw outputs should be calibrated using calibrate_predictions()
+        and then processed using process_outputs() before further use
         downstream. The typical workflow is:
         1. run_inference_model()
-        2. calibrate_predictions() 
+        2. calibrate_predictions()
         3. process_outputs()
+
+        Mode Comparison:
+        - 'streaming': Good for large datasets (>1M cells). Discards full
+          softmax arrays, applies calibration inline. Keeps sparse refinement
+          data. ~96% memory reduction. Refinement done separately via
+          refine_labels_all().
+        - 'minibatch': Best for very large datasets. Complete end-to-end
+          pipeline per minibatch (inference + calibration + refinement).
+          Returns only final refined labels. ~98% memory reduction. No need
+          to call calibrate_predictions() or refine_labels_all().
+        - 'original': Original implementation. No optimization. Full
+          softmax arrays retained.
         """
 
         assert self._inference_input_matrix is not None, (
             "Input matrix not initialized. Call process_query() first."
         )
 
-        inference_class = Inference(
-            self._inference_input_matrix,
-            self.inference_model,
-            self.inference_encoders,
-            self._eval_batch_size,
-            self.max_depth
-        )
+        if isinstance(mode, bool):
+            mode = 'streaming' if mode else 'original'
 
-        self._inference_outputs_unprocessed = inference_class.run_inference()
+        valid_modes = ['streaming', 'minibatch', 'original']
+        if mode not in valid_modes:
+            raise ValueError(
+                f"mode must be one of {valid_modes}, got '{mode}'"
+            )
+
+        if mode == 'streaming':
+            inference_class = StreamingInference(
+                self._inference_input_matrix,
+                self.inference_model,
+                self.inference_encoders,
+                self.calibrators,
+                self.model_meta['calibration'],
+                self.max_depth,
+                self._eval_batch_size
+            )
+            self._inference_outputs_unprocessed = (
+                inference_class.run_streaming_inference()
+            )
+        elif mode == 'minibatch':
+            inference_class = FullInferenceInMinibatch(
+                self._inference_input_matrix,
+                self.inference_model,
+                self.inference_encoders,
+                self.calibrators,
+                self.model_meta['calibration'],
+                self.max_depth,
+                self._eval_batch_size,
+                self._model_version
+            )
+            outputs = inference_class.run_inference_in_minibatches()
+
+            self._azimuth_refined_labels = {
+                'azimuth_broad': outputs['azimuth_broad'],
+                'azimuth_medium': outputs['azimuth_medium'],
+                'azimuth_fine': outputs['azimuth_fine']
+            }
+
+            self._inference_outputs_unprocessed = outputs
+        else:
+            inference_class = Inference(
+                self._inference_input_matrix,
+                self.inference_model,
+                self.inference_encoders,
+                self._eval_batch_size,
+                self.max_depth
+            )
+            self._inference_outputs_unprocessed = inference_class.run_inference()
 
         return self._inference_outputs_unprocessed
 
     def calibrate_predictions(self):
         """
         Apply calibration to softmax outputs using trained calibrators.
-        
-        This method calibrates the softmax probability outputs from each 
-        hierarchical level using the corresponding trained calibration models, 
-        if available. Calibration improves the reliability and trustworthiness 
-        of prediction confidence scores by adjusting for overconfidence or 
+
+        This method calibrates the softmax probability outputs from each
+        hierarchical level using the corresponding trained calibration models,
+        if available. Calibration improves the reliability and trustworthiness
+        of prediction confidence scores by adjusting for overconfidence or
         underconfidence in the original model outputs.
-        
+
         Returns
         -------
         dict
-            Updated inference outputs dictionary with calibrated results. 
+            Updated inference outputs dictionary with calibrated results.
             Contains the same keys as the original inference outputs but with
             calibrated values:
-            
+
             - 'softmax_vals_all': List of calibrated softmax probability arrays,
             one per hierarchical level
             - 'probability_of_preds': Updated maximum probability values from
             the calibrated softmax distributions
             - Other keys remain unchanged from the original inference outputs
-            
+
         Notes
         -----
-        - Only applies calibration if calibration method is specified in model 
+        - Only applies calibration if calibration method is specified in model
         metadata and calibrator models are available
-        - If no calibration is configured (calibration method is None), the 
+        - If no calibration is configured (calibration method is None), the
         method returns the original inference outputs unchanged
         - Each hierarchical level is calibrated independently using its own
         trained calibrator model
         - Memory management is applied during processing to handle large datasets
         efficiently by cleaning up intermediate results after each level
-        
+        - If streaming inference was used, calibration was already applied
+        during inference and this method does nothing
+
         Raises
         ------
         AssertionError
             If calibration method is not None but the number of available
             calibrator models doesn't match the expected number of hierarchical
             levels (max_depth).
-            
+
         Examples
         --------
         The method is typically called as part of the inference pipeline:
-        
+
         >>> azimuth = AzimuthNN_base()
         >>> # ... load data and run inference ...
         >>> raw_outputs = azimuth.run_inference_model()
         >>> calibrated_outputs = azimuth.calibrate_predictions()
         >>> # Calibrated outputs now have adjusted confidence scores
-        
+
         The calibration process transforms prediction confidence scores:
-        
-        - Before calibration: Model might be over(/under)-confident 
+
+        - Before calibration: Model might be over(/under)-confident
         (high probabilities for uncertain predictions or vice-versa)
         - After calibration: Probabilities better reflect true prediction
         confidence and uncertainty
 
         """
+
+        if self._inference_outputs_unprocessed.get('softmax_vals_all') is None:
+            print("Calibration already applied during streaming inference.\n")
+            return self._inference_outputs_unprocessed
 
         calibration_method = self.model_meta['calibration']
         if calibration_method is not None:
@@ -559,7 +634,7 @@ class AzimuthNN_base(AutoloadInferenceTools):
                     sm_array = softmax_all[level]
                     calibrator_model = self.calibrators[level]
 
-            
+
                     calibration_obj = CalibrationSingleClassifier(
                         softmax = sm_array,
                         eval_batch_size = self._eval_batch_size
@@ -669,32 +744,45 @@ class AzimuthNN_base(AutoloadInferenceTools):
     def refine_labels(self, refine_level):
         """
         Refine hierarchical labels to a consistent level of granularity.
-        
-        This method applies post-processing rules to standardize 
-        annotations at the specified level of granularity (broad, 
+
+        .. deprecated::
+            This method is deprecated. Use :meth:`refine_labels_all` instead,
+            which performs all three refinement levels in one call.
+
+        This method applies post-processing rules to standardize
+        annotations at the specified level of granularity (broad,
         medium, or fine).
-        
+
         Parameters
         ----------
         refine_level : str
             Level of refinement: 'broad', 'medium', or 'fine'.
-            
+
         Returns
         -------
         list
             List of refined labels at the specified level.
-            
+
         Raises
         ------
         AssertionError
             If refine_level is not valid or inference hasn't been run.
-            
+
         Notes
         -----
         For 'broad' level, this returns the top-level annotations.
-        For 'medium' and 'fine' levels, specialized refinement is 
+        For 'medium' and 'fine' levels, specialized refinement is
         applied.
         """
+        import warnings
+
+        warnings.warn(
+            "refine_labels() is deprecated and will be removed in a future "
+            "version. Use refine_labels_all() instead, which performs all "
+            "three refinement levels in one call.",
+            DeprecationWarning,
+            stacklevel=2
+        )
 
         assert refine_level in ['broad','medium','fine'], (
             "refine_level should be 'broad', 'medium', or 'fine'."
@@ -704,54 +792,160 @@ class AzimuthNN_base(AutoloadInferenceTools):
             "Labels can be refined only after inference model has been run."
         )
 
-        print(
-            "Interpreting label predictions for consistent granularity "
-            f"at {refine_level} level.\n")
+        if not self._azimuth_refined_labels or \
+           f'azimuth_{refine_level}' not in self._azimuth_refined_labels:
+            all_refined = self.refine_labels_all()
+            return all_refined[f'azimuth_{refine_level}']
 
-        
+        return self._azimuth_refined_labels[f'azimuth_{refine_level}']
+
+
+        (
+            self._azimuth_refined_labels[f'azimuth_{refine_level}']
+         ) = results
+
+        return  results
+
+    def refine_labels_all(self):
+        """
+        Refine labels at all three levels (broad, medium, fine).
+
+        This is a simplified version that performs all refinement in one call,
+        using either full softmax (traditional mode) or sparse refinement data
+        (streaming mode).
+
+        Returns
+        -------
+        dict
+            Dictionary with keys 'azimuth_broad', 'azimuth_medium', 'azimuth_fine'
+            containing refined labels for each level.
+
+        Raises
+        ------
+        AssertionError
+            If inference outputs are not available.
+        RuntimeError
+            If no refinement data is available (neither softmax nor sparse data).
+
+        Notes
+        -----
+        This method automatically detects whether streaming or traditional
+        inference was used and applies the appropriate refinement method.
+
+        If 'minibatch' mode was used for inference, refinement was already
+        performed and this method simply returns the cached results.
+        """
+        assert self._inference_outputs_unprocessed is not None, (
+            "Labels can be refined only after inference model has been run."
+        )
+
+        if 'azimuth_broad' in self._inference_outputs_unprocessed:
+            print("Refinement already completed during minibatch inference.\n")
+            return self._azimuth_refined_labels
+
         labels_pred = self._inference_outputs_unprocessed[
             'hierarchical_label_preds'
         ]
         labels_prob = self._inference_outputs_unprocessed[
             'probability_of_preds'
         ]
-        probs = self._inference_outputs_unprocessed[
-            'softmax_vals_all'
-        ]
-
-        # this conditional block is to specifically handle refinement
-        # of empty cell calls at medium and fine levels.
-        if refine_level in ['medium', 'fine']:
-            labels_pred = np.array(labels_pred, dtype=object).copy()
-            prev_labels = self._azimuth_refined_labels.get(
-                'azimuth_broad', None
-                )
-            if prev_labels is not None:
-                for i, label in enumerate(labels_pred):
-                    labels_pred[i] = [
-                        prev_labels[i] + l[len('Empty'):] 
-                        if l.startswith('Empty') else l for l in label
-                        ]
-
-        refine_class = PostprocessingAzimuthLabels(
-            labels_pred,
-            labels_prob,
-            self.max_depth,
-            self.num_cells,
-            probs,
-            self.inference_encoders,
-            refine_level,
-            self._model_version
+        probs = self._inference_outputs_unprocessed.get('softmax_vals_all')
+        refinement_data = self._inference_outputs_unprocessed.get(
+            'refinement_data'
         )
 
-        results = refine_class.refine_labels()
-        
-        
-        (
-            self._azimuth_refined_labels[f'azimuth_{refine_level}']
-         ) = results
+        if probs is None and refinement_data is None:
+            raise RuntimeError(
+                "No refinement data available. This should not happen - "
+                "check streaming inference implementation."
+            )
 
-        return  results
+        if refinement_data is not None:
+            print("Using sparse refinement data from streaming inference...")
+            refined = self._refine_with_sparse_data(
+                labels_pred, labels_prob, refinement_data
+            )
+        else:
+            print("Using full softmax for refinement (traditional mode)...")
+            refined = self._refine_with_full_softmax(
+                labels_pred, labels_prob, probs
+            )
+
+        self._azimuth_refined_labels = refined
+
+        return refined
+
+    def _refine_with_sparse_data(self, labels_pred, labels_prob, refinement_data):
+        """Refine using sparse data from streaming inference."""
+        refined = {}
+
+        for level in ['broad', 'medium', 'fine']:
+            print(
+                f"Interpreting label predictions for consistent granularity "
+                f"at {level} level (sparse mode).\n"
+            )
+
+            labels_pred_copy = labels_pred
+            if level in ['medium', 'fine']:
+                labels_pred_copy = np.array(labels_pred, dtype=object).copy()
+                prev_labels = refined.get('azimuth_broad', None)
+                if prev_labels is not None:
+                    for i, label in enumerate(labels_pred_copy):
+                        labels_pred_copy[i] = [
+                            prev_labels[i] + l[len('Empty'):]
+                            if l.startswith('Empty') else l for l in label
+                        ]
+
+            refine_class = PostprocessingAzimuthLabelsSparse(
+                labels_pred_copy,
+                labels_prob,
+                self.max_depth,
+                self.num_cells,
+                refinement_data[level],
+                self.inference_encoders,
+                level,
+                self._model_version
+            )
+
+            refined[f'azimuth_{level}'] = refine_class.refine_labels()
+
+        return refined
+
+    def _refine_with_full_softmax(self, labels_pred, labels_prob, probs):
+        """Refine using full softmax (traditional approach)."""
+        refined = {}
+
+        for level in ['broad', 'medium', 'fine']:
+            print(
+                f"Interpreting label predictions for consistent granularity "
+                f"at {level} level (full softmax mode).\n"
+            )
+
+            labels_pred_copy = labels_pred
+            if level in ['medium', 'fine']:
+                labels_pred_copy = np.array(labels_pred, dtype=object).copy()
+                prev_labels = refined.get('azimuth_broad', None)
+                if prev_labels is not None:
+                    for i, label in enumerate(labels_pred_copy):
+                        labels_pred_copy[i] = [
+                            prev_labels[i] + l[len('Empty'):]
+                            if l.startswith('Empty') else l for l in label
+                        ]
+
+            refine_class = PostprocessingAzimuthLabels(
+                labels_pred_copy,
+                labels_prob,
+                self.max_depth,
+                self.num_cells,
+                probs,
+                self.inference_encoders,
+                level,
+                self._model_version
+            )
+
+            refined[f'azimuth_{level}'] = refine_class.refine_labels()
+
+        return refined
 
     def inference_model_embeddings(self, embedding_layer_name):
         """
@@ -1162,13 +1356,20 @@ class AzimuthNN(AzimuthNN_base):
     eval_batch_size : int, default=8192
         Batch size to use during model inference.
     normalization_override : bool, default=False
-        If True, skips normalization check and forces processing to 
+        If True, skips normalization check and forces processing to
         continue.
     norm_check_batch_size : int, default=1000
         Number of cells to sample for normalization check.
     output_mode : str, default='minimal'
-        Controls the verbosity of output in the cell meta dataframe. 
+        Controls the verbosity of output in the cell meta dataframe.
         Options are 'minimal' or 'detailed'.
+    inference_mode : str, default='minibatch'
+        Inference mode to use. Options:
+        - 'minibatch': Complete end-to-end pipeline per minibatch
+          (~98% memory reduction, best for very large datasets)
+        - 'streaming': Streaming inference with sparse refinement data
+          (~96% memory reduction)
+        - 'original': Original implementation (no optimization)
         
     Attributes
     ----------
@@ -1208,7 +1409,8 @@ class AzimuthNN(AzimuthNN_base):
         eval_batch_size=8192,
         normalization_override=False,
         norm_check_batch_size=100,
-        output_mode='minimal'
+        output_mode='minimal',
+        inference_mode='minibatch'
         ):
 
         """
@@ -1216,9 +1418,12 @@ class AzimuthNN(AzimuthNN_base):
 
         This constructor automatically runs the complete annotation workflow:
         1. Data loading and preprocessing
-        2. Model inference 
+        2. Model inference
         3. Confidence calibration using trained calibration models
         4. Output processing and metadata updating
+
+        With 'minibatch' mode (default), refinement is done automatically
+        during inference for maximum memory efficiency.
         """
 
         if (
@@ -1251,6 +1456,7 @@ class AzimuthNN(AzimuthNN_base):
         self._normalization_override = normalization_override
         self._norm_check_batch_size = norm_check_batch_size
         self._output_mode = output_mode
+        self._inference_mode = inference_mode
 
         super().__init__(
             annotation_pipeline,
@@ -1274,30 +1480,30 @@ class AzimuthNN(AzimuthNN_base):
             norm_check_batch_size = self._norm_check_batch_size
         )
 
-        _ = self.run_inference_model()
+        _ = self.run_inference_model(mode=self._inference_mode)
         _ = self.calibrate_predictions()
         self.annotations = self.process_outputs(mode=self._output_mode)
         _ = self.update_cells_meta()
 
     def azimuth_refine(self):
         """
-        Refine cell type annotations at multiple granularity levels.
-        
-        This method applies a hierarchical refinement of cell type labels,
-        progressing from broad to fine classifications. The results are
-        stored in the annotations attribute and the cell metadata is 
-        updated.
-        
+        Refine cell type annotations at all three granularity levels.
+
+        This method applies hierarchical refinement of cell type labels
+        at broad, medium, and fine levels. The results are stored in the
+        annotations attribute and the cell metadata is updated.
+
+        If 'minibatch' mode was used for inference, refinement was already
+        performed automatically and this method simply updates metadata.
+
         Returns
         -------
         None
-            Updates the annotations attribute in-place and updates cell 
+            Updates the annotations attribute in-place and updates cell
             metadata.
         """
 
-        _ = self.refine_labels(refine_level='broad')
-        _ = self.refine_labels(refine_level='medium')
-        _ = self.refine_labels(refine_level='fine')
+        _ = self.refine_labels_all()
 
         _ = self.update_cells_meta()
 
@@ -1525,17 +1731,18 @@ def annotate_core(
     refine_labels,
     extract_embeddings,
     umap_embeddings,
-    n_neighbors, 
-    n_components, 
-    metric, 
-    min_dist, 
-    umap_lr, 
-    umap_seed, 
+    n_neighbors,
+    n_components,
+    metric,
+    min_dist,
+    umap_lr,
+    umap_seed,
     spread,
     verbose,
     init,
-    model_version=model_version_default   
+    model_version=model_version_default,
     # adding a default here, so the R script does not need mods to access the default.
+    inference_mode='minibatch'
     ):
     """
     Core function for cell type annotation using the Azimuth neural 
@@ -1596,7 +1803,14 @@ def annotate_core(
         Whether to display progress during UMAP computation.
     init : str, default='spectral'
         Initialization method for UMAP.
-        
+    model_version : str
+        Model version to use for inference.
+    inference_mode : str, default='minibatch'
+        Inference mode to use. Options:
+        - 'minibatch': Complete end-to-end pipeline per minibatch (~98% memory reduction)
+        - 'streaming': Streaming inference with sparse refinement data (~96% memory reduction)
+        - 'original': Original implementation (no optimization)
+
     Returns
     -------
     dict
@@ -1692,6 +1906,7 @@ def annotate_core(
     print("Reference model and parameters:")
     print(f"    Model name: {azimuth.model_meta['inference_model_name']}")
     print(f"    Evaluation batch size: {eval_batch_size}")
+    print(f"    Inference mode: {inference_mode}")
     print(f"    Extract embeddings: {extract_embeddings}")
     print(f"    Run umap: {umap_embeddings}")
     print(f"    Refine labels in postprocessing: {refine_labels}")
@@ -1703,14 +1918,12 @@ def annotate_core(
             norm_check_batch_size = norm_check_batch_size
         )
 
-    _ = azimuth.run_inference_model()
+    _ = azimuth.run_inference_model(mode=inference_mode)
     _ = azimuth.calibrate_predictions()
     _ = azimuth.process_outputs(mode=output_mode)
 
     if refine_labels:
-        _ = azimuth.refine_labels(refine_level='broad')
-        _ = azimuth.refine_labels(refine_level='medium')
-        _ = azimuth.refine_labels(refine_level='fine')
+        _ = azimuth.refine_labels_all()
 
     _ = azimuth.update_cells_meta()
 

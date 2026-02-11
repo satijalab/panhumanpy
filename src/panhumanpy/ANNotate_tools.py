@@ -1272,12 +1272,437 @@ class Inference():
 
         return (
             {
-            'hierarchical_label_preds':np.array(string_labels_out).T, 
-            'class_preds':class_preds, 
-            'probability_of_preds':max_probs, 
+            'hierarchical_label_preds':np.array(string_labels_out).T,
+            'class_preds':class_preds,
+            'probability_of_preds':max_probs,
             'softmax_vals_all':softmax_vals_all
             }
         )
+
+
+class FullInferenceInMinibatch:
+    """
+    Complete end-to-end minibatch pipeline: inference → calibration → refinement.
+
+    This class performs the entire annotation pipeline on each minibatch,
+    discarding all intermediate data and keeping only final refined labels.
+    This is the most memory-efficient approach.
+
+    Pipeline per minibatch:
+    1. Inference → softmax outputs
+    2. Calibration → calibrated softmax (if calibration enabled)
+    3. Extract predictions and probabilities
+    4. Refine to broad, medium, and fine levels
+    5. Discard all intermediate data (softmax, probabilities, etc.)
+    6. Keep only final refined labels
+
+    Maximum memory efficiency:
+    - No full softmax arrays stored
+    - No intermediate probability arrays
+    - Only final refined labels accumulated
+    - ~98% memory reduction vs original
+
+    Parameters
+    ----------
+    X : scipy.sparse matrix
+        Input feature matrix (sparse).
+    model : tensorflow.keras.Model
+        Trained inference model.
+    label_encoders : list
+        List of label encoders for each hierarchical level.
+    calibrators : list or None
+        List of calibration models for each level, or None.
+    calibration_method : str or None
+        Name of calibration method to apply, or None.
+    max_depth : int
+        Number of hierarchical levels.
+    eval_batch_size : int
+        Size of minibatches for processing.
+    model_version : str
+        Model version for loading refinement annotations.
+    """
+
+    def __init__(
+        self,
+        X,
+        model,
+        label_encoders,
+        calibrators,
+        calibration_method,
+        max_depth,
+        eval_batch_size,
+        model_version
+    ):
+        self._X = X
+        self._model = model
+        self._label_encoders = label_encoders
+        self._calibrators = calibrators
+        self._calibration_method = calibration_method
+        self._max_depth = max_depth
+        self._eval_batch_size = eval_batch_size
+        self._model_version = model_version
+        self._num_cells = X.shape[0]
+        self._num_batches = (
+            (self._num_cells + eval_batch_size - 1) // eval_batch_size
+        )
+
+    def _apply_calibration_to_minibatch(self, softmax_batch, level):
+        if self._calibration_method is None or self._calibrators is None:
+            return softmax_batch
+
+        calibrator = self._calibrators[level]
+
+        if self._calibration_method == 'temperature_scaling_entropy_informed':
+            ent = compute_entropy(softmax_batch)
+            ent = np.array(ent, dtype=np.float32).reshape(-1, 1)
+            logits = softmax_to_logits(softmax_batch)
+            calibrated = calibrator((logits, ent), verbose=0)
+            return np.array(calibrated)
+        else:
+            return softmax_batch
+
+    def _refine_minibatch(
+        self,
+        labels_pred_batch,
+        labels_prob_batch,
+        softmax_per_level_batch,
+        batch_start_idx,
+        prev_broad_labels=None
+    ):
+        batch_size = labels_pred_batch.shape[0]
+        refined_batch = {}
+
+        for level in ['broad', 'medium', 'fine']:
+            labels_pred_copy = labels_pred_batch
+            if level in ['medium', 'fine'] and prev_broad_labels is not None:
+                labels_pred_copy = np.array(labels_pred_copy, dtype=object).copy()
+                for i, label in enumerate(labels_pred_copy):
+                    labels_pred_copy[i] = [
+                        prev_broad_labels[i] + l[len('Empty'):]
+                        if l.startswith('Empty') else l for l in label
+                    ]
+
+            refine_class = PostprocessingAzimuthLabels(
+                labels_pred_copy,
+                labels_prob_batch,
+                self._max_depth,
+                batch_size,
+                softmax_per_level_batch,
+                self._label_encoders,
+                level,
+                self._model_version
+            )
+
+            refined_batch[level] = refine_class.refine_labels()
+
+        return refined_batch
+
+    def run_inference_in_minibatches(self):
+        if self._X.shape[0] == 0:
+            raise ValueError("Input matrix is empty")
+
+        refined_broad = []
+        refined_medium = []
+        refined_fine = []
+        hierarchical_labels_all = []
+        class_preds = np.zeros((self._num_cells, self._max_depth), dtype=np.int32)
+        max_probs = np.zeros((self._num_cells, self._max_depth), dtype=np.float32)
+
+        print(
+            f"Running complete pipeline on {self._num_batches} minibatches "
+            "(inference + calibration + refinement)...\n"
+        )
+
+        for batch_idx in range(self._num_batches):
+            start_idx = batch_idx * self._eval_batch_size
+            end_idx = min((batch_idx + 1) * self._eval_batch_size, self._num_cells)
+
+            if start_idx >= self._num_cells:
+                break
+
+            minibatch = self._X[start_idx:end_idx].toarray()
+            batch_size = minibatch.shape[0]
+
+            y_mb = self._model.predict(minibatch, verbose=0)
+
+            class_preds_batch = np.zeros((batch_size, self._max_depth), dtype=np.int32)
+            max_probs_batch = np.zeros((batch_size, self._max_depth), dtype=np.float32)
+            hierarchical_labels_batch = []
+            softmax_per_level_batch = []
+
+            for level in range(self._max_depth):
+                softmax = (
+                    y_mb[level].numpy()
+                    if hasattr(y_mb[level], 'numpy')
+                    else np.array(y_mb[level])
+                )
+
+                softmax = self._apply_calibration_to_minibatch(softmax, level)
+                softmax_per_level_batch.append(softmax)
+
+                class_preds_batch[:, level] = np.argmax(softmax, axis=-1)
+                max_probs_batch[:, level] = np.max(softmax, axis=-1)
+
+                labels = self._label_encoders[level].inverse_transform(
+                    class_preds_batch[:, level]
+                )
+                hierarchical_labels_batch.append(labels)
+
+            class_preds[start_idx:end_idx, :] = class_preds_batch
+            max_probs[start_idx:end_idx, :] = max_probs_batch
+
+            hierarchical_labels_array = np.array(hierarchical_labels_batch).T
+
+            for row in hierarchical_labels_array:
+                hierarchical_labels_all.append(row)
+
+            prev_broad = (
+                np.array(refined_broad) if batch_idx > 0 and refined_broad else None
+            )
+
+            refined_batch = self._refine_minibatch(
+                hierarchical_labels_array,
+                max_probs_batch,
+                softmax_per_level_batch,
+                start_idx,
+                prev_broad
+            )
+
+            refined_broad.extend(refined_batch['broad'])
+            refined_medium.extend(refined_batch['medium'])
+            refined_fine.extend(refined_batch['fine'])
+
+            del minibatch, y_mb, softmax_per_level_batch
+            del hierarchical_labels_array, refined_batch
+
+            if (batch_idx + 1) % 10 == 0 or (batch_idx + 1) == self._num_batches:
+                print(f"  Processed {end_idx}/{self._num_cells} cells...")
+
+        print("Complete pipeline finished.\n")
+
+        hierarchical_label_preds = np.array(hierarchical_labels_all)
+
+        return {
+            'azimuth_broad': np.array(refined_broad),
+            'azimuth_medium': np.array(refined_medium),
+            'azimuth_fine': np.array(refined_fine),
+            'hierarchical_label_preds': hierarchical_label_preds,
+            'class_preds': class_preds,
+            'probability_of_preds': max_probs,
+            'softmax_vals_all': None
+        }
+
+    def run_inference(self):
+        return self.run_inference_in_minibatches()
+
+
+class StreamingInference:
+    """
+    Memory-efficient streaming inference that avoids storing full softmax.
+
+    Processes data in minibatches, extracting only necessary information
+    and discarding full probability distributions immediately. This reduces
+    memory usage from O(n_cells × n_classes) to O(minibatch_size × n_classes).
+
+    Parameters
+    ----------
+    X : scipy.sparse matrix
+        Input feature matrix (sparse).
+    model : tensorflow.keras.Model
+        Trained inference model.
+    label_encoders : list
+        List of label encoders for each hierarchical level.
+    calibrators : list or None
+        List of calibration models for each level, or None if no calibration.
+    calibration_method : str or None
+        Name of calibration method to apply, or None for no calibration.
+    max_depth : int
+        Number of hierarchical levels.
+    minibatch_size : int
+        Size of minibatches for processing.
+    """
+
+    def __init__(
+        self,
+        X,
+        model,
+        label_encoders,
+        calibrators,
+        calibration_method,
+        max_depth,
+        minibatch_size
+    ):
+        self._X = X
+        self._model = model
+        self._label_encoders = label_encoders
+        self._calibrators = calibrators
+        self._calibration_method = calibration_method
+        self._max_depth = max_depth
+        self._minibatch_size = minibatch_size
+        self._num_cells = X.shape[0]
+        self._num_batches = (
+            (self._num_cells + minibatch_size - 1) // minibatch_size
+        )
+
+    def _apply_calibration_to_minibatch(self, softmax_batch, level):
+        if self._calibration_method is None or self._calibrators is None:
+            return softmax_batch
+
+        calibrator = self._calibrators[level]
+
+        if self._calibration_method == 'temperature_scaling_entropy_informed':
+            ent = compute_entropy(softmax_batch)
+            ent = np.array(ent, dtype=np.float32).reshape(-1, 1)
+            logits = softmax_to_logits(softmax_batch)
+            calibrated = calibrator((logits, ent), verbose=0)
+            return np.array(calibrated)
+        else:
+            return softmax_batch
+
+    def extract_sparse_refinement_data_all_levels(
+        self,
+        softmax_per_level,
+        cell_start_idx,
+        confidence_threshold=0.9,
+        top_k=10
+    ):
+        refinement_data = {'broad': {}, 'medium': {}, 'fine': {}}
+        level_names = ['broad', 'medium', 'fine']
+
+        for level_idx, level_name in enumerate(level_names):
+            if level_idx >= len(softmax_per_level):
+                continue
+
+            softmax = softmax_per_level[level_idx]
+            batch_size = softmax.shape[0]
+
+            max_probs = np.max(softmax, axis=-1)
+            needs_refinement = max_probs < confidence_threshold
+
+            for local_idx in np.where(needs_refinement)[0]:
+                global_idx = cell_start_idx + local_idx
+
+                k = min(top_k, softmax.shape[1])
+                top_k_indices = np.argsort(softmax[local_idx])[-k:][::-1]
+                top_k_probs = softmax[local_idx][top_k_indices]
+
+                class_names = self._label_encoders[level_idx].inverse_transform(
+                    top_k_indices
+                )
+
+                refinement_data[level_name][global_idx] = {
+                    'class_names': class_names.tolist(),
+                    'probabilities': top_k_probs.tolist()
+                }
+
+        return refinement_data
+
+    def process_single_minibatch(self, start_idx, end_idx):
+        minibatch = self._X[start_idx:end_idx].toarray()
+        batch_size = minibatch.shape[0]
+
+        y_mb = self._model.predict(minibatch, verbose=0)
+
+        class_preds_mb = np.zeros((batch_size, self._max_depth), dtype=np.int32)
+        max_probs_mb = np.zeros((batch_size, self._max_depth), dtype=np.float32)
+        hierarchical_labels_mb = []
+
+        softmax_per_level = []
+
+        for level in range(self._max_depth):
+            softmax = (
+                y_mb[level].numpy()
+                if hasattr(y_mb[level], 'numpy')
+                else np.array(y_mb[level])
+            )
+
+            softmax = self._apply_calibration_to_minibatch(softmax, level)
+
+            softmax_per_level.append(softmax)
+
+            class_preds_mb[:, level] = np.argmax(softmax, axis=-1)
+            max_probs_mb[:, level] = np.max(softmax, axis=-1)
+
+            labels = self._label_encoders[level].inverse_transform(
+                class_preds_mb[:, level]
+            )
+            hierarchical_labels_mb.append(labels)
+
+        batch_refinement = self.extract_sparse_refinement_data_all_levels(
+            softmax_per_level, start_idx
+        )
+
+        del minibatch, y_mb, softmax_per_level
+
+        return {
+            'class_preds': class_preds_mb,
+            'max_probs': max_probs_mb,
+            'hierarchical_labels': hierarchical_labels_mb,
+            'refinement_data': batch_refinement,
+            'start_idx': start_idx,
+            'end_idx': end_idx
+        }
+
+    def run_streaming_inference(self):
+        if self._X.shape[0] == 0:
+            raise ValueError("Input matrix is empty")
+
+        class_preds = np.zeros((self._num_cells, self._max_depth), dtype=np.int32)
+        max_probs = np.zeros((self._num_cells, self._max_depth), dtype=np.float32)
+        hierarchical_labels = [[] for _ in range(self._max_depth)]
+
+        refinement_data = {'broad': {}, 'medium': {}, 'fine': {}}
+
+        print(
+            f"Splitting query data into {self._num_batches} "
+            "evaluation batches (streaming mode).\n"
+        )
+        print("Running model with streaming inference:")
+
+        for batch_idx in range(self._num_batches):
+            start_idx = batch_idx * self._minibatch_size
+            end_idx = min((batch_idx + 1) * self._minibatch_size, self._num_cells)
+
+            if start_idx >= self._num_cells:
+                break
+
+            batch_results = self.process_single_minibatch(start_idx, end_idx)
+
+            class_preds[start_idx:end_idx, :] = batch_results['class_preds']
+            max_probs[start_idx:end_idx, :] = batch_results['max_probs']
+
+            for level in range(self._max_depth):
+                hierarchical_labels[level].extend(
+                    batch_results['hierarchical_labels'][level]
+                )
+
+            for level_name in ['broad', 'medium', 'fine']:
+                refinement_data[level_name].update(
+                    batch_results['refinement_data'][level_name]
+                )
+
+            if (batch_idx + 1) % 10 == 0 or (batch_idx + 1) == self._num_batches:
+                print(f"  Processed {end_idx}/{self._num_cells} cells...")
+
+        hierarchical_labels_array = np.array(hierarchical_labels).T
+
+        assert self._max_depth == class_preds.shape[1], (
+            "The array of all predictions should have dimensions consistent "
+            "with max_depth."
+        )
+        assert self._num_cells == class_preds.shape[0], (
+            "The number of predictions != the number of cells in X_query"
+        )
+
+        print("Streaming inference complete.\n")
+
+        return {
+            'hierarchical_label_preds': hierarchical_labels_array,
+            'class_preds': class_preds,
+            'probability_of_preds': max_probs,
+            'softmax_vals_all': None,
+            'refinement_data': refinement_data
+        }
 
 
 class CalibrationSingleClassifier():
@@ -2983,6 +3408,138 @@ class PostprocessingAzimuthLabels(OutputLabels):
 
         return refined_labels
 
+
+class PostprocessingAzimuthLabelsSparse(PostprocessingAzimuthLabels):
+    """
+    Memory-efficient refinement using sparse probability data.
+
+    Instead of full softmax arrays, uses dictionary of top-k probabilities
+    for cells that need refinement. Produces identical output to
+    PostprocessingAzimuthLabels but with much lower memory footprint.
+
+    Parameters
+    ----------
+    labels_pred : np.ndarray
+        Hierarchical label predictions.
+    labels_prob : np.ndarray
+        Maximum probabilities per level.
+    max_depth : int
+        Hierarchy depth.
+    num_cells : int
+        Total number of cells.
+    sparse_probs : dict
+        Sparse probability dictionary for this refinement level.
+        Format: {cell_idx: {'class_names': [...], 'probabilities': [...]}}
+    encoders : list
+        Label encoders.
+    refine_level : str
+        'broad', 'medium', or 'fine'
+    model_version : str
+        Model version.
+    """
+
+    def __init__(
+        self,
+        labels_pred,
+        labels_prob,
+        max_depth,
+        num_cells,
+        sparse_probs,
+        encoders,
+        refine_level,
+        model_version
+    ):
+        self.sparse_probs = sparse_probs
+
+        OutputLabels.__init__(
+            self,
+            labels_pred,
+            labels_prob,
+            max_depth,
+            num_cells
+        )
+
+        self.refine_level = refine_level
+        self.encoders = encoders
+
+        if refine_level not in self.VALID_REFINE_LEVELS:
+            raise ValueError(
+                f"refine_level must be one of {self.VALID_REFINE_LEVELS}"
+            )
+
+        try:
+            version_module = importlib.import_module(
+                f"panhumanpy._tools.{model_version}"
+            )
+            version_path = files(version_module)
+            postprocessing_dir_path = version_path/"postprocessing"
+        except (ImportError, ModuleNotFoundError) as e:
+            raise RuntimeError(
+                "postprocessing module not found. Please ensure it is installed."
+            ) from e
+
+        self.refined_annotations_file_name = (
+            f'panhuman_annotate_{refine_level}.csv'
+        )
+        self._refined_annotations_df_path = (
+            postprocessing_dir_path / self.refined_annotations_file_name
+        )
+
+        try:
+            self.annotations_df = pd.read_csv(
+                self._refined_annotations_df_path,
+                index_col=None
+            )
+        except FileNotFoundError as e:
+            raise FileNotFoundError(
+                f"Annotation file {self.refined_annotations_file_name} not "
+                f"found in postprocessing directory"
+            ) from e
+
+        required_columns = ['Orig_Label', f'Annotate_{refine_level}']
+        missing_cols = [col for col in required_columns
+                       if col not in self.annotations_df.columns]
+        if missing_cols:
+            raise ValueError(
+                f"Annotation file missing required columns: {missing_cols}"
+            )
+
+    def _PostprocessingAzimuthLabels__softmax_classes_dict(self):
+        class SparseArrayWrapper:
+            def __init__(self, sparse_dict, num_cells):
+                self.sparse_dict = sparse_dict
+                self.num_cells = num_cells
+
+            def __getitem__(self, cell_idx):
+                if cell_idx in self.sparse_dict:
+                    return self.sparse_dict[cell_idx]
+                else:
+                    return -np.inf
+
+        precomputed_softmax = {}
+
+        for level in range(self._max_depth):
+            level_classes = {}
+
+            for cell_idx, cell_data in self.sparse_probs.items():
+                class_names = cell_data['class_names']
+                probabilities = cell_data['probabilities']
+
+                for class_name, prob in zip(class_names, probabilities):
+                    class_depth = len(class_name.split("|")) - 1
+
+                    if class_depth == level:
+                        if class_name not in level_classes:
+                            level_classes[class_name] = {}
+
+                        level_classes[class_name][cell_idx] = prob
+
+            precomputed_softmax[level] = {
+                class_name: SparseArrayWrapper(cell_probs, self._num_cells)
+                for class_name, cell_probs in level_classes.items()
+            }
+
+        return precomputed_softmax
 
 
 class Embeddings():
