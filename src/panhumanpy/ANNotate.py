@@ -434,7 +434,7 @@ class AzimuthNN_base(AutoloadInferenceTools):
         )
         
 
-    def run_inference_model(self, mode='streaming'):
+    def run_inference_model(self, mode='minibatch'):
         """
         Run the inference model on the processed query data.
 
@@ -443,16 +443,13 @@ class AzimuthNN_base(AutoloadInferenceTools):
 
         Parameters
         ----------
-        mode : str or bool, default='streaming'
+        mode : str, default='minibatch'
             Inference mode to use. Options:
-            - 'streaming': Memory-efficient streaming (discards full softmax,
-              ~96% memory reduction, inline calibration)
             - 'minibatch': Complete end-to-end pipeline per minibatch
               (inference + calibration + refinement). Returns only final
-              refined labels. ~98% memory reduction.
-            - 'original': Original implementation (backward compatibility)
-            - True: Equivalent to 'streaming' (for backward compatibility)
-            - False: Equivalent to 'original' (for backward compatibility)
+              refined labels. ~98% memory reduction. Best for large datasets.
+            - 'original': Original implementation (backward compatibility).
+              No optimization. Full softmax arrays retained.
 
         Returns
         -------
@@ -478,45 +475,25 @@ class AzimuthNN_base(AutoloadInferenceTools):
         3. process_outputs()
 
         Mode Comparison:
-        - 'streaming': Good for large datasets (>1M cells). Discards full
-          softmax arrays, applies calibration inline. Keeps sparse refinement
-          data. ~96% memory reduction. Refinement done separately via
+        - 'minibatch': Complete end-to-end pipeline per minibatch (inference +
+          calibration + refinement). Returns only final refined labels.
+          ~98% memory reduction. No need to call calibrate_predictions() or
           refine_labels_all().
-        - 'minibatch': Best for very large datasets. Complete end-to-end
-          pipeline per minibatch (inference + calibration + refinement).
-          Returns only final refined labels. ~98% memory reduction. No need
-          to call calibrate_predictions() or refine_labels_all().
         - 'original': Original implementation. No optimization. Full
-          softmax arrays retained.
+          softmax arrays retained. Requires separate calibration and refinement.
         """
 
         assert self._inference_input_matrix is not None, (
             "Input matrix not initialized. Call process_query() first."
         )
 
-        if isinstance(mode, bool):
-            mode = 'streaming' if mode else 'original'
-
-        valid_modes = ['streaming', 'minibatch', 'original']
+        valid_modes = ['minibatch', 'original']
         if mode not in valid_modes:
             raise ValueError(
                 f"mode must be one of {valid_modes}, got '{mode}'"
             )
 
-        if mode == 'streaming':
-            inference_class = StreamingInference(
-                self._inference_input_matrix,
-                self.inference_model,
-                self.inference_encoders,
-                self.calibrators,
-                self.model_meta['calibration'],
-                self.max_depth,
-                self._eval_batch_size
-            )
-            self._inference_outputs_unprocessed = (
-                inference_class.run_streaming_inference()
-            )
-        elif mode == 'minibatch':
+        if mode == 'minibatch':
             inference_class = FullInferenceInMinibatch(
                 self._inference_input_matrix,
                 self.inference_model,
@@ -581,7 +558,7 @@ class AzimuthNN_base(AutoloadInferenceTools):
         trained calibrator model
         - Memory management is applied during processing to handle large datasets
         efficiently by cleaning up intermediate results after each level
-        - If streaming inference was used, calibration was already applied
+        - If minibatch inference mode was used, calibration was already applied
         during inference and this method does nothing
 
         Raises
@@ -611,7 +588,7 @@ class AzimuthNN_base(AutoloadInferenceTools):
         """
 
         if self._inference_outputs_unprocessed.get('softmax_vals_all') is None:
-            print("Calibration already applied during streaming inference.\n")
+            print("Calibration already applied during minibatch inference.\n")
             return self._inference_outputs_unprocessed
 
         calibration_method = self.model_meta['calibration']
@@ -810,9 +787,7 @@ class AzimuthNN_base(AutoloadInferenceTools):
         """
         Refine labels at all three levels (broad, medium, fine).
 
-        This is a simplified version that performs all refinement in one call,
-        using either full softmax (traditional mode) or sparse refinement data
-        (streaming mode).
+        This method performs all refinement in one call using full softmax data.
 
         Returns
         -------
@@ -824,14 +799,9 @@ class AzimuthNN_base(AutoloadInferenceTools):
         ------
         AssertionError
             If inference outputs are not available.
-        RuntimeError
-            If no refinement data is available (neither softmax nor sparse data).
 
         Notes
         -----
-        This method automatically detects whether streaming or traditional
-        inference was used and applies the appropriate refinement method.
-
         If 'minibatch' mode was used for inference, refinement was already
         performed and this method simply returns the cached results.
         """
@@ -849,76 +819,14 @@ class AzimuthNN_base(AutoloadInferenceTools):
         labels_prob = self._inference_outputs_unprocessed[
             'probability_of_preds'
         ]
-        probs = self._inference_outputs_unprocessed.get('softmax_vals_all')
-        refinement_data = self._inference_outputs_unprocessed.get(
-            'refinement_data'
-        )
+        probs = self._inference_outputs_unprocessed['softmax_vals_all']
 
-        if probs is None and refinement_data is None:
-            raise RuntimeError(
-                "No refinement data available. This should not happen - "
-                "check streaming inference implementation."
-            )
-
-        if refinement_data is not None:
-            print("Using sparse refinement data from streaming inference...")
-            refined = self._refine_with_sparse_data(
-                labels_pred, labels_prob, refinement_data
-            )
-        else:
-            print("Using full softmax for refinement (traditional mode)...")
-            refined = self._refine_with_full_softmax(
-                labels_pred, labels_prob, probs
-            )
-
-        self._azimuth_refined_labels = refined
-
-        return refined
-
-    def _refine_with_sparse_data(self, labels_pred, labels_prob, refinement_data):
-        """Refine using sparse data from streaming inference."""
         refined = {}
 
         for level in ['broad', 'medium', 'fine']:
             print(
                 f"Interpreting label predictions for consistent granularity "
-                f"at {level} level (sparse mode).\n"
-            )
-
-            labels_pred_copy = labels_pred
-            if level in ['medium', 'fine']:
-                labels_pred_copy = np.array(labels_pred, dtype=object).copy()
-                prev_labels = refined.get('azimuth_broad', None)
-                if prev_labels is not None:
-                    for i, label in enumerate(labels_pred_copy):
-                        labels_pred_copy[i] = [
-                            prev_labels[i] + l[len('Empty'):]
-                            if l.startswith('Empty') else l for l in label
-                        ]
-
-            refine_class = PostprocessingAzimuthLabelsSparse(
-                labels_pred_copy,
-                labels_prob,
-                self.max_depth,
-                self.num_cells,
-                refinement_data[level],
-                self.inference_encoders,
-                level,
-                self._model_version
-            )
-
-            refined[f'azimuth_{level}'] = refine_class.refine_labels()
-
-        return refined
-
-    def _refine_with_full_softmax(self, labels_pred, labels_prob, probs):
-        """Refine using full softmax (traditional approach)."""
-        refined = {}
-
-        for level in ['broad', 'medium', 'fine']:
-            print(
-                f"Interpreting label predictions for consistent granularity "
-                f"at {level} level (full softmax mode).\n"
+                f"at {level} level.\n"
             )
 
             labels_pred_copy = labels_pred
@@ -944,6 +852,8 @@ class AzimuthNN_base(AutoloadInferenceTools):
             )
 
             refined[f'azimuth_{level}'] = refine_class.refine_labels()
+
+        self._azimuth_refined_labels = refined
 
         return refined
 
@@ -1367,8 +1277,6 @@ class AzimuthNN(AzimuthNN_base):
         Inference mode to use. Options:
         - 'minibatch': Complete end-to-end pipeline per minibatch
           (~98% memory reduction, best for very large datasets)
-        - 'streaming': Streaming inference with sparse refinement data
-          (~96% memory reduction)
         - 'original': Original implementation (no optimization)
         
     Attributes
@@ -1808,7 +1716,6 @@ def annotate_core(
     inference_mode : str, default='minibatch'
         Inference mode to use. Options:
         - 'minibatch': Complete end-to-end pipeline per minibatch (~98% memory reduction)
-        - 'streaming': Streaming inference with sparse refinement data (~96% memory reduction)
         - 'original': Original implementation (no optimization)
 
     Returns
