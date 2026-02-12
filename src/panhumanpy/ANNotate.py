@@ -434,7 +434,7 @@ class AzimuthNN_base(AutoloadInferenceTools):
         )
         
 
-    def run_inference_model(self, mode='minibatch'):
+    def run_inference_model(self, mode='original'):
         """
         Run the inference model on the processed query data.
 
@@ -443,7 +443,7 @@ class AzimuthNN_base(AutoloadInferenceTools):
 
         Parameters
         ----------
-        mode : str, default='minibatch'
+        mode : str, default='original'
             Inference mode to use. Options:
             - 'minibatch': Complete end-to-end pipeline per minibatch
               (inference + calibration + refinement). Returns only final
@@ -1273,7 +1273,7 @@ class AzimuthNN(AzimuthNN_base):
     output_mode : str, default='minimal'
         Controls the verbosity of output in the cell meta dataframe.
         Options are 'minimal' or 'detailed'.
-    inference_mode : str, default='minibatch'
+    inference_mode : str, default='original'
         Inference mode to use. Options:
         - 'minibatch': Complete end-to-end pipeline per minibatch
           (~98% memory reduction, best for very large datasets)
@@ -1318,7 +1318,7 @@ class AzimuthNN(AzimuthNN_base):
         normalization_override=False,
         norm_check_batch_size=100,
         output_mode='minimal',
-        inference_mode='minibatch'
+        inference_mode='original'
         ):
 
         """
@@ -1650,7 +1650,7 @@ def annotate_core(
     init,
     model_version=model_version_default,
     # adding a default here, so the R script does not need mods to access the default.
-    inference_mode='minibatch'
+    inference_mode='original'
     ):
     """
     Core function for cell type annotation using the Azimuth neural 
@@ -1713,7 +1713,7 @@ def annotate_core(
         Initialization method for UMAP.
     model_version : str
         Model version to use for inference.
-    inference_mode : str, default='minibatch'
+    inference_mode : str, default='original'
         Inference mode to use. Options:
         - 'minibatch': Complete end-to-end pipeline per minibatch (~98% memory reduction)
         - 'original': Original implementation (no optimization)
