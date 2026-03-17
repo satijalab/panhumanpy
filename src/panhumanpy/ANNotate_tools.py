@@ -1,35 +1,31 @@
-""" 
-Module with inference tools using Azimuth Neural Network trained on 
+"""
+Module with inference tools using Azimuth Neural Network trained on
 annotated panhuman scRNA-seq data.
 """
 
 import argparse
+import gc
+import importlib
 import os
-from pathlib import Path
-import numpy as np
-import tensorflow as tf
-from tensorflow.keras.models import Model, load_model
 import pickle
-import anndata
-import pandas as pd
-from scipy.sparse import csr_matrix, coo_matrix, hstack
-from sklearn.neighbors import NearestNeighbors
-import umap
+import sys
 import warnings
 from datetime import datetime
-
-import sys
-import importlib
 from importlib.resources import files
+from pathlib import Path
+
+import anndata
+import numpy as np
+import pandas as pd
+import tensorflow as tf
+import umap
+from scipy.sparse import coo_matrix, csr_matrix, hstack
+from sklearn.neighbors import NearestNeighbors
+from tensorflow.keras.models import Model, load_model
+
 from panhumanpy.loss_fn import *
 
-import warnings
-import gc
-#warnings.filterwarnings("ignore")  make this optional in script
-
-
-
-
+# warnings.filterwarnings("ignore")  make this optional in script
 
 
 #######################################################################
@@ -40,30 +36,25 @@ import gc
 
 def configure():
     """
-    Configures TensorFlow GPU settings to optimize memory usage and 
+    Configures TensorFlow GPU settings to optimize memory usage and
     performance.
 
-    - Limits default memory allocation on GPU to prevent excessive 
+    - Limits default memory allocation on GPU to prevent excessive
       consumption
-    - Enables memory growth, allowing TensorFlow to allocate GPU memory 
+    - Enables memory growth, allowing TensorFlow to allocate GPU memory
       as needed
-    - Sets JIT compilation flag to True for potential performance 
+    - Sets JIT compilation flag to True for potential performance
       improvements
-    - If GPUs are available, prints the number of physical and logical 
-      GPUs detected.      
+    - If GPUs are available, prints the number of physical and logical
+      GPUs detected.
     """
-    gpus = tf.config.list_physical_devices('GPU')
+    gpus = tf.config.list_physical_devices("GPU")
     if gpus:
         try:
             for gpu in gpus:
                 tf.config.experimental.set_memory_growth(gpu, True)
-            logical_gpus = tf.config.list_logical_devices('GPU')
-            print(
-                len(gpus), 
-                "Physical GPUs,", 
-                len(logical_gpus), 
-                "Logical GPUs \n"
-                )
+            logical_gpus = tf.config.list_logical_devices("GPU")
+            print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs \n")
         except RuntimeError as e:
             print(e)
             print("\n")
@@ -73,39 +64,38 @@ def configure():
 
 def is_valid_anndata_obj(obj):
     """
-    Check if an object is a valid AnnData object with required 
+    Check if an object is a valid AnnData object with required
     attributes.
-    
+
     Parameters
     ----------
     obj : The object to check.
-    
+
     Returns
     -------
-    bool : True if the object is a valid AnnData object with X, obs, 
+    bool : True if the object is a valid AnnData object with X, obs,
             and var attributes.
     """
     return (
-        isinstance(obj, anndata.AnnData) and
-        hasattr(obj, "X") and obj.X is not None and
-        hasattr(obj, "obs") and isinstance(obj.obs, pd.DataFrame) and
-        hasattr(obj, "var") and isinstance(obj.var, pd.DataFrame)
+        isinstance(obj, anndata.AnnData)
+        and hasattr(obj, "X")
+        and obj.X is not None
+        and hasattr(obj, "obs")
+        and isinstance(obj.obs, pd.DataFrame)
+        and hasattr(obj, "var")
+        and isinstance(obj.var, pd.DataFrame)
     )
 
 
-def check_normalization(
-        matrix, 
-        normalization_override, 
-        norm_check_batch_size
-        ):
-    '''
-    Check if a matrix is normalized based on examining a subset of 
+def check_normalization(matrix, normalization_override, norm_check_batch_size):
+    """
+    Check if a matrix is normalized based on examining a subset of
     values.
-    
+
     This function determines if a matrix has been normalized by checking
-     if any values are non-integer, which would indicate normalization 
+     if any values are non-integer, which would indicate normalization
      has occurred.
-    
+
     Parameters
     ----------
     matrix : array-like
@@ -114,51 +104,47 @@ def check_normalization(
         If True, bypass the normalization check and return True.
     norm_check_batch_size : int
         Maximum number of rows to check for efficiency.
-    
+
     Returns
     -------
     bool
         True if the matrix is normalized (contains non-integer values)
         or if normalization_override is True, False otherwise.
-    '''
+    """
     if matrix.shape[0] > norm_check_batch_size:
-        mat = matrix[:norm_check_batch_size,:]
+        mat = matrix[:norm_check_batch_size, :]
     else:
         mat = matrix
 
     mat = mat.toarray()
     mat_floor = np.floor(mat)
 
-    integer_counts_detect = (not np.any((mat_floor-mat) != 0.))
+    integer_counts_detect = not np.any((mat_floor - mat) != 0.0)
     print(
-        "Integer counts detected by panhumanpy.ANNotate : "
-        f"{integer_counts_detect}"
-        )
+        "Integer counts detected by panhumanpy.ANNotate : " f"{integer_counts_detect}"
+    )
 
     if normalization_override:
         return True
     else:
         return not integer_counts_detect
 
-def normalize(
-        matrix, 
-        normalization_override, 
-        norm_check_batch_size
-        ):
+
+def normalize(matrix, normalization_override, norm_check_batch_size):
     """
     Normalizes a gene expression count matrix using log1p transformation.
 
     This function first checks whether the provided matrix is already
     normalized by inspecting a batch of cells (specified by
-    norm_check_batch_size). If the matrix is not normalized and 
-    normalization_override is False, the function scales each cell to 
+    norm_check_batch_size). If the matrix is not normalized and
+    normalization_override is False, the function scales each cell to
     10,000 total counts and applies a log1p transformation to the data.
     The input matrix is assumed to be a sparse matrix (e.g., CSR format)
     that supports the operations .sum(), .multiply(), and .tocsr().
 
     A caveat of the current formulation of this function is that it
-    merely checks if a certain batch of cells (as specified) has 
-    integer counts data or not, and if not it assumes that the data is 
+    merely checks if a certain batch of cells (as specified) has
+    integer counts data or not, and if not it assumes that the data is
     log1p normalized, which need not be the case.
 
     Parameters
@@ -166,10 +152,10 @@ def normalize(
     matrix : scipy.sparse matrix
         Gene expression count matrix with shape (num_cells, num_genes).
     normalization_override : bool
-        If True, assumes that the matrix is already normalized and 
+        If True, assumes that the matrix is already normalized and
         bypasses the scaling and log1p transformation.
     norm_check_batch_size : int, optional
-        The number of cells used to determine whether the matrix is 
+        The number of cells used to determine whether the matrix is
         normalized.
 
     Returns
@@ -181,10 +167,8 @@ def normalize(
     """
 
     check_norm = check_normalization(
-        matrix, 
-        normalization_override, 
-        norm_check_batch_size
-        )
+        matrix, normalization_override, norm_check_batch_size
+    )
 
     if not check_norm:
         total_counts = matrix.sum(axis=1)
@@ -192,123 +176,106 @@ def normalize(
 
         if 0 in total_counts.flatten():
             warnings.warn(
-                "Cells with 0 counts across the entire feature "
-                "panel found."
-                )
+                "Cells with 0 counts across the entire feature " "panel found."
+            )
         total_counts[total_counts == 0] = 1
-        
+
         scaled_matrix = matrix.multiply(10000 / total_counts)
         scaled_matrix.data = np.log1p(scaled_matrix.data)
         matrix = scaled_matrix.tocsr()
 
-    print(
-        f"Log-normalization performed by panhumanpy.ANNotate: {not check_norm}"
-        )
+    print(f"Log-normalization performed by panhumanpy.ANNotate: {not check_norm}")
     if not check_norm:
         print("To override log-normalization, set normalization_override=False")
 
-        
     return matrix, check_norm
 
 
 def reorder_subset_data_matrix(
-        data_matrix,
-        query_features,
-        feature_panel_template,
-        common_features=None
-        ):
+    data_matrix, query_features, feature_panel_template, common_features=None
+):
     """
-    Reorders, subsets, and extends a sparse data matrix to match a 
+    Reorders, subsets, and extends a sparse data matrix to match a
     template feature order.
-    
-    This function takes a data matrix with features defined by 
-    query_features and transforms it to match the feature order 
-    specified in feature_panel_template. If features in 
+
+    This function takes a data matrix with features defined by
+    query_features and transforms it to match the feature order
+    specified in feature_panel_template. If features in
     feature_panel_template are missing from query_features, the
-    function adds zero columns for these features. Extra query features 
-    not present in the feature_panel_template are dropped. 
-    
+    function adds zero columns for these features. Extra query features
+    not present in the feature_panel_template are dropped.
+
     Parameters
     ----------
     data_matrix : scipy.sparse.csr_matrix
         The input data matrix to be reordered.
     query_features : list
-        List of feature names corresponding to the columns in 
+        List of feature names corresponding to the columns in
         data_matrix.
     feature_panel_template : list
         List of feature names defining the target order for output.
     common_features : set, optional
-        Set of features present in both query_features and 
-        feature_panel_template. If None, will be computed as the 
+        Set of features present in both query_features and
+        feature_panel_template. If None, will be computed as the
         intersection of both lists.
-    
+
     Returns
     -------
     scipy.sparse.csr_matrix
-        A reordered, subsetted, and possibly extended data matrix with 
-        the same number of rows (cells) as the input, but with columns 
+        A reordered, subsetted, and possibly extended data matrix with
+        the same number of rows (cells) as the input, but with columns
         matching the order and features of feature_panel_template.
-    
+
     Notes
     -----
-    - The function assumes that data_matrix is a scipy sparse matrix in 
+    - The function assumes that data_matrix is a scipy sparse matrix in
         CSR format.
-    - Zero columns are added for features that are in 
+    - Zero columns are added for features that are in
         feature_panel_template but not in query_features.
-    - Columns are reordered to match the exact order in 
+    - Columns are reordered to match the exact order in
         feature_panel_template.
     """
-    
+
     if not common_features:
-        common_features = set(
-            query_features
-            ).intersection(set(feature_panel_template))
-        
-    extra_features = set(feature_panel_template)-common_features
-    
-        
+        common_features = set(query_features).intersection(set(feature_panel_template))
+
+    extra_features = set(feature_panel_template) - common_features
+
     zero_columns = csr_matrix((data_matrix.shape[0], len(extra_features)))
     data_matrix = hstack([data_matrix, zero_columns])
     query_features_extended = query_features.copy()
     query_features_extended.extend(extra_features)
-    
+
     reordered_query_indices = [
-        query_features_extended.index(name) 
-        for name in feature_panel_template
-        ]
-    reordered_data_matrix = data_matrix[:,reordered_query_indices]
+        query_features_extended.index(name) for name in feature_panel_template
+    ]
+    reordered_data_matrix = data_matrix[:, reordered_query_indices]
 
     return reordered_data_matrix
 
 
-
 def if_full_consistent_hierarchy(cell_label, max_depth):
-    '''
-    Returns a boolean indicating whether the hierarchical 
-    predictions returned by the model for a given cell form an 
+    """
+    Returns a boolean indicating whether the hierarchical
+    predictions returned by the model for a given cell form an
     internally consistent hierarchy or not.
-    '''
-    if max_depth==1:
+    """
+    if max_depth == 1:
         return True
-        
-    for i in range(max_depth-1):
-        res = (
-            cell_label[i].split("|") == (
-                cell_label[i+1].split("|")[:-1]
-            )
-        )
 
-        # Note that the hierarchical ontology of cell labels does not 
+    for i in range(max_depth - 1):
+        res = cell_label[i].split("|") == (cell_label[i + 1].split("|")[:-1])
+
+        # Note that the hierarchical ontology of cell labels does not
         # have closed faces, but as soon as we tree the empty label ''
         # as a node, as we do the empty '' between two pipes '||' in this
         # function, we are introducing a node that can be shared by
         # multiple parents including itself.
 
-        if res==False:
+        if res == False:
             break
-    
-    return res
 
+    return res
 
 
 def comb_label(array_label, depth, max_depth):
@@ -316,58 +283,58 @@ def comb_label(array_label, depth, max_depth):
     Combine hierarchical label components from a list of hierarchically
     split label strings.
 
-    This function takes a list of label strings, passed through the 
-    argument 'array_label', each expected to contain hierarchical 
-    components separated by the '|' character in a cumulative manner, 
-    and produces a single concatenated label. Each list corresponds to a 
-    hierarchical label for a cell split into components in a cumulative 
+    This function takes a list of label strings, passed through the
+    argument 'array_label', each expected to contain hierarchical
+    components separated by the '|' character in a cumulative manner,
+    and produces a single concatenated label. Each list corresponds to a
+    hierarchical label for a cell split into components in a cumulative
     manner.
-     
-    The i-th element (0-indexed) of the label is anticipated to have i 
+
+    The i-th element (0-indexed) of the label is anticipated to have i
     '|' characters and none of the strings are anticipated to begin with
-     '|'. For each hierarchy level (from 0 to depth-1), the function  
-    looks for the first non-empty component between two the '|' characters 
-     approproite for that level among a subset of the labels in the 
+     '|'. For each hierarchy level (from 0 to depth-1), the function
+    looks for the first non-empty component between two the '|' characters
+     approproite for that level among a subset of the labels in the
      `array_label` argument. The search for each level starts at index i
-     and considers up to (max_depth - i) subsequent elements. Once a 
+     and considers up to (max_depth - i) subsequent elements. Once a
      non-empty component is found, it is appended to the output string,
-     followed by a '|' delimiter. This process is iterated up to the 
-     specified depth. 'depth' is also anticipated to be less than or 
-     or equal to 'max_depth'. After processing all levels, the trailing 
+     followed by a '|' delimiter. This process is iterated up to the
+     specified depth. 'depth' is also anticipated to be less than or
+     or equal to 'max_depth'. After processing all levels, the trailing
      delimiter is removed.
 
     Example 1: an internally consistent tree.
-        array_label = ["A", "A|B", "A|B|C", "A|B|C|D","A|B|C|D|", 
+        array_label = ["A", "A|B", "A|B|C", "A|B|C|D","A|B|C|D|",
                         "A|B|C|D||"]
         depth = 5
         max_depth = 6
-        
-        Level 0: Search for non-empty at positions [0, 1, 2, 3, 4, 5] 
+
+        Level 0: Search for non-empty at positions [0, 1, 2, 3, 4, 5]
                 (buffer = 6)
-                - For j = 0: from array_label[0] ("A"), split yields 
+                - For j = 0: from array_label[0] ("A"), split yields
                     ["A"]. Index 0 is "A" → out = "A|"
 
-        Level 1: Search for non-empty at positions [1, 2, 3, 4, 5] 
+        Level 1: Search for non-empty at positions [1, 2, 3, 4, 5]
                 (buffer = 5)
-                - For j = 0: from array_label[1] ("A|B"), split yields 
+                - For j = 0: from array_label[1] ("A|B"), split yields
                     ["A", "B"]. Index 1 is "B" → out = "A|B|"
 
-        Level 2: Search for non-empty at positions [2, 3, 4, 5] 
+        Level 2: Search for non-empty at positions [2, 3, 4, 5]
                 (buffer = 4)
                 - For j = 0: from array_label[2] ("A|B|C"), split yields
                  ["A", "B", "C"]. Index 2 is "C" → out = "A|B|C|"
 
-        Level 3: Search for non-empty at positions [3, 4, 5] 
+        Level 3: Search for non-empty at positions [3, 4, 5]
                 (buffer = 3)
-                - For j = 0: from array_label[3] ("A|B|C|D"), split 
-                yields ["A", "B", "C", "D"]. 
+                - For j = 0: from array_label[3] ("A|B|C|D"), split
+                yields ["A", "B", "C", "D"].
                 Index 3 is "D" → out = "A|B|C|D|"
 
         Level 4: Search for non-empty at positions [4, 5] (buffer = 2)
-                - For j = 0: from array_label[4] ("A|B|C|D|"), split 
+                - For j = 0: from array_label[4] ("A|B|C|D|"), split
                     yields ["A", "B", "C", "D", ""]. Index 4 is empty.
-                - For j = 1: from array_label[5] ("A|B|C|D||"), split 
-                    yields ["A", "B", "C", "D", "", ""]. Index 4 is 
+                - For j = 1: from array_label[5] ("A|B|C|D||"), split
+                    yields ["A", "B", "C", "D", "", ""]. Index 4 is
                     still empty.
                 → No non-empty component found; out remains "A|B|C|D|"
 
@@ -377,31 +344,31 @@ def comb_label(array_label, depth, max_depth):
 
     Example 2: an internally inconsistent tree (that can still be output)
                 by the model.
-        array_label = ["A", "A|B", "A|B|C", "A|B|C1|","A|B|C|D|", 
+        array_label = ["A", "A|B", "A|B|C", "A|B|C1|","A|B|C|D|",
                         "A|B|C1|||"]
         depth = 6
         max_depth = 6
-        
-        Level 0: Search for non-empty at positions [0, 1, 2, 3, 4, 5] 
+
+        Level 0: Search for non-empty at positions [0, 1, 2, 3, 4, 5]
                 (buffer = 6)
                 - For j = 0: from array_label[0] ("A"), splitting yields
                  ["A"]. Index 0 is "A" (non-empty) → out becomes "A|"
 
-        Level 1: Search for non-empty at positions [1, 2, 3, 4, 5] 
+        Level 1: Search for non-empty at positions [1, 2, 3, 4, 5]
                 (buffer = 5)
-                - For j = 0: from array_label[1] ("A|B"), splitting 
-                    yields ["A", "B"]. Index 1 is "B" (non-empty) → out 
+                - For j = 0: from array_label[1] ("A|B"), splitting
+                    yields ["A", "B"]. Index 1 is "B" (non-empty) → out
                     becomes "A|B|"
 
-        Level 2: Search for non-empty at positions [2, 3, 4, 5] 
+        Level 2: Search for non-empty at positions [2, 3, 4, 5]
                 (buffer = 4)
-                - For j = 0: from array_label[2] ("A|B|C"), splitting 
+                - For j = 0: from array_label[2] ("A|B|C"), splitting
                     yields ["A", "B", "C"].
                     Index 2 is "C" (non-empty) → out becomes "A|B|C|"
 
-        Level 3: Search for non-empty at positions [3, 4, 5] 
+        Level 3: Search for non-empty at positions [3, 4, 5]
                 (buffer = 3)
-                - For j = 0: from array_label[3] ("A|B|C1|"), splitting 
+                - For j = 0: from array_label[3] ("A|B|C1|"), splitting
                     yields ["A", "B", "C1", ""].
                     Index 3 is "" (empty).
                 - For j = 1: from array_label[4] ("A|B|C|D|"), splitting
@@ -412,13 +379,13 @@ def comb_label(array_label, depth, max_depth):
                 - For j = 0: from array_label[4] ("A|B|C|D|"), splitting
                     yields ["A", "B", "C", "D", ""].
                     Index 4 is "" (empty).
-                - For j = 1: from array_label[5] ("A|B|C1|||"), 
+                - For j = 1: from array_label[5] ("A|B|C1|||"),
                     splitting yields ["A", "B", "C1", "", "", ""].
                     Index 4 is "" (empty).
                 → No non-empty component found; out remains "A|B|C|D|"
 
         Level 5: Search for non-empty at position [5] (buffer = 1)
-                - For j = 0: from array_label[5] ("A|B|C1|||"), 
+                - For j = 0: from array_label[5] ("A|B|C1|||"),
                     splitting yields ["A", "B", "C1", "", "", ""].
                     Index 5 is "" (empty).
                  → No non-empty component found.
@@ -430,7 +397,7 @@ def comb_label(array_label, depth, max_depth):
     Example 3: a more complicated internally inconsistent tree that can
         still be a model output.
 
-        array_label = ["A", "A|B", "A|B||", "A|B|C1|", "A|B|C1|D1|", 
+        array_label = ["A", "A|B", "A|B||", "A|B|C1|", "A|B|C1|D1|",
                         "A|B|C1|||"]
         depth = 6
         max_depth = 6
@@ -461,26 +428,26 @@ def comb_label(array_label, depth, max_depth):
                     → "A|B|C1|".split('|') gives ["A", "B", "C1", ""]
                     → Element at index 3 is "" (empty)
                 - j = 1: array_label[4] is "A|B|C1|D1|"
-                    → "A|B|C1|D1|".split('|') gives ["A", "B", "C1", 
+                    → "A|B|C1|D1|".split('|') gives ["A", "B", "C1",
                                                             "D1", ""]
                     → Element at index 3 is "D1" (non-empty)
                     → out becomes "A|B|C1|D1|"
 
         Level 4 : Search at positions [4, 5] (buffer = 2)
                 - j = 0: array_label[4] is "A|B|C1|D1|"
-                    → "A|B|C1|D1|".split('|') gives ["A", "B", "C1", 
+                    → "A|B|C1|D1|".split('|') gives ["A", "B", "C1",
                                                             "D1", ""]
                     → Element at index 4 is "" (empty)
                 - j = 1: array_label[5] is "A|B|C1|||"
-                    → "A|B|C1|||".split('|') gives ["A", "B", "C1", "", 
+                    → "A|B|C1|||".split('|') gives ["A", "B", "C1", "",
                                                                 "", ""]
                     → Element at index 4 is "" (empty)
-                    → No non-empty component found; out remains 
+                    → No non-empty component found; out remains
                                                     "A|B|C1|D1|"
 
         Level 5 : Search at position [5] (buffer = 1)
                 - j = 0: array_label[5] is "A|B|C1|||"
-                    → "A|B|C1|||".split('|') gives ["A", "B", "C1", "", 
+                    → "A|B|C1|||".split('|') gives ["A", "B", "C1", "",
                                                                 "", ""]
                     → Element at index 5 is "" (empty)
                     → No non-empty component found.
@@ -499,67 +466,66 @@ def comb_label(array_label, depth, max_depth):
     max_depth : int
         Maximum number of label elements to consider when building the
         combined label.
-    
+
     Returns
     -------
     str
         A concatenated label string built from the appropriate components
         with '|' delimiters between hierarchy levels.
-    
+
     Notes
     -----
-    - Some internally consistent hierarchies cases may be merged 
+    - Some internally consistent hierarchies cases may be merged
       to give a sensible output, which hides the inconsistency.
       See Example 2 above.
-    - This function assumes that each element in array_label 
+    - This function assumes that each element in array_label
       contains at least 'depth' number of '|' delimiters.
     - If no non-empty component is found for a level, that level
       will be blank in the output label.
     """
-    out = ''
-    for i in range(depth): 
-        buffer=max_depth-i
+    out = ""
+    for i in range(depth):
+        buffer = max_depth - i
         for j in range(buffer):
-            add = array_label[i+j].split('|')[i]
-            if add != '':
-                out+= add
-                out +='|'
+            add = array_label[i + j].split("|")[i]
+            if add != "":
+                out += add
+                out += "|"
                 break
     out = out[:-1]
 
     return out
 
 
-
 def abs_labels(hierarchical_labels_array, max_depth):
     """
     Compute absolute hierarchical labels for each cell up to each level.
 
-    This function processes an array of hierarchical labels (one per 
+    This function processes an array of hierarchical labels (one per
     cell) and computes an "absolute" label for each hierarchy level from
-      1 up to max_depth. For each level, the function combines label 
-      components using the comb_label function. If the combined label 
-      for a cell does not contain enough components (i.e. the number of 
-      '|' delimiters is less than the expected level), the label is 
+      1 up to max_depth. For each level, the function combines label
+      components using the comb_label function. If the combined label
+      for a cell does not contain enough components (i.e. the number of
+      '|' delimiters is less than the expected level), the label is
       replaced with "NA".
 
     Parameters
     ----------
     hierarchical_labels_array : list
-        A list of hierarchical labels, where each element represents the 
-        label of a cell. Each cell label should be in a format that is 
-        compatible with the comb_label function (e.g., a list or string 
+        A list of hierarchical labels, where each element represents the
+        label of a cell. Each cell label should be in a format that is
+        compatible with the comb_label function (e.g., a list or string
         with components separated by '|').
     max_depth : int
         The maximum number of hierarchical levels available in the labels.
-    
+
     Returns
     -------
     list
-        A list of length max_depth. The i-th element is a list of 
-        absolute labels (strings) for each cell at hierarchical 
+        A list of length max_depth. The i-th element is a list of
+        absolute labels (strings) for each cell at hierarchical
         level i+1 (1-indexed).
-    
+
     Notes
     -----
     - The function relies on the comb_label function to combine label
@@ -568,95 +534,90 @@ def abs_labels(hierarchical_labels_array, max_depth):
     - The returned nested list is organized by level first, then by cell.
     """
 
-    abs_labels_upto_level=[[] for i in range(max_depth)]
+    abs_labels_upto_level = [[] for i in range(max_depth)]
     for i in range(max_depth):
         for cell_label in hierarchical_labels_array:
-            combined_label = comb_label(cell_label, i+1, max_depth)
-            if len(combined_label.split('|'))<i+1:
-                combined_label = 'NA'
+            combined_label = comb_label(cell_label, i + 1, max_depth)
+            if len(combined_label.split("|")) < i + 1:
+                combined_label = "NA"
             abs_labels_upto_level[i].append(combined_label)
-    
+
     return abs_labels_upto_level
-
-
 
 
 def split_labels_w_final_level(hierarchical_labels_array, max_depth):
     """
     Split hierarchical labels and extract final level annotations.
-    
-    This function processes an array of hierarchical labels for cells, 
-    where each cell's label is expressed as a series of hierarchical 
-    components separated by the '|' character. It performs the following 
+
+    This function processes an array of hierarchical labels for cells,
+    where each cell's label is expressed as a series of hierarchical
+    components separated by the '|' character. It performs the following
     steps:
-    1. Uses the `abs_labels` function to generate absolute labels for 
+    1. Uses the `abs_labels` function to generate absolute labels for
        each hierarchical level (from 1 to max_depth) for each cell.
-    2. Constructs a 2D array of these labels (cells x levels) and 
-       determines the deepest level (final level) for each cell by 
+    2. Constructs a 2D array of these labels (cells x levels) and
+       determines the deepest level (final level) for each cell by
        counting non-'NA' entries.
-    3. Appends the computed final level (1-indexed) as a new row to the 
+    3. Appends the computed final level (1-indexed) as a new row to the
        list of absolute labels.
-    4. For each hierarchical level, extracts only the final component 
+    4. For each hierarchical level, extracts only the final component
        (i.e., the substring after the last '|' delimiter).
-    5. Extracts the final level label for each cell using the computed 
+    5. Extracts the final level label for each cell using the computed
        final level indices and appends this as an additional element.
-    
+
     Parameters
     ----------
     hierarchical_labels_array : list
-        A list (or iterable) where each element corresponds to a cell's 
-        hierarchical label. Each cell's label is itself a list (or 
+        A list (or iterable) where each element corresponds to a cell's
+        hierarchical label. Each cell's label is itself a list (or
         similar iterable) of label strings for each level.
     max_depth : int
-        The maximum number of hierarchical levels present in the 
+        The maximum number of hierarchical levels present in the
         predicted labels.
-    
+
     Returns
     -------
     tuple
         A tuple containing:
         - abs_labels_list : list
             A list where:
-            * The first max_depth number of elements are lists of the 
-              final label components for each level (i.e., the part 
-              after the last '|' delimiter in the abs label up to the 
+            * The first max_depth number of elements are lists of the
+              final label components for each level (i.e., the part
+              after the last '|' delimiter in the abs label up to the
               corresponding level).
-            * The (max_depth+1)-th element is a list of the computed 
+            * The (max_depth+1)-th element is a list of the computed
               final levels (1-indexed) for each cell.
-            * The (max_depth+2)-th element is a list of the final level 
+            * The (max_depth+2)-th element is a list of the final level
               labels for each cell.
         - final_levels_arr : numpy.ndarray
-            A 1D numpy array of shape (num_cells,) containing the 
-            zero-indexed final level for each cell, computed as the 
+            A 1D numpy array of shape (num_cells,) containing the
+            zero-indexed final level for each cell, computed as the
             number of non-'NA' levels minus one.
-    
+
     Notes
     -----
-    - The function relies on the `abs_labels` function to generate 
+    - The function relies on the `abs_labels` function to generate
       absolute labels for each hierarchical level.
-    - Final level determination is based on counting non-'NA' entries 
+    - Final level determination is based on counting non-'NA' entries
       in the absolute labels.
-    - The returned abs_labels_list contains processed label components, 
+    - The returned abs_labels_list contains processed label components,
       not the original absolute labels.
     """
     abs_labels_list = abs_labels(hierarchical_labels_array, max_depth)
     abs_labels_array = np.array(abs_labels_list).T
 
-    na_mask = abs_labels_array!='NA'
-    final_levels_arr = np.sum(na_mask, axis=1) -1 
+    na_mask = abs_labels_array != "NA"
+    final_levels_arr = np.sum(na_mask, axis=1) - 1
     final_levels_list = list(final_levels_arr + 1)
 
     abs_labels_list.append(final_levels_list)
 
     for i in range(max_depth):
-        abs_labels_list[i] = [
-            label.split('|')[-1] for label in abs_labels_list[i]
-            ]
+        abs_labels_list[i] = [label.split("|")[-1] for label in abs_labels_list[i]]
 
     final_level_labels = np.array(abs_labels_list).T[
-        np.arange(len(final_levels_list)), 
-        final_levels_arr
-        ]
+        np.arange(len(final_levels_list)), final_levels_arr
+    ]
     final_level_labels = list(final_level_labels)
 
     abs_labels_list.append(final_level_labels)
@@ -667,12 +628,12 @@ def split_labels_w_final_level(hierarchical_labels_array, max_depth):
 def categorize_refinement_type(value):
     """
     Categorize refinement type based on the input value.
-    
+
     Parameters
     ----------
     value : any
         The value to be categorized.
-    
+
     Returns
     -------
     str
@@ -692,79 +653,68 @@ def categorize_refinement_type(value):
 
 
 def create_anndata(
-    X, 
-    cell_meta_df, 
-    feature_df, 
-    feature_names=None, 
-    cell_ids=None,
-    embeddings=None
-    ):
+    X, cell_meta_df, feature_df, feature_names=None, cell_ids=None, embeddings=None
+):
     """
     Create an AnnData object from expression matrix and metadata.
-    
+
     Parameters
     ----------
     X : numpy.ndarray or scipy.sparse.csr_matrix
         Expression matrix of shape (n_cells, n_features)
     cell_meta_df : pandas.DataFrame
-        DataFrame containing cell metadata, with rows corresponding to 
+        DataFrame containing cell metadata, with rows corresponding to
         cells
     feature_df : pandas.DataFrame
-        DataFrame containing feature metadata, with rows corresponding 
+        DataFrame containing feature metadata, with rows corresponding
         to features
     feature_names : list or None, optional
-        Feature names to use as var_names. If None, uses 
+        Feature names to use as var_names. If None, uses
         feature_df.index
     cell_ids : list or None, optional
         Cell IDs to use as obs_names. If None, uses cell_meta_df.index
     embeddings : dict or None, optional
-        Dictionary of embeddings to store in obsm. Keys are embedding 
-        names (e.g., 'X_umap', 'X_pca'), and values are numpy arrays of 
+        Dictionary of embeddings to store in obsm. Keys are embedding
+        names (e.g., 'X_umap', 'X_pca'), and values are numpy arrays of
         shape (n_cells, n_embedding_dims)
-    
+
     Returns
     -------
     anndata.AnnData
         AnnData object containing the expression matrix and metadata
-    
+
     Raises
     ------
     ValueError
         If dimensions don't match between inputs
     """
-    
+
     n_cells, n_features = X.shape
-    
+
     if cell_meta_df.shape[0] != n_cells:
         raise ValueError(
             f"cell_meta_df has {cell_meta_df.shape[0]} rows but X "
             f"has {n_cells} rows (cells)"
-            )
-    
+        )
+
     if feature_df.shape[0] != n_features:
         raise ValueError(
             f"feature_df has {feature_df.shape[0]} rows but X has "
             f"{n_features} columns (features)"
-            )
-    
+        )
+
     if cell_ids is not None:
         cell_meta_df.index = cell_ids
-    
+
     if feature_names is not None:
         feature_df.index = feature_names
-    
-    adata = anndata.AnnData(
-        X=X,
-        obs=cell_meta_df,
-        var=feature_df
-    )
-    
+
+    adata = anndata.AnnData(X=X, obs=cell_meta_df, var=feature_df)
+
     if embeddings is not None:
         if not isinstance(embeddings, dict):
-            raise ValueError(
-                "embeddings must be a dictionary mapping names to arrays"
-                )
-        
+            raise ValueError("embeddings must be a dictionary mapping names to arrays")
+
         for embedding_name, embedding_matrix in embeddings.items():
             if embedding_matrix.shape[0] != n_cells:
                 raise ValueError(
@@ -773,24 +723,22 @@ def create_anndata(
                     f"{n_cells} rows (cells)."
                 )
             adata.obsm[embedding_name] = embedding_matrix
-    
-    assert adata.n_obs == n_cells, (
-        "Created AnnData object has incorrect number of observations"
-    )
-    assert adata.n_vars == n_features, (
-        "Created AnnData object has incorrect number of variables"
-    )
-    
+
+    assert (
+        adata.n_obs == n_cells
+    ), "Created AnnData object has incorrect number of observations"
+    assert (
+        adata.n_vars == n_features
+    ), "Created AnnData object has incorrect number of variables"
+
     return adata
 
 
-
-
 def insert_col(df, loc, col_name, col_vals):
-    '''
-    Inserts a column in a pandas dataframe, if the column name 
+    """
+    Inserts a column in a pandas dataframe, if the column name
     exists already, it is overwritten.
-    '''
+    """
 
     if col_name in df.columns:
         df.drop(col_name, axis=1, inplace=True)
@@ -802,47 +750,46 @@ def insert_col(df, loc, col_name, col_vals):
 def compute_entropy(softmax):
     """
     Compute entropy from softmax outputs.
-    
+
     Args:
         softmax_outputs: A softmax array
-        
+
     Returns:
         entropy_values: Array of entropy values
     """
     entropy_values = []
-    
+
     # Clip probabilities to avoid log(0)
     probs_clipped = np.clip(softmax, 1e-8, 1.0)
-    
+
     # Compute entropy: H = -sum(p * log(p))
     entropy_vals = -np.sum(probs_clipped * np.log(probs_clipped), axis=1)
-    
+
     return entropy_vals
 
 
 def softmax_to_logits(softmax_probs, temperature=1.0):
     """
     Convert softmax probabilities back to logits
-    
+
     Args:
         softmax_probs: numpy array of softmax probabilities
         temperature: temperature parameter (default=1.0)
-    
+
     Returns:
         logits: numpy array of logits
     """
     # Clip probabilities to avoid log(0)
     probs_clipped = np.clip(softmax_probs, 1e-8, 1.0)
-    
+
     # Convert to logits using inverse softmax (log probabilities)
     logits = np.log(probs_clipped) * temperature
-    
+
     # Normalize by subtracting the mean (softmax is invariant to constant shifts)
     # This helps with numerical stability and follows standard practice
     logits = logits - np.mean(logits, axis=1, keepdims=True)
-    
-    return logits
 
+    return logits
 
 
 def coerce_metadata_types(df):
@@ -852,29 +799,15 @@ def coerce_metadata_types(df):
     for col in df_coerced.columns:
         col_data = df_coerced[col]
 
-        if pd.api.types.is_numeric_dtype(col_data) or pd.api.types.is_bool_dtype(col_data):
-            continue  
+        if pd.api.types.is_numeric_dtype(col_data) or pd.api.types.is_bool_dtype(
+            col_data
+        ):
+            continue
 
         col_str = col_data.astype(str)
-        df_coerced[col] = col_str.replace(
-            ['nan', 'None', '<NA>', 'NaN', 'NaT'], 'NA'
-        )
+        df_coerced[col] = col_str.replace(["nan", "None", "<NA>", "NaN", "NaT"], "NA")
 
     return df_coerced
-
-        
-    
-
-
-
-
-        
-
-
-
-
-
-
 
 
 ########################################################################
@@ -883,13 +816,12 @@ def coerce_metadata_types(df):
 ########################################################################
 
 
-
-class MemoryContext():
+class MemoryContext:
     """
     A context manager for memory-intensive operations.
 
-    This context manager provides a simple interface to encapsulate 
-    operations that are memory-intensive. Upon exiting the context, it 
+    This context manager provides a simple interface to encapsulate
+    operations that are memory-intensive. Upon exiting the context, it
     triggers garbage collection to help free up memory.
 
     Attributes
@@ -897,6 +829,7 @@ class MemoryContext():
     description : str
         A description of the memory-intensive operation.
     """
+
     def __init__(self, description="Memory-intensive operation"):
         """
         Initialize a MemoryContext instance.
@@ -908,7 +841,7 @@ class MemoryContext():
             Default is "Memory-intensive operation".
         """
         self.description = description
-    
+
     def __enter__(self):
         """
         Enter the memory context.
@@ -919,7 +852,7 @@ class MemoryContext():
             The current MemoryContext instance.
         """
         return self
-    
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         """
         Exit the memory context and perform garbage collection.
@@ -929,37 +862,36 @@ class MemoryContext():
         exc_type : type
             The exception type, if an exception occurred, otherwise None.
         exc_val : Exception
-            The exception instance, if an exception occurred, otherwise 
+            The exception instance, if an exception occurred, otherwise
             None.
         exc_tb : traceback
-            The traceback object, if an exception occurred, otherwise 
+            The traceback object, if an exception occurred, otherwise
             None.
 
         Returns
         -------
         None
         """
-        gc.collect() 
+        gc.collect()
         return None
 
 
-
-class Inference():
+class Inference:
     """
-    Run a supervised inference workflow using a confidence-calibrated 
+    Run a supervised inference workflow using a confidence-calibrated
     model.
 
     Public Interface
     ----------------
     Methods
       run_inference()
-          Execute the complete inference workflow on the input matrix and 
+          Execute the complete inference workflow on the input matrix and
           decode predictions to human-readable labels. Wrapped around
           the method run_on_X()
       run_on_X()
           Run inference on the entire input matrix in evaluation batches.
 
-    Private 
+    Private
     --------------------------
     Attributes
       _X : numpy.ndarray or scipy.sparse matrix
@@ -967,12 +899,12 @@ class Inference():
       _model : keras.Model
           The trained neural network model used for making predictions.
       _label_encoders : list
-          List of label encoder objects (one per hierarchical level) 
+          List of label encoder objects (one per hierarchical level)
           used for decoding model predictions.
       _eval_batch_size : int
           Batch size used during inference.
       _eval_steps : int
-          Number of complete evaluation batches (minus one), computed as 
+          Number of complete evaluation batches (minus one), computed as
           X.shape[0] // eval_batch_size.
       _max_depth : int
           Maximum number of hierarchical levels to process.
@@ -981,25 +913,19 @@ class Inference():
       run_on_minibatch(minibatch)
           Run model inference on a single minibatch.
       process_minibatch(
-                        minibatch, 
-                        softmax_mb_levels_cache, 
-                        class_preds_mb_cache, 
+                        minibatch,
+                        softmax_mb_levels_cache,
+                        class_preds_mb_cache,
                         max_probs_mb_cache
                     )
-          Process a minibatch to cache softmax outputs, class 
-          predictions, and maximum probabilities for each hierarchical 
+          Process a minibatch to cache softmax outputs, class
+          predictions, and maximum probabilities for each hierarchical
           level.
     """
-    def __init__(
-            self, 
-            X, 
-            model, 
-            label_encoders, 
-            eval_batch_size, 
-            max_depth
-            ):
+
+    def __init__(self, X, model, label_encoders, eval_batch_size, max_depth):
         """
-        Initialize the Inference object with input data, model, and 
+        Initialize the Inference object with input data, model, and
         evaluation parameters.
 
         Parameters
@@ -1025,7 +951,7 @@ class Inference():
         self._model = model
         self._label_encoders = label_encoders
         self._eval_batch_size = eval_batch_size
-        self._eval_steps = X.shape[0]//self._eval_batch_size
+        self._eval_steps = X.shape[0] // self._eval_batch_size
         self._max_depth = max_depth
 
     def run_on_minibatch(self, minibatch):
@@ -1040,27 +966,27 @@ class Inference():
         Returns
         -------
         list of numpy.ndarray/tensor
-            The model's predictions (softmax probabilities) for 
+            The model's predictions (softmax probabilities) for
             the minibatch.
         """
         y_mb = self._model.predict(minibatch)
 
         return y_mb
-    
+
     def process_minibatch(
-            self, 
-            minibatch, 
-            softmax_mb_levels_cache,
-            class_preds_mb_cache,
-            max_probs_mb_cache
-            ):
+        self,
+        minibatch,
+        softmax_mb_levels_cache,
+        class_preds_mb_cache,
+        max_probs_mb_cache,
+    ):
         """
-        Process a minibatch by running inference and 
+        Process a minibatch by running inference and
         caching predictions.
 
-        This method runs inference on the provided minibatch and, for 
-        each hierarchical level, caches the softmax outputs, computes 
-        the predicted class indices, and determines the maximum 
+        This method runs inference on the provided minibatch and, for
+        each hierarchical level, caches the softmax outputs, computes
+        the predicted class indices, and determines the maximum
         probability values.
 
         Parameters
@@ -1072,7 +998,7 @@ class Inference():
         class_preds_mb_cache : list
             Cache for storing predicted class indices for each minibatch.
         max_probs_mb_cache : list
-            Cache for storing maximum probability values for each 
+            Cache for storing maximum probability values for each
             minibatch.
 
         Returns
@@ -1085,7 +1011,7 @@ class Inference():
 
         Notes
         -----
-        This method uses TensorFlow operations (tf) for processing 
+        This method uses TensorFlow operations (tf) for processing
         predictions.
         """
         class_levels_cache = []
@@ -1097,9 +1023,8 @@ class Inference():
             softmax_mb_levels_cache[i].append(y_mb[i])
 
             class_outs = tf.expand_dims(
-                tf.cast(tf.argmax(y_mb[i], axis=-1), tf.int32), 
-                axis=1
-                )
+                tf.cast(tf.argmax(y_mb[i], axis=-1), tf.int32), axis=1
+            )
             class_levels_cache.append(class_outs)
 
             max_probs = tf.reduce_max(y_mb[i], axis=-1, keepdims=True)
@@ -1111,20 +1036,16 @@ class Inference():
         class_preds_mb_cache.append(class_preds_mb)
         max_probs_mb_cache.append(max_probs_mb)
 
-        return (
-            softmax_mb_levels_cache, 
-            class_preds_mb_cache, 
-            max_probs_mb_cache
-        )
-    
+        return (softmax_mb_levels_cache, class_preds_mb_cache, max_probs_mb_cache)
+
     def run_on_X(self):
         """
         Run inference on the entire input matrix in evaluation batches.
 
-        The input matrix is divided into batches based on 
-        _eval_batch_size. For each batch, the model is run to obtain 
-        predictions which are then aggregated. Consistency checks 
-        are performed to ensure that the number of predictions matches 
+        The input matrix is divided into batches based on
+        _eval_batch_size. For each batch, the model is run to obtain
+        predictions which are then aggregated. Consistency checks
+        are performed to ensure that the number of predictions matches
         the input dimensions.
 
         Returns
@@ -1132,10 +1053,10 @@ class Inference():
         tuple
             A tuple containing:
               - class_preds : numpy.ndarray
-                  Array of predicted class indices with shape 
+                  Array of predicted class indices with shape
                   (n_samples, _max_depth).
               - max_probs : numpy.ndarray
-                  Array of maximum probability values at each level 
+                  Array of maximum probability values at each level
                   with shape (n_samples, _max_depth).
               - softmax_vals_all : list of numpy.ndarray
                   List of softmax outputs for each hierarchical level.
@@ -1151,53 +1072,52 @@ class Inference():
         """
         if self._X.shape[0] == 0:
             raise ValueError("Input matrix is empty")
-        
+
         softmax_mb_levels_cache = [[] for _ in range(self._max_depth)]
         class_preds_mb_cache = []
         max_probs_mb_cache = []
 
         print(
-            f"Splitting query data into {self._eval_steps+1} "
-            "evaluation batches.\n"
-            )
-        
+            f"Splitting query data into {self._eval_steps+1} " "evaluation batches.\n"
+        )
+
         print("Running model:")
 
         for i in range(self._eval_steps):
-            start_idx = i*self._eval_batch_size
-            end_idx = (i+1)*self._eval_batch_size
+            start_idx = i * self._eval_batch_size
+            end_idx = (i + 1) * self._eval_batch_size
             if start_idx >= self._X.shape[0]:
                 break
-            
+
             minibatch = self._X[start_idx:end_idx].toarray()
             if minibatch.size == 0:
                 continue
-            
+
             (
                 softmax_mb_levels_cache,
                 class_preds_mb_cache,
-                max_probs_mb_cache
+                max_probs_mb_cache,
             ) = self.process_minibatch(
                 minibatch,
                 softmax_mb_levels_cache,
                 class_preds_mb_cache,
-                max_probs_mb_cache
+                max_probs_mb_cache,
             )
             del minibatch
 
-        final_start = self._eval_steps*self._eval_batch_size
+        final_start = self._eval_steps * self._eval_batch_size
         if final_start < self._X.shape[0]:
             final_batch = self._X[final_start:].toarray()
             if final_batch.size > 0:
                 (
                     softmax_mb_levels_cache,
                     class_preds_mb_cache,
-                    max_probs_mb_cache
+                    max_probs_mb_cache,
                 ) = self.process_minibatch(
                     final_batch,
                     softmax_mb_levels_cache,
                     class_preds_mb_cache,
-                    max_probs_mb_cache
+                    max_probs_mb_cache,
                 )
                 del final_batch
 
@@ -1210,32 +1130,28 @@ class Inference():
         class_preds = tf.concat(class_preds_mb_cache, axis=0)
         max_probs = tf.concat(max_probs_mb_cache, axis=0)
 
-        assert self._max_depth==class_preds.shape[1], (
+        assert self._max_depth == class_preds.shape[1], (
             "The array of all predictions should have dimensions consistent "
             "with max_depth."
         )
-        assert self._X.shape[0] == class_preds.shape[0], (
-            "The number of predictions != the number of cells in X_query"
-        )
+        assert (
+            self._X.shape[0] == class_preds.shape[0]
+        ), "The number of predictions != the number of cells in X_query"
         for level in softmax_vals_all:
-            assert level.shape[0]==self._X.shape[0], (
-                "Number of cells in softmax_outputs != numbers of cells in query "
-            )
+            assert (
+                level.shape[0] == self._X.shape[0]
+            ), "Number of cells in softmax_outputs != numbers of cells in query "
 
-        return (
-            np.array(class_preds),
-            np.array(max_probs),
-            softmax_vals_all
-        )
-    
+        return (np.array(class_preds), np.array(max_probs), softmax_vals_all)
+
     def run_inference(self):
         """
-        Run the complete inference workflow and decode predictions to 
+        Run the complete inference workflow and decode predictions to
         string labels.
 
-        This public method executes the full inference process on the 
-        input matrix (in batches), gathers predictions from the model, 
-        and decodes the class predictions using the provided 
+        This public method executes the full inference process on the
+        input matrix (in batches), gathers predictions from the model,
+        and decodes the class predictions using the provided
         label encoders. The final output is a dictionary containing
         both the raw numerical predictions and human-readable labels.
 
@@ -1244,17 +1160,17 @@ class Inference():
         dict
             Dictionary with keys:
               'hierarchical_label_preds' : numpy.ndarray
-                  Array of decoded string labels with shape 
+                  Array of decoded string labels with shape
                   (n_samples, _max_depth).
               'class_preds' : numpy.ndarray
-                  Array of predicted class indices with shape 
+                  Array of predicted class indices with shape
                   (n_samples, _max_depth).
               'probability_of_preds' : numpy.ndarray
-                  Array of maximum probability values with shape 
+                  Array of maximum probability values with shape
                   (n_samples, _max_depth).
               'softmax_vals_all' : list of numpy.ndarray
                   List of softmax outputs for each hierarchical level.
-                  
+
         Notes
         -----
         This method uses a MemoryContext context manager to handle memory
@@ -1267,42 +1183,40 @@ class Inference():
             class_preds, max_probs, softmax_vals_all = self.run_on_X()
         for i in range(self._max_depth):
             string_labels_out.append(
-            self._label_encoders[i].inverse_transform(class_preds[:,i])
+                self._label_encoders[i].inverse_transform(class_preds[:, i])
             )
 
-        return (
-            {
-            'hierarchical_label_preds':np.array(string_labels_out).T, 
-            'class_preds':class_preds, 
-            'probability_of_preds':max_probs, 
-            'softmax_vals_all':softmax_vals_all
-            }
-        )
+        return {
+            "hierarchical_label_preds": np.array(string_labels_out).T,
+            "class_preds": class_preds,
+            "probability_of_preds": max_probs,
+            "softmax_vals_all": softmax_vals_all,
+        }
 
 
-class CalibrationSingleClassifier():
+class CalibrationSingleClassifier:
     """
-    Calibrate softmax outputs. Can accommodate different calibration 
+    Calibrate softmax outputs. Can accommodate different calibration
     methods.
-    
-    This class provides functionality to apply calibration techniques to 
-    softmax probability outputs from neural network classifiers. It supports 
+
+    This class provides functionality to apply calibration techniques to
+    softmax probability outputs from neural network classifiers. It supports
     dynamic method selection for different calibration approaches.
-    Currently, it hosts a entropy-informed temperature scaling method for 
+    Currently, it hosts a entropy-informed temperature scaling method for
     calibration.
-    
-    The calibration process operates on batches of softmax outputs to 
+
+    The calibration process operates on batches of softmax outputs to
     manage memory usage efficiently, making it suitable for large datasets.
-    
+
     Parameters
     ----------
     softmax : numpy.ndarray or scipy.sparse matrix
-        Softmax probability outputs from a neural network model, with 
+        Softmax probability outputs from a neural network model, with
         shape (n_samples, n_classes).
     eval_batch_size : int
-        Batch size for processing softmax outputs. Controls memory usage 
+        Batch size for processing softmax outputs. Controls memory usage
         during calibration.
-        
+
     Attributes
     ----------
     _softmax : numpy.ndarray or scipy.sparse matrix
@@ -1313,53 +1227,50 @@ class CalibrationSingleClassifier():
     _eval_batch_size : int
         Batch size used for processing.
     _eval_steps : int
-        Number of complete evaluation batches, computed as 
+        Number of complete evaluation batches, computed as
         softmax.shape[0] // eval_batch_size.
-        
+
     Examples
     --------
     >>> import numpy as np
     >>> from tensorflow.keras.models import load_model
-    >>> 
+    >>>
     >>> # Get softmax outputs from a Keras model
     >>> main_model = load_model('classifier_model.keras')
-    >>> softmax_outputs = main_model.predict(X_data)  
+    >>> softmax_outputs = main_model.predict(X_data)
     >>> # Shape: (n_samples, n_classes)
-    >>> 
+    >>>
     >>> # Load a trained temperature scaling model
     >>> calibrator = load_model('temperature_scaling_model.keras')
-    >>> 
+    >>>
     >>> # Initialize calibration object
     >>> calibration = CalibrationSingleClassifier(
     ...     softmax=softmax_outputs,
     ...     eval_batch_size=256
     ... )
-    >>> 
+    >>>
     >>> # Apply entropy-informed temperature scaling
     >>> calibrated_probs = calibration.calibrate(
     ...     'temperature_scaling_entropy_informed',
     ...     calibrator
     ... )
-    
+
     Notes
     -----
-    The class uses a dynamic method calling approach via the `calibrate()` 
-    method, allowing for flexible selection of calibration techniques. 
-    New calibration methods can be added by implementing them as class 
+    The class uses a dynamic method calling approach via the `calibrate()`
+    method, allowing for flexible selection of calibration techniques.
+    New calibration methods can be added by implementing them as class
     methods and calling them through `calibrate()`.
-    
-    The entropy-informed temperature scaling method computes entropy from 
-    the softmax outputs and uses it along with converted logits as input 
+
+    The entropy-informed temperature scaling method computes entropy from
+    the softmax outputs and uses it along with converted logits as input
     to the calibration model.
     """
-    def __init__(
-        self,
-        softmax,
-        eval_batch_size
-    ):
+
+    def __init__(self, softmax, eval_batch_size):
         """
         Initialize the CalibrationSingleClassifier.
-        
+
         Parameters
         ----------
         softmax : numpy.ndarray or scipy.sparse matrix
@@ -1370,13 +1281,13 @@ class CalibrationSingleClassifier():
         self._softmax = softmax
         self._calibrated_softmax = softmax
         self._eval_batch_size = eval_batch_size
-        self._eval_steps = softmax.shape[0]//self._eval_batch_size
+        self._eval_steps = softmax.shape[0] // self._eval_batch_size
 
     def calibrate(self, name, *args, **kwargs):
         """
-        Dynamically call a calibration method by name with error 
+        Dynamically call a calibration method by name with error
         handling to verify that said method has been implemented.
-        
+
         Parameters
         ----------
         name : str
@@ -1385,13 +1296,13 @@ class CalibrationSingleClassifier():
             Positional arguments to pass to the calibration method.
         **kwargs : dict
             Keyword arguments to pass to the calibration method.
-            
+
         Returns
         -------
         numpy.ndarray
-            Calibrated softmax probabilities returned by the specified 
+            Calibrated softmax probabilities returned by the specified
             calibration method.
-            
+
         Raises
         ------
         AttributeError
@@ -1400,48 +1311,44 @@ class CalibrationSingleClassifier():
             If the specified attribute exists but is not callable.
         """
         if not hasattr(self, name):
-            raise AttributeError(
-                f"Calibration method '{name}' not found."
-                )
-        
+            raise AttributeError(f"Calibration method '{name}' not found.")
+
         attr = getattr(self, name)
         if not callable(attr):
             raise TypeError(f"'{name}' is not callable")
-        
+
         return attr(*args, **kwargs)
 
     def temperature_scaling_entropy_informed_minibatch(
-        self, 
-        softmax_minibatch,
-        calibrator
-        ):
+        self, softmax_minibatch, calibrator
+    ):
         """
         Apply entropy-informed temperature scaling to a single minibatch.
-        
+
         This method processes a single batch of softmax outputs by:
         1. Computing entropy from the softmax probabilities
         2. Converting softmax probabilities back to logits
         3. Applying the calibration model using both logits and entropy
-        
+
         Parameters
         ----------
         softmax_minibatch : numpy.ndarray
-            A batch of softmax probability outputs with shape 
+            A batch of softmax probability outputs with shape
             (batch_size, n_classes).
         calibrator : callable
-            Calibration model or function that takes (logits, entropy) 
+            Calibration model or function that takes (logits, entropy)
             as input and returns calibrated probabilities.
-            
+
         Returns
         -------
         numpy.ndarray
-            Calibrated softmax probabilities for the minibatch with 
+            Calibrated softmax probabilities for the minibatch with
             the same shape as input.
-            
+
         Notes
         -----
-        This method expects the calibrator to accept a tuple of 
-        (logits, entropy) as input. The entropy is computed using 
+        This method expects the calibrator to accept a tuple of
+        (logits, entropy) as input. The entropy is computed using
         the Shannon entropy formula: H = -sum(p * log(p)).
         """
         ent = compute_entropy(softmax_minibatch)
@@ -1453,139 +1360,121 @@ class CalibrationSingleClassifier():
 
         return out_minibatch
 
-    def temperature_scaling_entropy_informed(
-        self,
-        calibrator
-        ):
+    def temperature_scaling_entropy_informed(self, calibrator):
         """
         Apply entropy-informed temperature scaling to all softmax outputs.
-        
-        This method processes the complete set of softmax outputs in 
-        batches, applying entropy-informed temperature scaling to each 
-        batch and concatenating the results. It handles the final 
+
+        This method processes the complete set of softmax outputs in
+        batches, applying entropy-informed temperature scaling to each
+        batch and concatenating the results. It handles the final
         incomplete batch automatically.
-        
+
         The calibration process:
         1. Divides softmax outputs into batches based on eval_batch_size
         2. For each batch, computes entropy and converts to logits
         3. Applies the calibration model to get temperature-scaled outputs
         4. Concatenates all calibrated batches into final result
-        
+
         Parameters
         ----------
         calibrator : callable
-            Calibration model or function that takes (logits, entropy) 
+            Calibration model or function that takes (logits, entropy)
             as input and returns calibrated probabilities.
-            
+
         Returns
         -------
         numpy.ndarray
-            Calibrated softmax probabilities for all samples with shape 
-            (n_samples, n_classes). Also updates the internal 
+            Calibrated softmax probabilities for all samples with shape
+            (n_samples, n_classes). Also updates the internal
             _calibrated_softmax attribute.
-            
+
         Notes
         -----
-        This method modifies the internal state by updating 
-        _calibrated_softmax with the calibrated results. It handles 
-        both sparse matrices and numpy arrays by checking for the 
+        This method modifies the internal state by updating
+        _calibrated_softmax with the calibrated results. It handles
+        both sparse matrices and numpy arrays by checking for the
         .toarray() method.
-        
-        The method prints progress information including the number of 
+
+        The method prints progress information including the number of
         batches being processed.
         """
-        print(
-            f"Splitting softmax outputs into {self._eval_steps+1} "
-            "batches.\n"
-            )
+        print(f"Splitting softmax outputs into {self._eval_steps+1} " "batches.\n")
 
         calibrated_softmax_cache = []
 
         for i in range(self._eval_steps):
-            start_idx = i*self._eval_batch_size
-            end_idx = (i+1)*self._eval_batch_size
+            start_idx = i * self._eval_batch_size
+            end_idx = (i + 1) * self._eval_batch_size
             if start_idx >= self._softmax.shape[0]:
                 break
 
             # Handle both sparse matrices and numpy arrays
             minibatch_source = self._softmax[start_idx:end_idx]
-            if hasattr(minibatch_source, 'toarray'):
+            if hasattr(minibatch_source, "toarray"):
                 minibatch = minibatch_source.toarray()
             else:
                 minibatch = minibatch_source
-                
+
             if minibatch.size == 0:
                 continue
 
             calibrated_softmax_cache.append(
                 self.temperature_scaling_entropy_informed_minibatch(
-                    minibatch,
-                    calibrator
+                    minibatch, calibrator
                 )
             )
 
         final_start = self._eval_steps * self._eval_batch_size
         if final_start < self._softmax.shape[0]:
             final_batch_source = self._softmax[final_start:]
-            if hasattr(final_batch_source, 'toarray'):
+            if hasattr(final_batch_source, "toarray"):
                 final_batch = final_batch_source.toarray()
             else:
                 final_batch = final_batch_source
-                
+
             if final_batch.size > 0:
                 calibrated_softmax_cache.append(
                     self.temperature_scaling_entropy_informed_minibatch(
-                        final_batch,
-                        calibrator
+                        final_batch, calibrator
                     )
                 )
 
-        self._calibrated_softmax = np.concatenate(
-            calibrated_softmax_cache, 
-            axis=0
-        )
+        self._calibrated_softmax = np.concatenate(calibrated_softmax_cache, axis=0)
 
         return self._calibrated_softmax
-            
 
 
-
-        
-
-
-
-
-class InferenceTools():
+class InferenceTools:
     """
     Load and manage the necessary components required for model inference.
-    
+
     This class handles loading of model artifacts from predefined locations,
     including the trained model, label encoders, feature panel, and model
     metadata. It supports different annotation pipelines and performs
     validation of loaded components.
-    
+
     Public Interface
     ----------------
     Methods
       load_inference_model()
           Load the trained Keras model for inference.
       load_model_meta()
-          Load and validate model metadata containing configuration 
+          Load and validate model metadata containing configuration
           parameters.
       load_inference_encoders()
           Load label encoders used for decoding model predictions.
       load_inference_feature_panel()
-          Load the feature panel for subsetting query data (supervised 
+          Load the feature panel for subsetting query data (supervised
           pipeline only).
       load_calibrators()
           Load calibration models, if any.
-          
+
     Private Attributes
     -----------------
       _inference_model_filename : str
           Filename of the Keras model file to load.
       _model_meta : dict
-          Dictionary containing model metadata and configuration 
+          Dictionary containing model metadata and configuration
           parameters.
       _inference_encoders_filename : str
           Filename of the pickled label encoders.
@@ -1594,7 +1483,7 @@ class InferenceTools():
       _annotation_pipeline : str
           Type of annotation pipeline to use (e.g., 'supervised').
       _model_version: str
-          Model version to use for inference (e.g., 'v0'). 
+          Model version to use for inference (e.g., 'v0').
       _version_path: str
           Traversable directory path to the specified version.
       _version_model: module
@@ -1602,42 +1491,40 @@ class InferenceTools():
     """
 
     def __init__(
-            self, 
-            annotation_pipeline,
-            model_version,
-            inference_model_filename='inference_model.keras',
-            inference_encoders_filename='inference_encoders.pkl',
-            inference_feature_panel_filename='inference_feature_panel.txt'
-            ):
+        self,
+        annotation_pipeline,
+        model_version,
+        inference_model_filename="inference_model.keras",
+        inference_encoders_filename="inference_encoders.pkl",
+        inference_feature_panel_filename="inference_feature_panel.txt",
+    ):
         """
         Initialize the InferenceTools with file paths and configuration.
-        
+
         Parameters
         ----------
         annotation_pipeline : str
-            Type of annotation pipeline to use (e.g., 'supervised', 
+            Type of annotation pipeline to use (e.g., 'supervised',
             'self-supervised', currently the only pipeline implemented
-            is 'supervised'). Determines which components are required 
+            is 'supervised'). Determines which components are required
             for inference.
         model_version: str
             Model version to be used. Model version naming convention:
             f"v{i}" for panhumanpy i.x.y .
         inference_model_filename : str, optional
-            Filename of the Keras model file to load, by default 
+            Filename of the Keras model file to load, by default
             'inference_model.keras'.
         inference_encoders_filename : str, optional
-            Filename of the pickled label encoders, by default 
+            Filename of the pickled label encoders, by default
             'inference_encoders.pkl'.
         inference_feature_panel_filename : str, optional
             Filename of the text file containing feature names,
             by default 'inference_feature_panel.txt'.
         """
-        
+
         self._inference_model_filename = inference_model_filename
         self._inference_encoders_filename = inference_encoders_filename
-        self._inference_feature_panel_filename = (
-            inference_feature_panel_filename
-        )
+        self._inference_feature_panel_filename = inference_feature_panel_filename
 
         self._annotation_pipeline = annotation_pipeline
         self._model_version = model_version
@@ -1651,131 +1538,125 @@ class InferenceTools():
     def load_inference_model(self):
         """
         Load the trained Keras model for inference.
-        
+
         Loads the model from a predefined directory structure using the
-        version and filename specified during initialization. The model 
+        version and filename specified during initialization. The model
         is expected to be in .keras format.
-        
+
         Returns
         -------
         keras.Model
             The loaded model used for inference.
-            
+
         Notes
         -----
         The model must be saved in the 'inference_model' directory in the
-        version directory (for e.g. "v0"). This should be accessible via 
-        the 'files' import system. Model name must correspond to the name 
+        version directory (for e.g. "v0"). This should be accessible via
+        the 'files' import system. Model name must correspond to the name
         provided at initialization.
         """
-        model_dir_path = self._version_path/"inference_model"
+        model_dir_path = self._version_path / "inference_model"
         model_path = model_dir_path / self._inference_model_filename
 
-        model= load_model(model_path)
+        model = load_model(model_path)
 
         return model
-    
+
     def load_model_meta(self):
         """
-        Load and validate model metadata containing configuration 
+        Load and validate model metadata containing configuration
         parameters.
-        
-        Validates that the model metadata dictionary contains all 
+
+        Validates that the model metadata dictionary contains all
         required keys based on the annotation pipeline type. Checks that
-         values have the expected types and enforces constraints on the 
+         values have the expected types and enforces constraints on the
          metadata structure.
 
-        The model metadata dictionary is defined in the __init__ file 
-        for the package directory and is imported from there onto this 
+        The model metadata dictionary is defined in the __init__ file
+        for the package directory and is imported from there onto this
         module.
-        
+
         Returns
         -------
         dict
-            Dictionary containing validated model metadata and 
+            Dictionary containing validated model metadata and
             configuration parameters.
-            
+
         Raises
         ------
         AssertionError
-            If any required key is missing or if values have incorrect 
+            If any required key is missing or if values have incorrect
             types.
         """
 
-        meta_dict = self._model_meta      
+        meta_dict = self._model_meta
 
         for meta_key in meta_dict.keys():
-            assert isinstance(meta_key, str), (
-                "keys in the model metadata dict must be provided as strings."
-            )
+            assert isinstance(
+                meta_key, str
+            ), "keys in the model metadata dict must be provided as strings."
 
-        assert 'inference_model_name' in meta_dict.keys(),(
-            "model metadata dict must have a "
-            "key 'inference_model_name'"
+        assert "inference_model_name" in meta_dict.keys(), (
+            "model metadata dict must have a " "key 'inference_model_name'"
         )
 
-        assert 'inference_model_loss_function' in meta_dict.keys(),(
-            "model metadata dict must have a key "
-            "'inference_model_loss_function'"
+        assert "inference_model_loss_function" in meta_dict.keys(), (
+            "model metadata dict must have a key " "'inference_model_loss_function'"
         )
 
-        assert 'max_depth' in meta_dict.keys(), (
-            "model metadata dict must have a key 'max_depth'."
+        assert (
+            "max_depth" in meta_dict.keys()
+        ), "model metadata dict must have a key 'max_depth'."
+
+        assert isinstance(meta_dict["max_depth"], int), "max_depth must be an integer."
+
+        assert "inference_model_embedding_layer" in meta_dict.keys(), (
+            "model metadata dict must have a key " "'inference_model_embedding_layer'"
         )
 
-        assert isinstance(meta_dict['max_depth'], int),(
-            "max_depth must be an integer."
-        )
+        assert isinstance(
+            meta_dict["inference_model_embedding_layer"], str
+        ), "inference_model_embedding_layer name must be a string."
 
-        assert 'inference_model_embedding_layer' in meta_dict.keys(), (
-            "model metadata dict must have a key "
-            "'inference_model_embedding_layer'"
-        )
+        if self._annotation_pipeline == "supervised":
+            assert (
+                "feature_panel_size" in meta_dict.keys()
+            ), "model metadata dict must have a key 'feature_panel_size'."
 
-        assert isinstance(meta_dict['inference_model_embedding_layer'], str),(
-            "inference_model_embedding_layer name must be a string."
-        )
+            assert isinstance(
+                meta_dict["feature_panel_size"], int
+            ), "feature_panel_size must be an integer."
 
-        if self._annotation_pipeline == 'supervised':
+        assert (
+            "calibration" in meta_dict.keys()
+        ), "model metadata dict must have a key 'calibration'."
 
-            assert 'feature_panel_size' in meta_dict.keys(), (
-                "model metadata dict must have a key 'feature_panel_size'."
-            )
+        assert (
+            "calibrator_filenames" in meta_dict.keys()
+        ), "model metadata dict must have a key 'calibrator_filenames'."
 
-            assert isinstance(meta_dict['feature_panel_size'], int),(
-                "feature_panel_size must be an integer."
-            )
-        
-        assert 'calibration' in meta_dict.keys(), (
-            "model metadata dict must have a key 'calibration'."
-        )
-        
-        assert 'calibrator_filenames' in meta_dict.keys(), (
-            "model metadata dict must have a key 'calibrator_filenames'."
-        )
+        if meta_dict["calibration"] is not None:
+            assert isinstance(
+                meta_dict["calibration"], str
+            ), "calibration must be a string or None."
 
-        if meta_dict['calibration'] is not None:
-            assert isinstance(meta_dict['calibration'], str), (
-                "calibration must be a string or None."
-            )
-        
-        assert isinstance(meta_dict['calibrator_filenames'], list), (
-            "calibrators must be a list."
-        )
+        assert isinstance(
+            meta_dict["calibrator_filenames"], list
+        ), "calibrators must be a list."
 
-        if meta_dict['calibration'] is None:
-            assert len(meta_dict['calibrator_filenames'])==0, (
-                "'calibration' and 'calibrator_filenames' entries mutually inconsistent." 
-            )
+        if meta_dict["calibration"] is None:
+            assert (
+                len(meta_dict["calibrator_filenames"]) == 0
+            ), "'calibration' and 'calibrator_filenames' entries mutually inconsistent."
         else:
-            assert len(meta_dict['calibrator_filenames'])==meta_dict['max_depth'], (
-                "calibrator model names should be provided for each \
+            assert (
+                len(meta_dict["calibrator_filenames"]) == meta_dict["max_depth"]
+            ), "calibrator model names should be provided for each \
                 hierarchical level when calibration is not None."
-            )
 
-        if len(meta_dict['calibrator_filenames']) > 0:
+        if len(meta_dict["calibrator_filenames"]) > 0:
             calibration_dir_path = self._version_path / "calibration"
-            for calibrator_filename in meta_dict['calibrator_filenames']:
+            for calibrator_filename in meta_dict["calibrator_filenames"]:
                 calibrator_path = calibration_dir_path / calibrator_filename
                 assert calibrator_path.exists(), (
                     f"Calibrator file '{calibrator_filename}' not found in calibration "
@@ -1785,100 +1666,100 @@ class InferenceTools():
                     f"Calibrator '{calibrator_filename}' exists but is not a file. "
                     f"Path: {calibrator_path}"
                 )
-                assert calibrator_path.suffix == '.keras', (
-                    f"Expected .keras file, got: {calibrator_path}"
-                )
+                assert (
+                    calibrator_path.suffix == ".keras"
+                ), f"Expected .keras file, got: {calibrator_path}"
 
         return meta_dict
 
     def load_inference_encoders(self):
         """
         Load label encoders used for decoding model predictions.
-        
+
         Loads pickled label encoder objects from a predefined directory
-        structure using the version and filename specified during 
-        initialization. These encoders are used to convert numeric 
+        structure using the version and filename specified during
+        initialization. These encoders are used to convert numeric
         predictions back to string labels.
-        
+
         Returns
         -------
         list
             List of label encoders, typically one per hierarchical level
             in the classification taxonomy.
-            
+
         Notes
         -----
-        The encoders must be saved as a pickle file in the 
-        'inference_encoders' directory within the version directory 
+        The encoders must be saved as a pickle file in the
+        'inference_encoders' directory within the version directory
         (for e.g. "v0") that is accessible via the 'files' import
          system, and the name of the pickled file must correspond to the
          name provided to this object at initialization.
         """
-        encoders_dir_path = self._version_path/"inference_encoders"
+        encoders_dir_path = self._version_path / "inference_encoders"
         encoders_path = encoders_dir_path / self._inference_encoders_filename
 
-        with open(encoders_path, 'rb') as f:
+        with open(encoders_path, "rb") as f:
             encoders = pickle.load(f)
 
         return encoders
-    
+
     def load_inference_feature_panel(self):
         """
         Load the feature panel for subsetting query data.
-        
+
         For supervised annotation pipelines, loads a list of feature names
-        (typically gene names) from a text file. These features are used 
-        to subset the input data before inference. Validates that the 
+        (typically gene names) from a text file. These features are used
+        to subset the input data before inference. Validates that the
         feature list matches expected size from metadata and contains no
          duplicates.
-        
+
         Returns
         -------
         list or None
             List of feature names (strings) if using a supervised pipeline,
             or None for other pipeline types.
-            
+
         Raises
         ------
         AssertionError
-            If duplicates are found in the feature list or if the number 
+            If duplicates are found in the feature list or if the number
             of features doesn't match the value in model metadata.
-            
+
         Notes
         -----
-        The feature panel must be saved as a text file in the 
+        The feature panel must be saved as a text file in the
         'inference_feature_panel' directory within the version directory
-        that should be accessible via the 'files' import system, with 
-        the filename matching the name passed at initialization. 
-        
+        that should be accessible via the 'files' import system, with
+        the filename matching the name passed at initialization.
+
         For non-supervised pipelines, this method returns None.
         """
-        if self._annotation_pipeline == 'supervised':
-            feat_dir_path = self._version_path/"inference_feature_panel"
+        if self._annotation_pipeline == "supervised":
+            feat_dir_path = self._version_path / "inference_feature_panel"
             feat_path = feat_dir_path / self._inference_feature_panel_filename
 
             with open(feat_path, "r") as f:
                 feat_list = f.read().splitlines()
 
             feat_list = [
-                gene.decode("utf-8") if isinstance(gene, bytes) else gene 
+                gene.decode("utf-8") if isinstance(gene, bytes) else gene
                 for gene in feat_list
-                ]
+            ]
             feat_list = sorted(feat_list)
-            
-            assert len(feat_list) == len(set(feat_list)), (
-                "There are possible duplicates in the inference feature panel."
-            )
-            
-            if 'feature_panel_size' in self.load_model_meta().keys():
+
+            assert len(feat_list) == len(
+                set(feat_list)
+            ), "There are possible duplicates in the inference feature panel."
+
+            if "feature_panel_size" in self.load_model_meta().keys():
                 assert len(feat_list) == (
-                    self.load_model_meta()['feature_panel_size']
+                    self.load_model_meta()["feature_panel_size"]
                 ), (
                     "Number of features in inference feature panel provided \n"
                     " does not match with the number provided in inference \n"
                     "model metadata."
                 )
-                
+
             return feat_list
         else:
             return None
@@ -1886,38 +1767,36 @@ class InferenceTools():
     def load_calibrators(self):
         """
         Load the trained Keras models for calibration.
-        
+
         Loads the models from a predefined directory structure using the
-        version and the calibration filenames pre-defined for that version. 
+        version and the calibration filenames pre-defined for that version.
         The models are expected to be in .keras format. If available, custom
         objects required for model loading are imported from the version's
         calibration.custom_objects module.
-        
+
         Returns
         -------
         list of keras.Model
-            List of loaded keras models with length = max_depth, if 
+            List of loaded keras models with length = max_depth, if
             calibrators are available.
-            
+
         Notes
         -----
         The models must be saved in the 'calibration' directory in the
-        version directory (for e.g. "v0"). This should be accessible via 
-        the 'files' import system. Model names must correspond to the names 
+        version directory (for e.g. "v0"). This should be accessible via
+        the 'files' import system. Model names must correspond to the names
         provided in model_meta for the specific version.
-        
-        If a custom_objects module exists at 
+
+        If a custom_objects module exists at
         {version_module}.calibration.custom_objects, it will be used to load
         any custom calibration objects required by the models. If this module
         is not found, models will be loaded without custom objects.
         """
-        calib_dir_path = self._version_path/"calibration"
-        calibrator_names = self._model_meta['calibrator_filenames']
-        
+        calib_dir_path = self._version_path / "calibration"
+        calibrator_names = self._model_meta["calibrator_filenames"]
+
         if len(calibrator_names) > 0:
-            calib_paths = [
-                calib_dir_path / name for name in calibrator_names
-            ]
+            calib_paths = [calib_dir_path / name for name in calibrator_names]
 
             # Try to load custom objects if the module exists
             custom_obj_dict = None
@@ -1925,16 +1804,16 @@ class InferenceTools():
                 custom_objects_module = importlib.import_module(
                     f"{self._version_module.__name__}.calibration.custom_objects"
                 )
-                
+
                 custom_calibration_objects = (
                     custom_objects_module.custom_calibration_objects
                 )
 
-                calibration_method = self._model_meta['calibration']
+                calibration_method = self._model_meta["calibration"]
                 assert calibration_method in custom_calibration_objects.keys(), (
                     f"Calibration method {calibration_method} as specified "
                     f"in metadata for version {self._model_version} not found"
-                    " in custom_calibration_objects dictionary in calibration tools." 
+                    " in custom_calibration_objects dictionary in calibration tools."
                 )
 
                 custom_obj_names = [
@@ -1945,23 +1824,20 @@ class InferenceTools():
                     obj_name: getattr(custom_objects_module, obj_name)
                     for obj_name in custom_obj_names
                 }
-                
+
             except (ImportError, ModuleNotFoundError):
                 # Custom objects module doesn't exist, load models without custom objects
                 custom_obj_dict = None
 
             if custom_obj_dict is not None:
                 calibrators = [
-                    load_model(path, custom_objects=custom_obj_dict) 
+                    load_model(path, custom_objects=custom_obj_dict)
                     for path in calib_paths
                 ]
             else:
-                calibrators = [
-                    load_model(path) 
-                    for path in calib_paths
-                ]
-                
-            assert len(calibrators) == self._model_meta['max_depth'], (
+                calibrators = [load_model(path) for path in calib_paths]
+
+            assert len(calibrators) == self._model_meta["max_depth"], (
                 f"Expected {self._model_meta['max_depth']} calibrators, "
                 f"got {len(calibrators)}"
             )
@@ -1973,18 +1849,18 @@ class InferenceTools():
 
 class AutoloadInferenceTools(InferenceTools):
     """
-    Enhanced version of InferenceTools that automatically loads all 
+    Enhanced version of InferenceTools that automatically loads all
     components on initialization.
-    
-    This subclass extends InferenceTools by automatically calling all 
-    loading methods during initialization and storing their results as 
+
+    This subclass extends InferenceTools by automatically calling all
+    loading methods during initialization and storing their results as
     instance attributes. This provides a more convenient interface where
-     components can be accessed directly as attributes rather than 
+     components can be accessed directly as attributes rather than
      calling loading methods each time they are needed.
-    
-    For example, instead of calling `tools.load_inference_model()` each 
+
+    For example, instead of calling `tools.load_inference_model()` each
     time, the model can be accessed directly via `tools.inference_model`.
-    
+
     Attributes
     ----------
     inference_model : keras.Model
@@ -1997,51 +1873,51 @@ class AutoloadInferenceTools(InferenceTools):
         List of features for subsetting data, or None for non-supervised
         pipelines (from load_inference_feature_panel).
     calibrators: list of keras.Model or None
-        List of keras Models (if any) that is max_depth long for 
+        List of keras Models (if any) that is max_depth long for
         calibration.
-        
+
     Notes
     -----
-    All methods that start with 'load_' will be automatically called 
-    during initialization, and their return values will be stored as 
-    attributes. The attribute names are derived by removing the 'load_' 
+    All methods that start with 'load_' will be automatically called
+    during initialization, and their return values will be stored as
+    attributes. The attribute names are derived by removing the 'load_'
     prefix from the method name.
     """
-    
+
     def __init__(self, annotation_pipeline, model_version, *args, **kwargs):
         super().__init__(annotation_pipeline, model_version, *args, **kwargs)
-        
-        methods = [method for method in dir(self) 
-                  if callable(getattr(self, method)) and 
-                  (method.startswith('load_'))]
-        
+
+        methods = [
+            method
+            for method in dir(self)
+            if callable(getattr(self, method)) and (method.startswith("load_"))
+        ]
+
         for method_name in methods:
             attr_name = method_name[5:]
             # everything other than 'load_'
             method = getattr(self, method_name)
             result = method()
             setattr(self, attr_name, result)
-    
 
-  
 
-class QueryObj():
+class QueryObj:
     """
-    Wrapper for AnnData objects to provide standardized access to query 
+    Wrapper for AnnData objects to provide standardized access to query
     data.
-    
+
     This class encapsulates an AnnData object and provides methods for
     accessing its components in a consistent way for use in inference
     pipelines. It performs validation to ensure the data structure meets
     the requirements for inference and offers methods to extract the
     expression matrix, feature names, and metadata.
-    
+
     Attributes
     ----------
     query : anndata.AnnData
         The AnnData object containing query data with expression matrix,
         cell metadata, and feature metadata.
-        
+
     Methods
     -------
     X_query(format='csr_matrix')
@@ -2053,17 +1929,18 @@ class QueryObj():
     cells_meta()
         Get the cell metadata as a pandas DataFrame.
     """
+
     def __init__(self, query):
         """
         Initialize a QueryObj with an AnnData object.
-        
+
         Parameters
         ----------
         query : anndata.AnnData
             AnnData object containing the query data, including an
             expression matrix in the `.X` slot, cell metadata in `.obs`,
             and feature metadata in `.var`.
-            
+
         Raises
         ------
         ValueError
@@ -2075,28 +1952,28 @@ class QueryObj():
                 "Object should be a valid anndata.AnnData object w. \n"
                 "a data slot X, cell meta and gene meta in obs and var resp."
             )
-        
+
         self.query = query
 
-    def X_query(self, format='csr_matrix'):
+    def X_query(self, format="csr_matrix"):
         """
         Extract the expression matrix in the specified format.
-        
+
         The inference process typically requires the expression data in
         a specific sparse matrix format for memory efficiency and
         performance.
-        
+
         Parameters
         ----------
         format : str, default='csr_matrix'
             The desired format for the expression matrix. Currently,
             only 'csr_matrix' is supported.
-            
+
         Returns
         -------
         scipy.sparse.csr_matrix
             The expression matrix in CSR format.
-            
+
         Raises
         ------
         ValueError
@@ -2105,30 +1982,31 @@ class QueryObj():
         """
 
         X_query = self.query.X
-        if format=='csr_matrix':
+        if format == "csr_matrix":
             if not isinstance(X_query, csr_matrix):
                 X_query = csr_matrix(X_query)
         else:
             raise ValueError(
                 "Inference process is supported on the csr_matrix only. \n"
-                "We may incorporate more flexibility in the future.")
-        
+                "We may incorporate more flexibility in the future."
+            )
+
         return X_query
-    
+
     def query_features(self, feature_names_col=None):
         """
         Get the list of feature names from the query data.
-        
+
         Extracts feature names (e.g., gene identifiers) from the query
         data, either from the index of the feature metadata DataFrame or
         from a specified column.
-        
+
         Parameters
         ----------
         feature_names_col : str, optional
             Column name in var DataFrame to use for feature names.
             If None, uses the var_names index.
-            
+
         Returns
         -------
         list
@@ -2144,16 +2022,16 @@ class QueryObj():
     def features_meta(self):
         """
         Get the feature metadata as a pandas DataFrame.
-        
+
         Provides access to the feature (gene) metadata stored in the
         AnnData object, containing annotations or properties of each
         feature in the expression matrix.
-        
+
         Returns
         -------
         pandas.DataFrame
             DataFrame containing metadata for each feature.
-            
+
         Raises
         ------
         AssertionError
@@ -2161,26 +2039,25 @@ class QueryObj():
         """
 
         features_meta_df = self.query.var
-        assert isinstance(features_meta_df, pd.DataFrame), (
-            "Query features meta should be a pandas DataFrame."
-            )
-        
+        assert isinstance(
+            features_meta_df, pd.DataFrame
+        ), "Query features meta should be a pandas DataFrame."
+
         return features_meta_df
-    
 
     def cells_meta(self):
         """
         Get the cell metadata as a pandas DataFrame.
-        
+
         Provides access to the cell (observation) metadata stored in the
         AnnData object, containing annotations or properties of each
         cell in the expression matrix.
-        
+
         Returns
         -------
         pandas.DataFrame
             DataFrame containing metadata for each cell.
-            
+
         Raises
         ------
         AssertionError
@@ -2188,41 +2065,41 @@ class QueryObj():
         """
 
         cells_meta_df = self.query.obs
-        assert isinstance(cells_meta_df, pd.DataFrame), (
-            "Query cells meta should be a pandas DataFrame."
-            )
-        
+        assert isinstance(
+            cells_meta_df, pd.DataFrame
+        ), "Query cells meta should be a pandas DataFrame."
+
         return cells_meta_df
-        
+
 
 class ReadQueryObj(QueryObj):
     """
     Reads and initializes a QueryObj directly from an AnnData file.
-    
-    This class extends QueryObj to provide functionality for loading 
-    AnnData objects from disk. It validates the file type, reads the 
-    data using the anndata library, and initializes the parent QueryObj 
-    with the loaded data. This simplifies the process of creating query 
+
+    This class extends QueryObj to provide functionality for loading
+    AnnData objects from disk. It validates the file type, reads the
+    data using the anndata library, and initializes the parent QueryObj
+    with the loaded data. This simplifies the process of creating query
     objects for inference pipelines by handling the file loading step.
-    
+
     Parameters
     ----------
     query_path : str
         Path to the AnnData file (.h5ad format) containing the query data.
-        
+
     Attributes
     ----------
     query_path : str
         The path to the AnnData file that was loaded.
     query : anndata.AnnData
-        The loaded AnnData object containing query data with expression 
+        The loaded AnnData object containing query data with expression
         matrix, cell metadata, and feature metadata.
-        
+
     Raises
     ------
     ValueError
         If the provided file is not in .h5ad format.
-        
+
     Examples
     --------
     >>> query_obj = ReadQueryObj("path/to/query_data.h5ad")
@@ -2231,46 +2108,45 @@ class ReadQueryObj(QueryObj):
     """
 
     def __init__(self, query_path):
-        query_filetype = query_path.split('.')[-1]
-        if query_filetype!='h5ad':
-            raise ValueError("Query filetype should be h5ad.")        
+        query_filetype = query_path.split(".")[-1]
+        if query_filetype != "h5ad":
+            raise ValueError("Query filetype should be h5ad.")
 
         self.query_path = query_path
         query = anndata.read_h5ad(self.query_path)
 
         super().__init__(query)
 
-        
 
-class InferenceInputData():
+class InferenceInputData:
     """
     Processes a counts data matrix into the standardized format required
      for the inference model.
-    
-    This class handles normalization and feature alignment of single-cell 
-    expression data, preparing it for downstream inference tasks. It 
-    validates input data types, performs normalization, and can align 
+
+    This class handles normalization and feature alignment of single-cell
+    expression data, preparing it for downstream inference tasks. It
+    validates input data types, performs normalization, and can align
     query features with a reference feature panel template.
-    
+
     Parameters
     ----------
     X_query : scipy.sparse.csr_matrix
-        Expression matrix in CSR format with cells as rows and features 
+        Expression matrix in CSR format with cells as rows and features
         (genes) as columns.
     query_features : list of str
         List of feature names corresponding to the columns in X_query.
     feature_panel_template : list of str or None
-        Optional reference feature list used for standardizing the 
+        Optional reference feature list used for standardizing the
         feature space. If provided, the query data will be reordered and
          subset to match this template.
     normalization_override : bool, default=False
-        If True, bypasses normalization entirely regardless of whether 
-        the values are integers or not. When False, normalization will 
+        If True, bypasses normalization entirely regardless of whether
+        the values are integers or not. When False, normalization will
         be applied based on the data characteristics.
     norm_check_batch_size : int, default=1000
         Batch size used for checking normalization status by checking
         whether the values in this batch are integers or not.
-        
+
     Attributes
     ----------
     X_query : scipy.sparse.csr_matrix
@@ -2287,101 +2163,96 @@ class InferenceInputData():
         Set of features common to both query and template.
     overlap_percent : float
         Percentage of template features present in the query data.
-        
+
     Raises
     ------
     AssertionError
-        If inputs don't match expected types or if there are duplicates 
+        If inputs don't match expected types or if there are duplicates
         in the feature panel template.
     UserWarning
         If feature overlap between query and template is below 20%.
     """
+
     def __init__(
-            self, 
-            X_query, 
-            query_features, 
-            feature_panel_template,
-            normalization_override = False,
-            norm_check_batch_size = 1000
-            ):
-        
-        assert isinstance(X_query, csr_matrix), (
-            "X_query should be in the scipy.sparse.csr_matrix format."
-        )
+        self,
+        X_query,
+        query_features,
+        feature_panel_template,
+        normalization_override=False,
+        norm_check_batch_size=1000,
+    ):
+        assert isinstance(
+            X_query, csr_matrix
+        ), "X_query should be in the scipy.sparse.csr_matrix format."
         self.X_query, _ = normalize(
             X_query,
             normalization_override=normalization_override,
-            norm_check_batch_size=norm_check_batch_size
-            )
+            norm_check_batch_size=norm_check_batch_size,
+        )
 
         self.num_cells = X_query.shape[0]
 
-        assert isinstance(query_features, list), (
-            "query_features must be a list."
-        ) 
-        assert all(isinstance(item, str) for item in query_features), (
-            "Each element of the list of query_features must be a string."
-        )
+        assert isinstance(query_features, list), "query_features must be a list."
+        assert all(
+            isinstance(item, str) for item in query_features
+        ), "Each element of the list of query_features must be a string."
         self.query_features = query_features
 
         if feature_panel_template:
-            assert isinstance(feature_panel_template, list), (
-                "feature panel template must be a list."
-            ) 
-            assert all(
-                isinstance(item, str) for item in feature_panel_template
-                ), (
+            assert isinstance(
+                feature_panel_template, list
+            ), "feature panel template must be a list."
+            assert all(isinstance(item, str) for item in feature_panel_template), (
                 "Each element of the list of feature panel "
                 "template must be a string."
             )
         self.feature_panel_template = feature_panel_template
         if self.feature_panel_template:
             self.template_size = len(set(self.feature_panel_template))
-            assert self.template_size == len(self.feature_panel_template), (
-                "There are possible duplicates in the feature_panel_template."
+            assert self.template_size == len(
+                self.feature_panel_template
+            ), "There are possible duplicates in the feature_panel_template."
+
+            self.common_features = set(self.query_features).intersection(
+                set(self.feature_panel_template)
             )
 
-            self.common_features = set(
-                self.query_features
-                ).intersection(set(self.feature_panel_template))
-            
             self.overlap_percent = (
-                len(self.common_features)*100
-            )/self.template_size
+                len(self.common_features) * 100
+            ) / self.template_size
 
             if self.overlap_percent < 20:
                 warnings.warn(
                     f"Low feature overlap ({self.overlap_percent:.1f}%) may "
                     "lead to suboptimal results.",
-                    UserWarning
+                    UserWarning,
                 )
-
 
     def reorder_subset_on_feature_template(self):
         """
-        Reorders and subsets the query data to match the feature panel 
+        Reorders and subsets the query data to match the feature panel
         template.
-        
-        Aligns the feature dimensions of the query data with the 
-        reference feature panel. Features present in the template but 
+
+        Aligns the feature dimensions of the query data with the
+        reference feature panel. Features present in the template but
         missing in the query will be filled with zeros. Features present
          in the query but not in the template will be excluded.
-        
+
         Returns
         -------
         scipy.sparse.csr_matrix
-            Expression matrix reordered padded and subset to match the 
-            feature panel template. If no template is provided, returns 
+            Expression matrix reordered padded and subset to match the
+            feature panel template. If no template is provided, returns
             the original expression matrix.
-            
+
         Warns
         -----
         UserWarning
             If no feature panel template was provided.
-            
+
         Notes
         -----
-        This method prints a summary of the query data dimensions and 
+        This method prints a summary of the query data dimensions and
         feature overlap with the reference panel when successful.
         """
         if self.feature_panel_template:
@@ -2389,23 +2260,23 @@ class InferenceInputData():
                 self.X_query,
                 self.query_features,
                 self.feature_panel_template,
-                common_features=self.common_features
-            )   
+                common_features=self.common_features,
+            )
 
-            assert reordered_X_query.shape[1]==self.template_size, (
+            assert reordered_X_query.shape[1] == self.template_size, (
                 "Feature dimension mismatch after reordering "
                 "and subsetting the query."
-                )
+            )
 
-            
             print("Query object:")
             print(f"    Total number of cells: {self.num_cells}")
-            print("    Total number of features: "
-                  f"{len(set(self.query_features))}")
-            print("    Overlap w. feature reference: "
-                  f"{len(self.common_features)} "
-                  f"(~{int(self.overlap_percent)}%)\n")
-            
+            print("    Total number of features: " f"{len(set(self.query_features))}")
+            print(
+                "    Overlap w. feature reference: "
+                f"{len(self.common_features)} "
+                f"(~{int(self.overlap_percent)}%)\n"
+            )
+
             return reordered_X_query
         else:
             warnings.warn(
@@ -2413,59 +2284,58 @@ class InferenceInputData():
                 "query data on all query features."
             )
             return self.X_query
-        
-    def inference_input(self, annotation_pipeline='supervised'):
+
+    def inference_input(self, annotation_pipeline="supervised"):
         """
-        Produces the final input matrix for passing to the inference 
+        Produces the final input matrix for passing to the inference
         model.
-        
+
         Based on the specified annotation pipeline, this method produces
-        the appropriately formatted input data matrix for the inference 
-        model. Currently only 'supervised' pipeline is supported, which 
-        reorders pads and subsets the query data according to the 
+        the appropriately formatted input data matrix for the inference
+        model. Currently only 'supervised' pipeline is supported, which
+        reorders pads and subsets the query data according to the
         feature panel template.
-        
+
         Parameters
         ----------
         annotation_pipeline : str, default='supervised'
-            The type of annotation pipeline to use. Currently only 
+            The type of annotation pipeline to use. Currently only
             'supervised' is supported.
-            
+
         Returns
         -------
         scipy.sparse.csr_matrix
             Expression matrix ready for inference.
-            
+
         Raises
         ------
         ValueError
             If an unsupported annotation pipeline is specified.
         """
 
-        if annotation_pipeline=='supervised':
+        if annotation_pipeline == "supervised":
             input_matrix = self.reorder_subset_on_feature_template()
         else:
             raise ValueError("annotation_pipeline not recognized.")
 
         return input_matrix
-    
 
 
-class OutputLabels():
+class OutputLabels:
     """
-    Processes and organizes hierarchical labels produced by inference 
+    Processes and organizes hierarchical labels produced by inference
     models.
-    
-    This class handles the post-processing of prediction outputs from 
-    hierarchical classification models. It extracts and organizes 
+
+    This class handles the post-processing of prediction outputs from
+    hierarchical classification models. It extracts and organizes
     predictions at different levels of the hierarchy, extracts
-    probabilities, and provides methods to access level-specific 
+    probabilities, and provides methods to access level-specific
     information.
-    
+
     Parameters
     ----------
     labels_pred : numpy.ndarray
-        Predicted hierarchical labels, typically with shape 
+        Predicted hierarchical labels, typically with shape
         (num_cells, max_depth).
     labels_prob : numpy.ndarray
         Probability scores associated with each prediction.
@@ -2474,7 +2344,7 @@ class OutputLabels():
         Maximum depth of the hierarchical classification.
     num_cells : int
         Number of cells/samples in the query data.
-        
+
     Attributes
     ----------
     combined_labels : list
@@ -2492,20 +2362,20 @@ class OutputLabels():
         Could be calibrated confidence scores or uncalibrated softmax
         values (depending on the specific pipeline implemented).
     full_consistent_hierarchy : list
-        Flags indicating whether each cell has a fully consistent 
+        Flags indicating whether each cell has a fully consistent
         hierarchy.
-    
+
     Raises
     ------
     AssertionError
-        If the number of predicted labels doesn't match the number of 
+        If the number of predicted labels doesn't match the number of
         cells.
     """
-    def __init__(self, labels_pred, labels_prob, max_depth, num_cells):
 
-        assert labels_pred.shape[0] == num_cells, (
-            "Number of labels predicted != number of cells in query."
-        )
+    def __init__(self, labels_pred, labels_prob, max_depth, num_cells):
+        assert (
+            labels_pred.shape[0] == num_cells
+        ), "Number of labels predicted != number of cells in query."
 
         self._labels_predicted = labels_pred
         self._labels_prob = labels_prob
@@ -2514,57 +2384,48 @@ class OutputLabels():
 
         combined_labels = []
         for cell_label in self._labels_predicted:
-            combined_label = comb_label(
-                cell_label, 
-                self._max_depth, 
-                self._max_depth
-                )
+            combined_label = comb_label(cell_label, self._max_depth, self._max_depth)
             combined_labels.append(combined_label)
         self.combined_labels = combined_labels
 
         (
             self._level_specific_labels_and_final_level,
-            self._final_levels_array
-        ) = split_labels_w_final_level(
-            self._labels_predicted, 
-            self._max_depth
-        )
+            self._final_levels_array,
+        ) = split_labels_w_final_level(self._labels_predicted, self._max_depth)
 
         self.level_zero_labels = self._level_specific_labels_and_final_level[0]
         self.final_level_labels = self._level_specific_labels_and_final_level[
-            self._max_depth+1
+            self._max_depth + 1
         ]
 
-        self.level_zero_prob = self._labels_prob[:,0]
+        self.level_zero_prob = self._labels_prob[:, 0]
         self.final_level_prob = self._labels_prob[
-            np.arange(self._num_cells), 
-            self._final_levels_array
-            ]
+            np.arange(self._num_cells), self._final_levels_array
+        ]
 
         full_consistent_hierarchy = []
         for cell_label in self._labels_predicted:
             full_consistent_hierarchy.append(
                 if_full_consistent_hierarchy(cell_label, self._max_depth)
-                )
+            )
         self.full_consistent_hierarchy = full_consistent_hierarchy
 
-       
     def level_specific_prob(self, level):
         """
         Get probabilities for a specific hierarchical level.
         These could be calibrated confidence scores or raw softmax values,
         depending on the specific pipeline that has been implemented.
-        
+
         Parameters
         ----------
         level : int
             Level to get probabilities for (1-indexed).
-            
+
         Returns
         -------
         numpy.ndarray
             Probabilities for the specified level.
-            
+
         Raises
         ------
         TypeError
@@ -2576,25 +2437,24 @@ class OutputLabels():
             raise TypeError("level must be an integer")
         if level < 1 or level > self._max_depth:
             raise ValueError(f"level must be between 1 and {self._max_depth}")
-        
-        probs = self._labels_prob[:,level-1]
+
+        probs = self._labels_prob[:, level - 1]
         return probs
-        
 
     def level_specific_labels(self, level):
         """
         Get predicted labels for a specific hierarchical level.
-        
+
         Parameters
         ----------
         level : int
             Level to get labels for (1-indexed).
-            
+
         Returns
         -------
         numpy.ndarray
             Predicted labels for the specified level.
-            
+
         Raises
         ------
         IndexError
@@ -2606,41 +2466,40 @@ class OutputLabels():
     def all_level_labels(self):
         """
         Get predicted labels for all hierarchical levels.
-        
+
         Returns
         -------
         list of numpy.ndarray
-            List containing the predicted labels for each level in the 
+            List containing the predicted labels for each level in the
             hierarchy, organized by level.
-            
+
         Notes
         -----
         This method provides a convenient way to access all hierarchical
-         levels at once, which can be useful for comprehensive analysis 
+         levels at once, which can be useful for comprehensive analysis
          or visualization of the hierarchical classification results.
         """
         all_level_labels = [
-            self.level_specific_labels(level) 
-            for level in range(self._max_depth)
-            ]
+            self.level_specific_labels(level) for level in range(self._max_depth)
+        ]
 
         return all_level_labels
 
-    
+
 class PostprocessingAzimuthLabels(OutputLabels):
     """
     Specialized class for refining and postprocessing Azimuth labels.
-    
-    This class extends OutputLabels to provide additional functionality 
+
+    This class extends OutputLabels to provide additional functionality
     for refining cell type annotations at different levels of granularity
-     (broad, medium, fine). It applies post-processing rules to improve 
-     annotation quality based on hierarchical consistency, reference 
+     (broad, medium, fine). It applies post-processing rules to improve
+     annotation quality based on hierarchical consistency, reference
      annotations, and confidence scores.
-    
+
     Parameters
     ----------
     labels_pred : numpy.ndarray
-        Predicted hierarchical labels, typically with shape 
+        Predicted hierarchical labels, typically with shape
         (num_cells, max_depth).
     labels_prob : numpy.ndarray
         Probability scores associated with each prediction.
@@ -2650,7 +2509,7 @@ class PostprocessingAzimuthLabels(OutputLabels):
         Number of cells/samples in the query data.
     probs : list of numpy.ndarray
         Probability arrays for each level of the hierarchy.
-        These values could be calibrated confidence scores or 
+        These values could be calibrated confidence scores or
         uncalibrated softmax values depending on the pipeline implemented.
     encoders : list
         List of label encoders used during model training/inference.
@@ -2658,13 +2517,13 @@ class PostprocessingAzimuthLabels(OutputLabels):
         Level of refinement to apply ('broad', 'medium', or 'fine').
     model_version: str
           Model version to use for inference (e.g., 'v0').
-        
+
     Attributes
     ----------
     probs : list of numpy.ndarray
         Probability arrays for each level.
-        These values could be calibrated confidence scores, or 
-        uncalibrated softmax values depending on the pipeline that has 
+        These values could be calibrated confidence scores, or
+        uncalibrated softmax values depending on the pipeline that has
         been implemented.
     refine_level : str
         Selected level of refinement.
@@ -2674,7 +2533,7 @@ class PostprocessingAzimuthLabels(OutputLabels):
         Reference annotation mapping data.
     refined_annotations_file_name : str
         Filename of the reference annotation file.
-        
+
     Raises
     ------
     ValueError
@@ -2685,38 +2544,31 @@ class PostprocessingAzimuthLabels(OutputLabels):
         If the annotation file is not found.
     ValueError
         If the annotation file is missing required columns.
-        
+
     Notes
     -----
-    This class uses several private methods (prefixed with double 
+    This class uses several private methods (prefixed with double
     underscore) for internal processing. Users should primarily interact
      with the public `refine_labels()` method.
     """
-    VALID_REFINE_LEVELS = ['broad', 'medium', 'fine']
-    
+
+    VALID_REFINE_LEVELS = ["broad", "medium", "fine"]
+
     def __init__(
-        self, 
-        labels_pred, 
-        labels_prob, 
-        max_depth, 
+        self,
+        labels_pred,
+        labels_prob,
+        max_depth,
         num_cells,
         probs,
         encoders,
         refine_level,
-        model_version
-        ):
-        
+        model_version,
+    ):
         if refine_level not in self.VALID_REFINE_LEVELS:
-            raise ValueError(
-                f"refine_level must be one of {self.VALID_REFINE_LEVELS}"
-            )
-            
-        super().__init__(
-            labels_pred, 
-            labels_prob, 
-            max_depth, 
-            num_cells
-            )
+            raise ValueError(f"refine_level must be one of {self.VALID_REFINE_LEVELS}")
+
+        super().__init__(labels_pred, labels_prob, max_depth, num_cells)
 
         self.probs = probs
         self.refine_level = refine_level
@@ -2727,33 +2579,31 @@ class PostprocessingAzimuthLabels(OutputLabels):
                 f"panhumanpy._tools.{model_version}"
             )
             version_path = files(version_module)
-            postprocessing_dir_path = version_path/"postprocessing"
+            postprocessing_dir_path = version_path / "postprocessing"
         except (ImportError, ModuleNotFoundError) as e:
             raise RuntimeError(
                 "postprocessing module not found. Please ensure it is installed."
             ) from e
 
-        self.refined_annotations_file_name = (
-            f'panhuman_annotate_{refine_level}.csv'
-        )
+        self.refined_annotations_file_name = f"panhuman_annotate_{refine_level}.csv"
         self._refined_annotations_df_path = (
             postprocessing_dir_path / self.refined_annotations_file_name
         )
-        
+
         try:
             self.annotations_df = pd.read_csv(
-                self._refined_annotations_df_path,
-                index_col=None
+                self._refined_annotations_df_path, index_col=None
             )
         except FileNotFoundError as e:
             raise FileNotFoundError(
                 f"Annotation file {self.refined_annotations_file_name} not "
                 f"found in postprocessing directory"
             ) from e
-            
-        required_columns = ['Orig_Label', f'Annotate_{refine_level}']
-        missing_cols = [col for col in required_columns 
-                       if col not in self.annotations_df.columns]
+
+        required_columns = ["Orig_Label", f"Annotate_{refine_level}"]
+        missing_cols = [
+            col for col in required_columns if col not in self.annotations_df.columns
+        ]
         if missing_cols:
             raise ValueError(
                 f"Annotation file missing required columns: {missing_cols}"
@@ -2762,7 +2612,7 @@ class PostprocessingAzimuthLabels(OutputLabels):
     def __combined_labels_w_consistency(self):
         """
         Private method: Creates labels with consistency flag.
-        
+
         Returns
         -------
         list of str
@@ -2779,7 +2629,7 @@ class PostprocessingAzimuthLabels(OutputLabels):
     def __encoders_dict(self):
         """
         Private method: Creates a dictionary mapping of label encoders.
-        
+
         Returns
         -------
         dict
@@ -2791,14 +2641,14 @@ class PostprocessingAzimuthLabels(OutputLabels):
             level_name = int(i)
             enc_dicts[level_name] = {
                 label: index for index, label in enumerate(encoder.classes_)
-                }
+            }
 
         return enc_dicts
 
     def __annotations_dict(self):
         """
         Private method: Creates a dictionary of annotation mappings.
-        
+
         Returns
         -------
         dict
@@ -2807,42 +2657,39 @@ class PostprocessingAzimuthLabels(OutputLabels):
 
         annot_dict = dict(
             zip(
-            self.annotations_df['Orig_Label'], 
-            self.annotations_df[f'Annotate_{self.refine_level}']
+                self.annotations_df["Orig_Label"],
+                self.annotations_df[f"Annotate_{self.refine_level}"],
             )
-            )
-        for fine_label in self.annotations_df[f'Annotate_{self.refine_level}']:
+        )
+        for fine_label in self.annotations_df[f"Annotate_{self.refine_level}"]:
             annot_dict[fine_label] = fine_label
 
         return annot_dict
 
     def __softmax_arrays_dict(self):
         """
-        Private method: Creates a dictionary of softmax probability 
+        Private method: Creates a dictionary of softmax probability
         arrays.
-        
+
         Returns
         -------
         dict
             Dictionary mapping array identifiers to softmax arrays.
         """
 
-        softmax = {
-            f"arr_{i}": np.array(row) for i, row 
-            in enumerate(self.probs)
-            }
+        softmax = {f"arr_{i}": np.array(row) for i, row in enumerate(self.probs)}
 
         return softmax
 
-    def __map_to_annotate_refine(self, label): 
+    def __map_to_annotate_refine(self, label):
         """
         Private method: Maps a label to its refined annotation.
-        
+
         Parameters
         ----------
         label : str
             Original label with consistency flag.
-            
+
         Returns
         -------
         str or list
@@ -2850,32 +2697,34 @@ class PostprocessingAzimuthLabels(OutputLabels):
         """
         label_split = label.split("_")
         flag = label_split[-1]
-        label = '_'.join(label_split[:-1])
+        label = "_".join(label_split[:-1])
         annot_dict = self.__annotations_dict()
 
-        if flag == "True":  
+        if flag == "True":
             refined_label = annot_dict.get(label)
             if pd.isna(refined_label):
                 matching_df = self.annotations_df[
-                    self.annotations_df['Orig_Label'].str.startswith(
-                        label, na=False
-                        )
+                    self.annotations_df["Orig_Label"].str.startswith(label, na=False)
                 ]
                 matching_refined_labels = matching_df[
-                    f'Annotate_{self.refine_level}'
+                    f"Annotate_{self.refine_level}"
                 ].tolist()
                 matching_refined_labels = list(set(matching_refined_labels))
+                if len(matching_refined_labels) == 1:
+                    return matching_refined_labels[0]
                 return matching_refined_labels
             if refined_label == label:
                 return refined_label
-            elif refined_label in label:
+            elif refined_label in label or all(
+                p in label.split("|") for p in refined_label.split("|")
+            ):
                 return refined_label
         return "False"
 
     def __refinement_type(self):
         """
         Private method: Determines the type of refinement for each cell.
-        
+
         Returns
         -------
         list
@@ -2896,11 +2745,11 @@ class PostprocessingAzimuthLabels(OutputLabels):
         """
         Private method: Creates a dictionary of softmax probabilities by
          class.
-        
+
         Returns
         -------
         dict
-            Nested dictionary mapping hierarchy levels and classes to 
+            Nested dictionary mapping hierarchy levels and classes to
             probabilities.
         """
 
@@ -2913,43 +2762,45 @@ class PostprocessingAzimuthLabels(OutputLabels):
             if arr_key in softmax:
                 softmax_array = softmax[arr_key]
                 precomputed_softmax[level] = {
-                    key: softmax_array[:, idx] for key, idx 
-                    in level_dict.items() 
+                    key: softmax_array[:, idx]
+                    for key, idx in level_dict.items()
                     if idx < softmax_array.shape[1]
-            }
+                }
 
         return precomputed_softmax
 
     def refine_labels(self):
         """
-        Refines raw predicted labels using reference annotations and 
+        Refines raw predicted labels using reference annotations and
         confidence scores.
-        
-        This method applies a multi-step refinement process to improve 
+
+        This method applies a multi-step refinement process to improve
         annotation quality:
         1. Identifies labels with consistent hierarchies
         2. Maps consistent labels to reference annotations
-        3. For ambiguous cases, selects the annotation with highest 
+        3. For ambiguous cases, selects the annotation with highest
             confidence
         4. Returns the most specific (leaf) annotation level
-        
+
         Returns
         -------
         list of str
             Refined cell type labels at the specified refinement level.
-            
+
         Notes
         -----
-        The refinement process prioritizes hierarchical consistency and 
-        reference annotations while using confidence scores to resolve 
+        The refinement process prioritizes hierarchical consistency and
+        reference annotations while using confidence scores to resolve
         ambiguities.
         """
-        
+
         labels_w_consistency_flag = self.__combined_labels_w_consistency()
-        labels_options = pd.Series(labels_w_consistency_flag).apply(
-            self.__map_to_annotate_refine
-        ).tolist()
-        
+        labels_options = (
+            pd.Series(labels_w_consistency_flag)
+            .apply(self.__map_to_annotate_refine)
+            .tolist()
+        )
+
         refined_labels = []
 
         refine_types = self.__refinement_type()
@@ -2965,7 +2816,7 @@ class PostprocessingAzimuthLabels(OutputLabels):
                     levels = len(pred.split("|")) - 1
 
                     if pred in precomputed_softmax[levels]:
-                        value = precomputed_softmax[levels][pred][i]  
+                        value = precomputed_softmax[levels][pred][i]
                         if value > max_value:
                             max_value = value
                             best_prediction = pred
@@ -2974,9 +2825,9 @@ class PostprocessingAzimuthLabels(OutputLabels):
                 best_prediction = labels_options[i]
 
             refined_label = (
-                best_prediction.split("|")[-1] if isinstance(
-                    best_prediction, str
-                    ) else best_prediction
+                best_prediction.split("|")[-1]
+                if isinstance(best_prediction, str)
+                else best_prediction
             )
 
             refined_labels.append(refined_label)
@@ -2984,24 +2835,23 @@ class PostprocessingAzimuthLabels(OutputLabels):
         return refined_labels
 
 
-
-class Embeddings():
+class Embeddings:
     """
-    Extracts embeddings from intermediate layers of a neural network 
+    Extracts embeddings from intermediate layers of a neural network
     model.
-    
-    This class facilitates the extraction of feature embeddings from a 
+
+    This class facilitates the extraction of feature embeddings from a
     specified intermediate layer of a neural network model, which can be
-     useful for dimensionality reduction, visualization, or downstream 
+     useful for dimensionality reduction, visualization, or downstream
      analysis tasks.
-    
+
     Parameters
     ----------
     model : tensorflow.keras.Model
         The neural network model from which to extract embeddings.
     embedding_layer_name : str
         The name of the intermediate layer to extract embeddings from.
-        
+
     Attributes
     ----------
     model : tensorflow.keras.Model
@@ -3009,108 +2859,103 @@ class Embeddings():
     embedding_layer : str
         The name of the layer used for embedding extraction.
     embedding_model : tensorflow.keras.Model
-        A derived model that outputs the embeddings from the specified 
+        A derived model that outputs the embeddings from the specified
         layer.
-        
+
     Raises
     ------
     AssertionError
         If the specified embedding layer name is not found in the model.
-        
+
     Notes
     -----
-    The class creates a new model that takes the same inputs as the 
-    original model but outputs the activations from the specified 
-    embedding layer. This approach allows for efficient extraction of 
+    The class creates a new model that takes the same inputs as the
+    original model but outputs the activations from the specified
+    embedding layer. This approach allows for efficient extraction of
     embeddings without modifying the original model.
     """
+
     def __init__(self, model, embedding_layer_name):
         self.model = model
         layer_names = [layer.name for layer in model.layers]
-        assert embedding_layer_name in layer_names, (
-            f"Layer '{embedding_layer_name}' not found in model."
-        )
+        assert (
+            embedding_layer_name in layer_names
+        ), f"Layer '{embedding_layer_name}' not found in model."
         self.embedding_layer = embedding_layer_name
 
         embedding = self.model.get_layer(self.embedding_layer).output
-        self.embedding_model = Model(
-            inputs=self.model.input, 
-            outputs=embedding
-            )
+        self.embedding_model = Model(inputs=self.model.input, outputs=embedding)
 
     def embeddings(self, X_query, batch_size):
         """
         Extract embeddings from the specified layer for input data.
-        
+
         This method processes the input data in batches to efficiently
         generate embeddings while managing memory usage. Each batch is
         processed separately, and the results are concatenated.
-        
+
         Parameters
         ----------
         X_query : scipy.sparse.csr_matrix
             Input data matrix where each row represents a cell/sample.
         batch_size : int
             Number of samples to process in each batch.
-            
+
         Returns
         -------
         numpy.ndarray
             Array of embeddings for each input sample. The shape will be
             (n_samples, embedding_dimensions) where embedding_dimensions
             is determined by the size of the specified layer's output.
-            
+
         Notes
         -----
         The method uses a `MemoryContext` context manager to help manage
-        memory usage when processing large datasets. It explicitly 
+        memory usage when processing large datasets. It explicitly
         deletes intermediate results to minimize memory consumption.
         """
         print("Extracting azimuth embeddings:")
-        embedding_batches=[]
-        eval_steps = X_query.shape[0]//batch_size
+        embedding_batches = []
+        eval_steps = X_query.shape[0] // batch_size
 
-        for i in range(eval_steps):  
+        for i in range(eval_steps):
             with MemoryContext():
-                X_batch = X_query[i*batch_size:(i+1)*batch_size].toarray()
+                X_batch = X_query[i * batch_size : (i + 1) * batch_size].toarray()
                 embeddings_batch = self.embedding_model.predict(X_batch)
                 embedding_batches.append(embeddings_batch)
                 del X_batch
 
-        with MemoryContext(): 
-            X_final_batch = X_query[eval_steps*batch_size:].toarray()  
-            embeddings_final_batch = self.embedding_model.predict(
-                X_final_batch
-                )
+        with MemoryContext():
+            X_final_batch = X_query[eval_steps * batch_size :].toarray()
+            embeddings_final_batch = self.embedding_model.predict(X_final_batch)
             embedding_batches.append(embeddings_final_batch)
             del X_final_batch
 
-        with MemoryContext():    
+        with MemoryContext():
             embeddings = tf.concat(embedding_batches, axis=0)
             embedding_batches.clear()
 
         return embeddings.numpy()
 
 
-
-class Umaps():
+class Umaps:
     """
-    Creates UMAP (Uniform Manifold Approximation and Projection) 
+    Creates UMAP (Uniform Manifold Approximation and Projection)
     embeddings for dimensionality reduction.
-    
-    This class provides a standardized interface for creating UMAP 
-    embeddings from high-dimensional data. UMAP is a dimensionality 
-    reduction technique that can be used for visualization, 
+
+    This class provides a standardized interface for creating UMAP
+    embeddings from high-dimensional data. UMAP is a dimensionality
+    reduction technique that can be used for visualization,
     preprocessing, or exploratory data analysis.
-    
+
     Parameters
     ----------
     n_neighbors : int
-        The size of the local neighborhood used for manifold 
-        approximation. Larger values result in more global structure 
+        The size of the local neighborhood used for manifold
+        approximation. Larger values result in more global structure
         being preserved at the loss of detailed local structure.
     n_components : int
-        The dimension of the embedding space. Typically 2 for 
+        The dimension of the embedding space. Typically 2 for
         visualization purposes.
     metric : str or callable
         The metric to use for distance computation in the input space.
@@ -3122,28 +2967,29 @@ class Umaps():
     umap_seed : int
         Random seed for reproducibility.
     spread : float
-        The scale of the embedding. Larger values spread points further 
+        The scale of the embedding. Larger values spread points further
         apart.
     verbose : bool
         Whether to display progress information during fitting.
     init : str
-        How to initialize the embedding. Options include 'spectral', 
+        How to initialize the embedding. Options include 'spectral',
         'random', etc.
-        
+
     Attributes
     ----------
     umap_model : umap.UMAP
         The underlying UMAP model instance with the specified parameters.
-        
+
     Notes
     -----
-    The UMAP algorithm is a powerful dimensionality reduction technique 
-    that preserves both local and global structure in the data. It is 
-    particularly useful for visualizing high-dimensional data such as 
+    The UMAP algorithm is a powerful dimensionality reduction technique
+    that preserves both local and global structure in the data. It is
+    particularly useful for visualizing high-dimensional data such as
     single-cell genomics data.
     """
+
     def __init__(
-        self, 
+        self,
         n_neighbors,
         n_components,
         metric,
@@ -3152,9 +2998,8 @@ class Umaps():
         umap_seed,
         spread,
         verbose,
-        init
-        ):
-
+        init,
+    ):
         self._n_neighbors = n_neighbors
         self._n_components = n_components
         self._metric = metric
@@ -3163,65 +3008,65 @@ class Umaps():
         self._umap_seed = umap_seed
         self._spread = spread
         self._verbose = verbose
-        self._init = init 
+        self._init = init
 
         self.umap_model = umap.UMAP(
-                                    n_neighbors=n_neighbors,   
-                                    n_components=n_components,   
-                                    metric=metric,     
-                                    min_dist=min_dist,   
-                                    learning_rate=umap_lr,    
-                                    random_state=umap_seed,    
-                                    spread=spread,
-                                    verbose=verbose,
-                                    init=init
-                                    )
+            n_neighbors=n_neighbors,
+            n_components=n_components,
+            metric=metric,
+            min_dist=min_dist,
+            learning_rate=umap_lr,
+            random_state=umap_seed,
+            spread=spread,
+            verbose=verbose,
+            init=init,
+        )
 
     def create_umap(self, input_data):
         """
         Generate UMAP embeddings from input data.
-        
+
         This method fits the UMAP model to the input data and returns
         the lower-dimensional representation. It uses a memory management
         context to help handle large datasets efficiently.
-        
+
         Parameters
         ----------
         input_data : numpy.ndarray or scipy.sparse.csr_matrix
             The high-dimensional input data to be embedded.
-            Each row represents a sample and each column represents a 
+            Each row represents a sample and each column represents a
             feature.
-            
+
         Returns
         -------
         numpy.ndarray
             The lower-dimensional embedding of the input data.
             Shape will be (n_samples, n_components).
-            
+
         Notes
         -----
         This method can be memory-intensive for large datasets.
         The MemoryContext is used to help manage memory resources
         during the UMAP transformation process.
-        
+
         Examples
         --------
         >>> umap_obj = Umaps(
-        ...                 n_neighbors=15, 
-        ...                 n_components=2, 
+        ...                 n_neighbors=15,
+        ...                 n_components=2,
         ...                 metric='euclidean',
-        ...                 min_dist=0.1, 
-        ...                 umap_lr=1.0, 
+        ...                 min_dist=0.1,
+        ...                 umap_lr=1.0,
         ...                 umap_seed=42,
-        ...                 spread=1.0, 
-        ...                 verbose=False, 
+        ...                 spread=1.0,
+        ...                 verbose=False,
         ...                 init='spectral'
         ...                 )
         >>> embeddings = umap_obj.create_umap(high_dim_data)
-        >>> # embeddings can now be used for visualization or further 
+        >>> # embeddings can now be used for visualization or further
         >>> # analysis
         """
-        
+
         with MemoryContext():
             umap_embeddings = self.umap_model.fit_transform(input_data)
 
@@ -3230,16 +3075,16 @@ class Umaps():
 
 class EmbeddingsAndUmap(Embeddings, Umaps):
     """
-    Combined class for generating neural network embeddings and UMAP 
+    Combined class for generating neural network embeddings and UMAP
     dimensionality reduction.
-    
-    This class inherits from both Embeddings and Umaps to provide a 
-    streamlined workflow for extracting intermediate layer embeddings 
-    from a neural network and then applying UMAP dimensionality 
-    reduction to these embeddings. This is particularly useful for 
+
+    This class inherits from both Embeddings and Umaps to provide a
+    streamlined workflow for extracting intermediate layer embeddings
+    from a neural network and then applying UMAP dimensionality
+    reduction to these embeddings. This is particularly useful for
     visualization and exploration of high-dimensional
     neural network representations.
-    
+
     Parameters
     ----------
     model : tensorflow.keras.Model
@@ -3247,10 +3092,10 @@ class EmbeddingsAndUmap(Embeddings, Umaps):
     embedding_layer_name : str
         The name of the intermediate layer to extract embeddings from.
     n_neighbors : int
-        The size of the local neighborhood used for manifold 
+        The size of the local neighborhood used for manifold
         approximation in UMAP.
     n_components : int
-        The dimension of the UMAP embedding space (typically 2 for 
+        The dimension of the UMAP embedding space (typically 2 for
         visualization).
     metric : str or callable
         The metric to use for distance computation in the input space.
@@ -3266,7 +3111,7 @@ class EmbeddingsAndUmap(Embeddings, Umaps):
         Whether to display progress information during UMAP fitting.
     init : str
         How to initialize the UMAP embedding.
-        
+
     Attributes
     ----------
     model : tensorflow.keras.Model
@@ -3274,17 +3119,18 @@ class EmbeddingsAndUmap(Embeddings, Umaps):
     embedding_layer : str
         The name of the layer used for embedding extraction.
     embedding_model : tensorflow.keras.Model
-        A derived model that outputs the embeddings from the specified 
+        A derived model that outputs the embeddings from the specified
         layer.
     umap_model : umap.UMAP
         The UMAP model instance with the specified parameters.
-        
+
     Notes
     -----
-    This class combines the functionality of the Embeddings and Umaps 
-    classes to provide a convenient interface for the common task of 
+    This class combines the functionality of the Embeddings and Umaps
+    classes to provide a convenient interface for the common task of
     visualizing neural network embeddings using UMAP.
     """
+
     def __init__(
         self,
         model,
@@ -3297,9 +3143,8 @@ class EmbeddingsAndUmap(Embeddings, Umaps):
         umap_seed,
         spread,
         verbose,
-        init
-        ):
-
+        init,
+    ):
         Embeddings.__init__(self, model, embedding_layer_name)
         Umaps.__init__(
             self,
@@ -3311,157 +3156,79 @@ class EmbeddingsAndUmap(Embeddings, Umaps):
             umap_seed,
             spread,
             verbose,
-            init
+            init,
         )
-
-        
 
     def create_embeddings_and_umap(self, X_query, batch_size):
         """
-        Generate both neural network embeddings and their UMAP 
+        Generate both neural network embeddings and their UMAP
         representation.
-        
+
         This method performs a two-step process:
         1. Extract embeddings from the specified neural network layer
         2. Apply UMAP dimensionality reduction to these embeddings
-        
-        The method also calculates and reports the sparsity of the 
+
+        The method also calculates and reports the sparsity of the
         embeddings, which can be useful diagnostic information.
-        
+
         Parameters
         ----------
         X_query : scipy.sparse.csr_matrix
             Input data matrix where each row represents a cell/sample.
         batch_size : int
-            Number of samples to process in each batch when generating 
+            Number of samples to process in each batch when generating
             embeddings.
-            
+
         Returns
         -------
         tuple
             A tuple containing two elements:
-            - numpy.ndarray: The original embeddings from the neural 
+            - numpy.ndarray: The original embeddings from the neural
                                 network
-            - numpy.ndarray: The UMAP embeddings derived from the 
+            - numpy.ndarray: The UMAP embeddings derived from the
                                 original embeddings
-            
+
         Notes
         -----
-        The combination of neural network embeddings and UMAP is 
-        commonly used in single-cell analysis to visualize 
-        high-dimensional representations in a 2D space while preserving 
+        The combination of neural network embeddings and UMAP is
+        commonly used in single-cell analysis to visualize
+        high-dimensional representations in a 2D space while preserving
         both local and global structure.
-        
+
         Examples
         --------
         >>> embeddings_umap = EmbeddingsAndUmap(
-        ...     model=my_model, 
+        ...     model=my_model,
         ...     embedding_layer_name='dense_2',
-        ...     n_neighbors=15, 
-        ...     n_components=2, 
+        ...     n_neighbors=15,
+        ...     n_components=2,
         ...     metric='euclidean',
-        ...     min_dist=0.1, 
-        ...     umap_lr=1.0, 
+        ...     min_dist=0.1,
+        ...     umap_lr=1.0,
         ...     umap_seed=42,
-        ...     spread=1.0, 
-        ...     verbose=False, 
+        ...     spread=1.0,
+        ...     verbose=False,
         ...     init='spectral'
         ... )
         >>> (
-        ...     embeddings, 
+        ...     embeddings,
         ...     umap_coords
         ...     ) = embeddings_umap.create_embeddings_and_umap(
-        ...     X_query=input_data, 
+        ...     X_query=input_data,
         ...     batch_size=256
         ... )
         >>> # umap_coords can now be used for visualization
         """
-        
+
         em = self.embeddings(X_query, batch_size)
-        input_dim = em.shape[1] 
+        input_dim = em.shape[1]
 
         print("Running UMAP:")
-        print(
-            f"    UMAP input: {self.embedding_layer}, "
-            f"{input_dim} dimensions"
-            )
-        
-        sparsity = 1 - (np.count_nonzero(em)/ em.size)
+        print(f"    UMAP input: {self.embedding_layer}, " f"{input_dim} dimensions")
+
+        sparsity = 1 - (np.count_nonzero(em) / em.size)
         print(f"Sparsity on embeddings is {sparsity}.\n")
 
         umap_embeddings = self.create_umap(em)
 
         return em, umap_embeddings
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-            
-
-
-
-
-
-
-
-
-    
-
-
-
-
-    
-
-
-
-
-
-
-    
-
-      
-    
-    
-
-
-
-
-
-
-
-
-
-
-
-
-        
-     
-
-    
-    
-
-
-
-
-
-
-
-
-            
-
-
-        
-
-
-
-
