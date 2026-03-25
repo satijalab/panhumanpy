@@ -1064,6 +1064,57 @@ class AzimuthNN_base(AutoloadInferenceTools):
 
         return self.cells_meta
 
+    
+    @contextmanager
+    def _scoped_slice(self, start, end):
+        """
+        Context manager that temporarily scopes this object to a 
+        slice of cells for minibatched processing.
+ 
+        Saves and restores instance state so that existing methods 
+        (run_inference_model, calibrate_predictions, process_outputs,
+        refine_labels) operate on the slice as if it were the full 
+        dataset. On exit, original state is restored and intermediate
+        outputs from the slice are discarded.
+        
+        Parameters
+        ----------
+        start : int
+            Start index (inclusive) into the inference input matrix.
+        end : int
+            End index (exclusive) into the inference input matrix.
+            
+        Yields
+        ------
+        None
+ 
+        Notes
+        -----
+        This is a private method intended for use by subclasses that 
+        implement minibatched pipelines. It does not affect embeddings 
+        or umaps state.
+        """
+        orig_inference_input_matrix = self._inference_input_matrix
+        orig_num_cells = self.num_cells
+        orig_inference_outputs = self._inference_outputs_unprocessed
+        orig_processed_outputs = self.processed_outputs
+        orig_refined_labels = self._azimuth_refined_labels
+ 
+        self._inference_input_matrix = orig_inference_input_matrix[start:end]
+        self.num_cells = end - start
+        self._inference_outputs_unprocessed = None
+        self.processed_outputs = None
+        self._azimuth_refined_labels = {}
+ 
+        try:
+            yield
+        finally:
+            self._inference_input_matrix = orig_inference_input_matrix
+            self.num_cells = orig_num_cells
+            self._inference_outputs_unprocessed = orig_inference_outputs
+            self.processed_outputs = orig_processed_outputs
+            self._azimuth_refined_labels = orig_refined_labels
+
 
     def pack_adata(self, save_path = None):
         """
