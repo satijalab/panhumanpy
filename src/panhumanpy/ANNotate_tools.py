@@ -977,6 +977,8 @@ class Inference():
           X.shape[0] // eval_batch_size.
       _max_depth : int
           Maximum number of hierarchical levels to process.
+      _verbose: bool
+          Bool enabling suppression of messages displayed.
 
     Private Methods
       run_on_minibatch(minibatch)
@@ -997,7 +999,8 @@ class Inference():
             model, 
             label_encoders, 
             eval_batch_size, 
-            max_depth
+            max_depth,
+            verbose=True
             ):
         """
         Initialize the Inference object with input data, model, and 
@@ -1021,6 +1024,8 @@ class Inference():
         max_depth : int
             The maximum number of hierarchical levels to process in the
             classification taxonomy.
+        verbose: bool
+            Bool enabling suppression of messages displayed. 
         """
         self._X = X
         self._model = model
@@ -1157,12 +1162,13 @@ class Inference():
         class_preds_mb_cache = []
         max_probs_mb_cache = []
 
-        print(
-            f"Splitting query data into {self._eval_steps+1} "
-            "evaluation batches.\n"
-            )
-        
-        print("Running model:")
+        if self._verbose:
+
+            print(
+                f"Splitting query data into {self._eval_steps+1} "
+                "evaluation batches.\n"
+                )
+            print("Running model:")
 
         for i in range(self._eval_steps):
             start_idx = i*self._eval_batch_size
@@ -1316,6 +1322,8 @@ class CalibrationSingleClassifier():
     _eval_steps : int
         Number of complete evaluation batches, computed as 
         softmax.shape[0] // eval_batch_size.
+    _verbose: bool
+        Bool enabling suppression of messages displayed.
         
     Examples
     --------
@@ -1356,7 +1364,8 @@ class CalibrationSingleClassifier():
     def __init__(
         self,
         softmax,
-        eval_batch_size
+        eval_batch_size,
+        verbose=True
     ):
         """
         Initialize the CalibrationSingleClassifier.
@@ -1367,11 +1376,14 @@ class CalibrationSingleClassifier():
             Softmax probability outputs with shape (n_samples, n_classes).
         eval_batch_size : int
             Batch size for processing softmax outputs.
+        verbose: bool
+            Bool enabling suppression of messages displayed.
         """
         self._softmax = softmax
         self._calibrated_softmax = softmax
         self._eval_batch_size = eval_batch_size
         self._eval_steps = softmax.shape[0]//self._eval_batch_size
+        self._verbose = verbose
 
     def calibrate(self, name, *args, **kwargs):
         """
@@ -1495,10 +1507,11 @@ class CalibrationSingleClassifier():
         The method prints progress information including the number of 
         batches being processed.
         """
-        print(
-            f"Splitting softmax outputs into {self._eval_steps+1} "
-            "batches.\n"
-            )
+        if self._verbose:
+            print(
+                f"Splitting softmax outputs into {self._eval_steps+1} "
+                "batches.\n"
+                )
 
         calibrated_softmax_cache = []
 
