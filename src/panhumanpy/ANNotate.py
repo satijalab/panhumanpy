@@ -1455,8 +1455,12 @@ class AzimuthNN(AzimuthNN_base):
             f"Running annotation pipeline on {n_cells} cells in "
             f"{n_batches} batch(es) of up to "
             f"{self._eval_batch_size} cells.\n"
-            f"Label refinement: {refine_str}.\n"
         )
+        if refine_str != 'none':
+            print(
+                "Interpreting label predictions for consistent granularity "
+                f"at {refine_str} level(s).\n"
+            )
 
         # accumulators for results across minibatches
         all_processed_outputs = {}
