@@ -1452,8 +1452,8 @@ class AzimuthNN(AzimuthNN_base):
             refine_str = 'none'
 
         print(
-            f"Running annotation pipeline on {n_cells} cells in "
-            f"{n_batches} batch(es) of up to "
+            f"Splitting query data into {n_batches} "
+            f"evaluation batch(es) of up to \n"
             f"{self._eval_batch_size} cells.\n"
         )
         if refine_str != 'none':
@@ -1475,11 +1475,6 @@ class AzimuthNN(AzimuthNN_base):
             start = batch_idx * self._eval_batch_size
             end = min(
                 (batch_idx + 1) * self._eval_batch_size, n_cells
-            )
-
-            print(
-                f"Batch {batch_idx+1}/{n_batches}: "
-                f"cells {start}-{end-1}"
             )
 
             with MemoryContext():
