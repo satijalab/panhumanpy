@@ -30,8 +30,7 @@ Interactive usage with high-level interface:
     >>> from panhumanpy import AzimuthNN
     >>> adata = anndata.read_h5ad('my_data.h5ad')
     >>> # Run minimal annotation pipeline with calibration
-    >>> azimuth = AzimuthNN(adata) 
-    >>> azimuth.azimuth_refine()  # Refine annotations
+    >>> azimuth = AzimuthNN(adata)
     >>> embeddings = azimuth.azimuth_embed()  # Extract embeddings
     >>> umap = azimuth.azimuth_umap()  # Generate UMAP
     >>> adata_annotated = azimuth.pack_adata('output.h5ad')  # Save results
