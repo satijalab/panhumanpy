@@ -1568,8 +1568,7 @@ class AzimuthNN(AzimuthNN_base):
         if missing:
             print(
                 f"Refinement level(s) {missing} were not included "
-                f"at initialization. Softmax arrays have been "
-                f"released and are no longer available.\n"
+                f"at initialization. \n"
                 f"To include these levels, re-initialize AzimuthNN "
                 f"with refine={requested}."
             )
