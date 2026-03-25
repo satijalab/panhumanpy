@@ -1033,6 +1033,7 @@ class Inference():
         self._eval_batch_size = eval_batch_size
         self._eval_steps = X.shape[0]//self._eval_batch_size
         self._max_depth = max_depth
+        self._verbose = verbose
 
     def run_on_minibatch(self, minibatch):
         """
