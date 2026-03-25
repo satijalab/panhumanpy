@@ -395,7 +395,7 @@ class AzimuthNN_base(AutoloadInferenceTools):
         normalization_override : bool, default=False
             If True, bypasses normalization entirely regardless of
             whether the values are integers or not.
-        norm_check_batch_size : int, default=1000
+        norm_check_batch_size : int, default=100
             Batch size for checking normalization status.
             
         Raises
@@ -1217,7 +1217,7 @@ class AzimuthNN(AzimuthNN_base):
     normalization_override : bool, default=False
         If True, skips normalization check and forces processing to 
         continue.
-    norm_check_batch_size : int, default=1000
+    norm_check_batch_size : int, default=100
         Number of cells to sample for normalization check.
     output_mode : str, default='minimal'
         Controls the verbosity of output in the cell meta dataframe. 
@@ -1618,7 +1618,7 @@ def annotate_core(
     normalization_override : bool, default=False
         If True, skips normalization check and forces processing to 
         continue.
-    norm_check_batch_size : int, default=1000
+    norm_check_batch_size : int, default=100
         Number of cells to sample for normalization check.
     output_mode : str, default='minimal'
         Controls the verbosity of output in the cell meta dataframe.
