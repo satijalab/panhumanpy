@@ -1180,6 +1180,8 @@ class AzimuthNN_base(AutoloadInferenceTools):
 ########################################################################
 ######## Object for high level interactive usage #######################
 
+_VALID_REFINE_LEVELS = ['broad', 'medium', 'fine']
+
 class AzimuthNN(AzimuthNN_base):
     """
     AzimuthNN: A high-level interface for a cell annotation pipeline 
