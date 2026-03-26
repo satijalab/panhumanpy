@@ -938,3 +938,248 @@ def test_parametrized_tests_skip_when_no_alternates():
     assert len(alternate_versions) > 0, (
         "This assertion should not fail if we reach this point"
     )
+
+
+
+####### AzimuthNN refine parameter tests ###################################
+############################################################################
+ 
+ 
+def test_azimuthnn_refine_default():
+    """Test that AzimuthNN with default refine=True produces all three 
+    refinement levels in cells_meta."""
+    try:
+        from panhumanpy import AzimuthNN
+ 
+        test_file = os.path.join("queries", "test_obj.h5ad")
+        if not os.path.exists(test_file):
+            pytest.skip(f"Test file {test_file} not found")
+ 
+        azimuth = AzimuthNN(
+            query_arg=test_file,
+            eval_batch_size=32
+        )
+ 
+        for level in ['broad', 'medium', 'fine']:
+            assert f'azimuth_{level}' in azimuth.cells_meta.columns, (
+                f"test_azimuthnn_refine_default: 'azimuth_{level}' "
+                f"column not found in cells_meta with default refine=True"
+            )
+ 
+    except Exception as e:
+        assert False, (
+            f"test_azimuthnn_refine_default: {e}"
+        )
+ 
+ 
+def test_azimuthnn_refine_false():
+    """Test that AzimuthNN with refine=False produces no refinement 
+    columns."""
+    try:
+        from panhumanpy import AzimuthNN
+ 
+        test_file = os.path.join("queries", "test_obj.h5ad")
+        if not os.path.exists(test_file):
+            pytest.skip(f"Test file {test_file} not found")
+ 
+        azimuth = AzimuthNN(
+            query_arg=test_file,
+            eval_batch_size=32,
+            refine=False
+        )
+ 
+        for level in ['broad', 'medium', 'fine']:
+            assert f'azimuth_{level}' not in azimuth.cells_meta.columns, (
+                f"test_azimuthnn_refine_false: 'azimuth_{level}' "
+                f"should not be in cells_meta with refine=False"
+            )
+ 
+        # processed outputs should still exist
+        assert azimuth.processed_outputs is not None, (
+            "test_azimuthnn_refine_false: processed_outputs should "
+            "exist even without refinement"
+        )
+ 
+    except Exception as e:
+        assert False, (
+            f"test_azimuthnn_refine_false: {e}"
+        )
+ 
+ 
+def test_azimuthnn_refine_none():
+    """Test that AzimuthNN with refine=None behaves same as 
+    refine=False."""
+    try:
+        from panhumanpy import AzimuthNN
+ 
+        test_file = os.path.join("queries", "test_obj.h5ad")
+        if not os.path.exists(test_file):
+            pytest.skip(f"Test file {test_file} not found")
+ 
+        azimuth = AzimuthNN(
+            query_arg=test_file,
+            eval_batch_size=32,
+            refine=None
+        )
+ 
+        for level in ['broad', 'medium', 'fine']:
+            assert f'azimuth_{level}' not in azimuth.cells_meta.columns, (
+                f"test_azimuthnn_refine_none: 'azimuth_{level}' "
+                f"should not be in cells_meta with refine=None"
+            )
+ 
+    except Exception as e:
+        assert False, (
+            f"test_azimuthnn_refine_none: {e}"
+        )
+ 
+ 
+def test_azimuthnn_refine_broad_only():
+    """Test that AzimuthNN with refine=['broad'] produces only broad 
+    refinement."""
+    try:
+        from panhumanpy import AzimuthNN
+ 
+        test_file = os.path.join("queries", "test_obj.h5ad")
+        if not os.path.exists(test_file):
+            pytest.skip(f"Test file {test_file} not found")
+ 
+        azimuth = AzimuthNN(
+            query_arg=test_file,
+            eval_batch_size=32,
+            refine=['broad']
+        )
+ 
+        assert 'azimuth_broad' in azimuth.cells_meta.columns, (
+            "test_azimuthnn_refine_broad_only: 'azimuth_broad' "
+            "should be in cells_meta"
+        )
+        for level in ['medium', 'fine']:
+            assert f'azimuth_{level}' not in azimuth.cells_meta.columns, (
+                f"test_azimuthnn_refine_broad_only: 'azimuth_{level}' "
+                f"should not be in cells_meta with refine=['broad']"
+            )
+ 
+    except Exception as e:
+        assert False, (
+            f"test_azimuthnn_refine_broad_only: {e}"
+        )
+ 
+ 
+def test_azimuthnn_refine_fine_auto_prepends_broad():
+    """Test that refine=['fine'] automatically includes broad as a 
+    prerequisite."""
+    try:
+        from panhumanpy import AzimuthNN
+ 
+        test_file = os.path.join("queries", "test_obj.h5ad")
+        if not os.path.exists(test_file):
+            pytest.skip(f"Test file {test_file} not found")
+ 
+        azimuth = AzimuthNN(
+            query_arg=test_file,
+            eval_batch_size=32,
+            refine=['fine']
+        )
+ 
+        assert 'azimuth_broad' in azimuth.cells_meta.columns, (
+            "test_azimuthnn_refine_fine_auto_prepends_broad: "
+            "'azimuth_broad' should be auto-included when "
+            "refine=['fine']"
+        )
+        assert 'azimuth_fine' in azimuth.cells_meta.columns, (
+            "test_azimuthnn_refine_fine_auto_prepends_broad: "
+            "'azimuth_fine' should be in cells_meta"
+        )
+        assert 'azimuth_medium' not in azimuth.cells_meta.columns, (
+            "test_azimuthnn_refine_fine_auto_prepends_broad: "
+            "'azimuth_medium' should not be in cells_meta with "
+            "refine=['fine']"
+        )
+ 
+    except Exception as e:
+        assert False, (
+            f"test_azimuthnn_refine_fine_auto_prepends_broad: {e}"
+        )
+ 
+ 
+def test_azimuthnn_refine_empty_list():
+    """Test that refine=[] behaves same as refine=False."""
+    try:
+        from panhumanpy import AzimuthNN
+ 
+        test_file = os.path.join("queries", "test_obj.h5ad")
+        if not os.path.exists(test_file):
+            pytest.skip(f"Test file {test_file} not found")
+ 
+        azimuth = AzimuthNN(
+            query_arg=test_file,
+            eval_batch_size=32,
+            refine=[]
+        )
+ 
+        for level in ['broad', 'medium', 'fine']:
+            assert f'azimuth_{level}' not in azimuth.cells_meta.columns, (
+                f"test_azimuthnn_refine_empty_list: 'azimuth_{level}' "
+                f"should not be in cells_meta with refine=[]"
+            )
+ 
+    except Exception as e:
+        assert False, (
+            f"test_azimuthnn_refine_empty_list: {e}"
+        )
+ 
+ 
+def test_azimuthnn_refine_invalid_raises():
+    """Test that invalid refinement levels raise ValueError."""
+    from panhumanpy import AzimuthNN
+ 
+    test_file = os.path.join("queries", "test_obj.h5ad")
+    if not os.path.exists(test_file):
+        pytest.skip(f"Test file {test_file} not found")
+ 
+    with pytest.raises(ValueError):
+        AzimuthNN(
+            query_arg=test_file,
+            eval_batch_size=32,
+            refine=['coarse']
+        )
+ 
+ 
+def test_azimuthnn_refine_invalid_type_raises():
+    """Test that non-list/bool/None refine raises TypeError."""
+    from panhumanpy import AzimuthNN
+ 
+    test_file = os.path.join("queries", "test_obj.h5ad")
+    if not os.path.exists(test_file):
+        pytest.skip(f"Test file {test_file} not found")
+ 
+    with pytest.raises(TypeError):
+        AzimuthNN(
+            query_arg=test_file,
+            eval_batch_size=32,
+            refine='broad'
+        )
+ 
+ 
+def test_azimuthnn_refine_deprecation_warning():
+    """Test that calling azimuth_refine() emits a DeprecationWarning."""
+    try:
+        from panhumanpy import AzimuthNN
+ 
+        test_file = os.path.join("queries", "test_obj.h5ad")
+        if not os.path.exists(test_file):
+            pytest.skip(f"Test file {test_file} not found")
+ 
+        azimuth = AzimuthNN(
+            query_arg=test_file,
+            eval_batch_size=32
+        )
+ 
+        with pytest.warns(DeprecationWarning):
+            azimuth.azimuth_refine()
+ 
+    except Exception as e:
+        assert False, (
+            f"test_azimuthnn_refine_deprecation_warning: {e}"
+        )
