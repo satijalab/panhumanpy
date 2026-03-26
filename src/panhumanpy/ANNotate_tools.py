@@ -278,14 +278,22 @@ def reorder_subset_data_matrix(
         for name in feature_panel_template
         ]
 
-    import psutil, os
-    rss = psutil.Process(os.getpid()).memory_info().rss / (1024**2)
-    print(f"  before column reorder: {rss:.0f} MB")
+    import psutil, os, time
+    from datetime import datetime
+
+    p = psutil.Process(os.getpid())
+    t = datetime.now().strftime('%H:%M:%S.%f')[:-3]
+    rss = p.memory_info().rss / (1024**2)
+    print(f"  [{t}] before column reorder: {rss:.0f} MB")
+
+    _cr_start = time.time()
 
     reordered_data_matrix = data_matrix[:,reordered_query_indices]
 
-    rss = psutil.Process(os.getpid()).memory_info().rss / (1024**2)
-    print(f"  after column reorder: {rss:.0f} MB")
+    _cr_elapsed = time.time() - _cr_start
+    t = datetime.now().strftime('%H:%M:%S.%f')[:-3]
+    rss = p.memory_info().rss / (1024**2)
+    print(f"  [{t}] after column reorder: {rss:.0f} MB ({_cr_elapsed:.2f}s)")
 
     return reordered_data_matrix
 

@@ -1355,10 +1355,25 @@ class AzimuthNN(AzimuthNN_base):
                 feature_names_col = feature_names_col
                 )
 
+        import psutil, os, time
+        from datetime import datetime
+
+        p = psutil.Process(os.getpid())
+        t = datetime.now().strftime('%H:%M:%S.%f')[:-3]
+        rss = p.memory_info().rss / (1024**2)
+        print(f"  [{t}] before process_query: {rss:.0f} MB")
+
+        _pq_start = time.time()
+
         self.process_query(
             normalization_override = self._normalization_override,
             norm_check_batch_size = self._norm_check_batch_size
         )
+
+        _pq_elapsed = time.time() - _pq_start
+        t = datetime.now().strftime('%H:%M:%S.%f')[:-3]
+        rss = p.memory_info().rss / (1024**2)
+        print(f"  [{t}] after process_query: {rss:.0f} MB ({_pq_elapsed:.2f}s)")
 
         self._run_minibatched_pipeline()
 
