@@ -277,7 +277,15 @@ def reorder_subset_data_matrix(
         query_features_extended.index(name) 
         for name in feature_panel_template
         ]
+
+    import psutil, os
+    rss = psutil.Process(os.getpid()).memory_info().rss / (1024**2)
+    print(f"  before column reorder: {rss:.0f} MB")
+
     reordered_data_matrix = data_matrix[:,reordered_query_indices]
+
+    rss = psutil.Process(os.getpid()).memory_info().rss / (1024**2)
+    print(f"  after column reorder: {rss:.0f} MB")
 
     return reordered_data_matrix
 
