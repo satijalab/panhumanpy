@@ -1817,7 +1817,8 @@ def annotate_core(
     verbose,
     init,
     model_version=model_version_default   
-    # adding a default here, so the R script does not need mods to access the default.
+    # adding a default here, so the R script does not need mods 
+    # to access the default.
     ):
     """
     Core function for cell type annotation using the Azimuth neural 
@@ -1830,6 +1831,10 @@ def annotate_core(
       call: data preprocessing, model inference, confidence calibration,
       label generation, optional label refinement, and optional 
       embedding/UMAP generation.
+
+    As of v0.3.0, this function uses the AzimuthNN class internally,
+    which performs inference, calibration, and refinement in minibatches
+    for improved memory efficiency.
     
     Parameters
     ----------
@@ -1883,7 +1888,7 @@ def annotate_core(
     -------
     dict
         A dictionary containing:
-        - 'azimuth_object': The instantiated AzimuthNN_base object
+        - 'azimuth_object': The instantiated AzimuthNN object
         - 'embeddings_dict': Dictionary of computed embeddings
         - 'umap_dict': Dictionary of computed UMAP projections
         - 'cells_meta': Updated cell metadata with annotations
@@ -1943,10 +1948,10 @@ def annotate_core(
             "'minimal' or 'detailed'"
         )
 
-    if not isinstance(extract_embeddings,bool):
+    if not isinstance(extract_embeddings, bool):
         raise TypeError("extract_embeddings argument should be boolean")
 
-    if not isinstance(umap_embeddings,bool):
+    if not isinstance(umap_embeddings, bool):
         raise TypeError("umap_embeddings argument should be boolean")
 
     if not isinstance(refine_labels, bool):
@@ -1959,89 +1964,54 @@ def annotate_core(
                 "Set extract_embeddings to True."
             )
 
-    azimuth = AzimuthNN_base(
-        annotation_pipeline = annotation_pipeline,
-        model_version = model_version,
-        eval_batch_size = eval_batch_size
+    # load model meta to print model name before pipeline runs
+    _version_module = importlib.import_module(
+        f"panhumanpy._tools.{model_version}"
     )
-
-    azimuth.query_stripped(
-        X_query,
-        query_features,
-        cells_meta
-    )
+    _model_meta = _version_module.model_meta
 
     print("Reference model and parameters:")
-    print(f"    Model name: {azimuth.model_meta['inference_model_name']}")
+    print(f"    Model version: {model_version}")
+    print(f"    Model name: {_model_meta['inference_model_name']}")
     print(f"    Evaluation batch size: {eval_batch_size}")
     print(f"    Extract embeddings: {extract_embeddings}")
     print(f"    Run umap: {umap_embeddings}")
     print(f"    Refine labels in postprocessing: {refine_labels}")
 
+    # construct a minimal AnnData from pre-extracted components.
+    # this wraps references, no data is copied.
+    query_adata = anndata.AnnData(
+        X = X_query,
+        obs = cells_meta,
+        var = pd.DataFrame(index=query_features)
+    )
 
-
-    azimuth.process_query(
-            normalization_override = normalization_override,
-            norm_check_batch_size = norm_check_batch_size
-        )
-
-    _ = azimuth.run_inference_model()
-    _ = azimuth.calibrate_predictions()
-    _ = azimuth.process_outputs(mode=output_mode)
-
-    if refine_labels:
-        _ = azimuth.refine_labels(refine_level='broad')
-        _ = azimuth.refine_labels(refine_level='medium')
-        _ = azimuth.refine_labels(refine_level='fine')
-
-    _ = azimuth.update_cells_meta()
+    azimuth = AzimuthNN(
+        query_adata,
+        annotation_pipeline = annotation_pipeline,
+        model_version = model_version,
+        eval_batch_size = eval_batch_size,
+        normalization_override = normalization_override,
+        norm_check_batch_size = norm_check_batch_size,
+        output_mode = output_mode,
+        refine = refine_labels
+    )
 
     if extract_embeddings:
-        azimuth_embedding_layer_name = azimuth.model_meta[
-                    'inference_model_embedding_layer'
-            ]
         if umap_embeddings:
-            (
-                azimuth_embeddings, 
-                azimuth_umap
-                ) = azimuth.inference_embeddings_and_umap(
-                    embedding_layer_name = azimuth_embedding_layer_name,
-                    n_neighbors=n_neighbors,
-                    n_components=n_components,
-                    metric=metric,
-                    min_dist=min_dist,
-                    umap_lr=umap_lr,
-                    umap_seed=umap_seed,
-                    spread=spread,
-                    verbose=verbose,
-                    init=init
-                )
-
-            embed_key_og = (
-                f'{azimuth.inference_model_name}_'
-                f'{azimuth_embedding_layer_name}_embed'
+            azimuth.azimuth_embed_and_umap(
+                n_neighbors=n_neighbors,
+                n_components=n_components,
+                metric=metric,
+                min_dist=min_dist,
+                umap_lr=umap_lr,
+                umap_seed=umap_seed,
+                spread=spread,
+                verbose=verbose,
+                init=init
             )
-            umap_key_og = (
-                f'{azimuth.inference_model_name}_'
-                f'{azimuth_embedding_layer_name}_umap'
-            )
-
-            azimuth.embeddings['azimuth_embed'] = azimuth_embeddings
-            azimuth.umaps['azimuth_umap'] = azimuth_umap
-
-            del azimuth.embeddings[embed_key_og]
-            del azimuth.umaps[umap_key_og]
-
         else:
-            azimuth_embeddings = azimuth.inference_model_embeddings(
-                embedding_layer_name = azimuth_embedding_layer_name
-            )
-
-            azimuth.embeddings['azimuth_embed'] = azimuth_embeddings
-            del azimuth.embeddings[
-                f'{azimuth.inference_model_name}_'
-                f'{azimuth_embedding_layer_name}_embed'
-                ]
+            azimuth.azimuth_embed()
 
     core_outputs = {
         'azimuth_object' : azimuth,
