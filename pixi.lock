@@ -4361,8 +4361,8 @@ packages:
   timestamp: 1631603397334
 - pypi: .
   name: panhumanpy
-  version: 0.1.0
-  sha256: b364ea36c0e3703cf8a53dd107422d73b2c9e09718b87724ba7897fc7c67257c
+  version: 0.2.3
+  sha256: 15f5ac997c596b7757a2042252597c2143ced3d3ace28a6dc8e10ba62ed1bd6b
   requires_dist:
   - anndata
   - jupyter>=1.0.0
