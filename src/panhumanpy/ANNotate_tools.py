@@ -21,6 +21,7 @@ from datetime import datetime
 import sys
 import importlib
 from importlib.resources import files
+from contextlib import contextmanager
 from panhumanpy.loss_fn import *
 
 import warnings
@@ -257,26 +258,66 @@ def reorder_subset_data_matrix(
         feature_panel_template but not in query_features.
     - Columns are reordered to match the exact order in 
         feature_panel_template.
+    - As of v0.3.0, the function drops unneeded columns first to 
+        reduce the matrix to only common features before any 
+        further operations. This avoids creating a large 
+        intermediate matrix of shape (n_cells, n_query_features), 
+        reducing peak memory from O(n_cells × n_query_features) to 
+        O(n_cells × n_template_features).
     """
-    
+
     if not common_features:
         common_features = set(
             query_features
             ).intersection(set(feature_panel_template))
-        
-    extra_features = set(feature_panel_template)-common_features
-    
-        
-    zero_columns = csr_matrix((data_matrix.shape[0], len(extra_features)))
-    data_matrix = hstack([data_matrix, zero_columns])
-    query_features_extended = query_features.copy()
-    query_features_extended.extend(extra_features)
-    
-    reordered_query_indices = [
-        query_features_extended.index(name) 
+
+    extra_features = set(feature_panel_template) - common_features
+
+    # O(1) lookup for query feature indices
+    feature_to_idx = {
+        name: idx for idx, name in enumerate(query_features)
+    }
+
+    # step 1: drop columns not in the template by selecting
+    # only common features from the original matrix.
+    # this reduces the matrix from (n_cells × n_query_features)
+    # to (n_cells × n_common_features).
+    common_indices = [
+        feature_to_idx[name] for name in common_features
+    ]
+    common_names = [
+        query_features[idx] for idx in common_indices
+    ]
+    data_matrix_subset = data_matrix[:, common_indices]
+
+    # release reference to the original full-width matrix
+    del data_matrix
+
+    # step 2: add zero columns for features in the template
+    # that are missing from the query. the matrix is now small 
+    # so this is cheap.
+    if len(extra_features) > 0:
+        zero_columns = csr_matrix(
+            (data_matrix_subset.shape[0], len(extra_features))
+        )
+        data_matrix_subset = hstack(
+            [data_matrix_subset, zero_columns], format='csr'
+        )
+        common_names.extend(extra_features)
+
+    # step 3: reorder columns to match the template order.
+    # the matrix is now (n_cells × n_template_features) so
+    # this operation is on the small output-sized matrix.
+    subset_feature_to_idx = {
+        name: idx for idx, name in enumerate(common_names)
+    }
+    reordered_indices = [
+        subset_feature_to_idx[name] 
         for name in feature_panel_template
-        ]
-    reordered_data_matrix = data_matrix[:,reordered_query_indices]
+    ]
+    reordered_data_matrix = data_matrix_subset[:, reordered_indices]
+
+    del data_matrix_subset
 
     return reordered_data_matrix
 
@@ -976,6 +1017,8 @@ class Inference():
           X.shape[0] // eval_batch_size.
       _max_depth : int
           Maximum number of hierarchical levels to process.
+      _verbose: bool
+          Bool enabling suppression of messages displayed.
 
     Private Methods
       run_on_minibatch(minibatch)
@@ -996,7 +1039,8 @@ class Inference():
             model, 
             label_encoders, 
             eval_batch_size, 
-            max_depth
+            max_depth,
+            verbose=True
             ):
         """
         Initialize the Inference object with input data, model, and 
@@ -1020,6 +1064,8 @@ class Inference():
         max_depth : int
             The maximum number of hierarchical levels to process in the
             classification taxonomy.
+        verbose: bool
+            Bool enabling suppression of messages displayed. 
         """
         self._X = X
         self._model = model
@@ -1027,6 +1073,7 @@ class Inference():
         self._eval_batch_size = eval_batch_size
         self._eval_steps = X.shape[0]//self._eval_batch_size
         self._max_depth = max_depth
+        self._verbose = verbose
 
     def run_on_minibatch(self, minibatch):
         """
@@ -1156,12 +1203,13 @@ class Inference():
         class_preds_mb_cache = []
         max_probs_mb_cache = []
 
-        print(
-            f"Splitting query data into {self._eval_steps+1} "
-            "evaluation batches.\n"
-            )
-        
-        print("Running model:")
+        if self._verbose:
+
+            print(
+                f"Splitting query data into {self._eval_steps+1} "
+                "evaluation batches.\n"
+                )
+            print("Running model:")
 
         for i in range(self._eval_steps):
             start_idx = i*self._eval_batch_size
@@ -1315,6 +1363,8 @@ class CalibrationSingleClassifier():
     _eval_steps : int
         Number of complete evaluation batches, computed as 
         softmax.shape[0] // eval_batch_size.
+    _verbose: bool
+        Bool enabling suppression of messages displayed.
         
     Examples
     --------
@@ -1355,7 +1405,8 @@ class CalibrationSingleClassifier():
     def __init__(
         self,
         softmax,
-        eval_batch_size
+        eval_batch_size,
+        verbose=True
     ):
         """
         Initialize the CalibrationSingleClassifier.
@@ -1366,11 +1417,14 @@ class CalibrationSingleClassifier():
             Softmax probability outputs with shape (n_samples, n_classes).
         eval_batch_size : int
             Batch size for processing softmax outputs.
+        verbose: bool
+            Bool enabling suppression of messages displayed.
         """
         self._softmax = softmax
         self._calibrated_softmax = softmax
         self._eval_batch_size = eval_batch_size
         self._eval_steps = softmax.shape[0]//self._eval_batch_size
+        self._verbose = verbose
 
     def calibrate(self, name, *args, **kwargs):
         """
@@ -1494,10 +1548,11 @@ class CalibrationSingleClassifier():
         The method prints progress information including the number of 
         batches being processed.
         """
-        print(
-            f"Splitting softmax outputs into {self._eval_steps+1} "
-            "batches.\n"
-            )
+        if self._verbose:
+            print(
+                f"Splitting softmax outputs into {self._eval_steps+1} "
+                "batches.\n"
+                )
 
         calibrated_softmax_cache = []
 

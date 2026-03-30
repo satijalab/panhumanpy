@@ -30,8 +30,7 @@ Interactive usage with high-level interface:
     >>> from panhumanpy import AzimuthNN
     >>> adata = anndata.read_h5ad('my_data.h5ad')
     >>> # Run minimal annotation pipeline with calibration
-    >>> azimuth = AzimuthNN(adata) 
-    >>> azimuth.azimuth_refine()  # Refine annotations
+    >>> azimuth = AzimuthNN(adata)
     >>> embeddings = azimuth.azimuth_embed()  # Extract embeddings
     >>> umap = azimuth.azimuth_umap()  # Generate UMAP
     >>> adata_annotated = azimuth.pack_adata('output.h5ad')  # Save results
@@ -188,7 +187,7 @@ class AzimuthNN_base(AutoloadInferenceTools):
         self, 
         annotation_pipeline='supervised',
         model_version=model_version_default,
-        eval_batch_size=8192
+        eval_batch_size=8192,
         ):
 
         if not isinstance(annotation_pipeline, str):
@@ -205,6 +204,7 @@ class AzimuthNN_base(AutoloadInferenceTools):
         self._annotation_pipeline = annotation_pipeline
         self._model_version = model_version
         self._eval_batch_size = eval_batch_size
+        self._verbose = True
 
        
         super().__init__(annotation_pipeline, model_version)
@@ -395,7 +395,7 @@ class AzimuthNN_base(AutoloadInferenceTools):
         normalization_override : bool, default=False
             If True, bypasses normalization entirely regardless of
             whether the values are integers or not.
-        norm_check_batch_size : int, default=1000
+        norm_check_batch_size : int, default=100
             Batch size for checking normalization status.
             
         Raises
@@ -472,7 +472,8 @@ class AzimuthNN_base(AutoloadInferenceTools):
             self.inference_model,
             self.inference_encoders,
             self._eval_batch_size,
-            self.max_depth
+            self.max_depth,
+            verbose = self._verbose
         )
 
         self._inference_outputs_unprocessed = inference_class.run_inference()
@@ -562,7 +563,8 @@ class AzimuthNN_base(AutoloadInferenceTools):
             
                     calibration_obj = CalibrationSingleClassifier(
                         softmax = sm_array,
-                        eval_batch_size = self._eval_batch_size
+                        eval_batch_size = self._eval_batch_size,
+                        verbose = self._verbose
                     )
 
                     calibrated_sm = calibration_obj.calibrate(
@@ -704,9 +706,10 @@ class AzimuthNN_base(AutoloadInferenceTools):
             "Labels can be refined only after inference model has been run."
         )
 
-        print(
-            "Interpreting label predictions for consistent granularity "
-            f"at {refine_level} level.\n")
+        if self._verbose:
+            print(
+                "Interpreting label predictions for consistent granularity "
+                f"at {refine_level} level.\n")
 
         
         labels_pred = self._inference_outputs_unprocessed[
@@ -1064,6 +1067,57 @@ class AzimuthNN_base(AutoloadInferenceTools):
 
         return self.cells_meta
 
+    
+    @contextmanager
+    def _scoped_slice(self, start, end):
+        """
+        Context manager that temporarily scopes this object to a 
+        slice of cells for minibatched processing.
+ 
+        Saves and restores instance state so that existing methods 
+        (run_inference_model, calibrate_predictions, process_outputs,
+        refine_labels) operate on the slice as if it were the full 
+        dataset. On exit, original state is restored and intermediate
+        outputs from the slice are discarded.
+        
+        Parameters
+        ----------
+        start : int
+            Start index (inclusive) into the inference input matrix.
+        end : int
+            End index (exclusive) into the inference input matrix.
+            
+        Yields
+        ------
+        None
+ 
+        Notes
+        -----
+        This is a private method intended for use by subclasses that 
+        implement minibatched pipelines. It does not affect embeddings 
+        or umaps state.
+        """
+        orig_inference_input_matrix = self._inference_input_matrix
+        orig_num_cells = self.num_cells
+        orig_inference_outputs = self._inference_outputs_unprocessed
+        orig_processed_outputs = self.processed_outputs
+        orig_refined_labels = self._azimuth_refined_labels
+ 
+        self._inference_input_matrix = orig_inference_input_matrix[start:end]
+        self.num_cells = end - start
+        self._inference_outputs_unprocessed = None
+        self.processed_outputs = None
+        self._azimuth_refined_labels = {}
+ 
+        try:
+            yield
+        finally:
+            self._inference_input_matrix = orig_inference_input_matrix
+            self.num_cells = orig_num_cells
+            self._inference_outputs_unprocessed = orig_inference_outputs
+            self.processed_outputs = orig_processed_outputs
+            self._azimuth_refined_labels = orig_refined_labels
+
 
     def pack_adata(self, save_path = None):
         """
@@ -1129,6 +1183,8 @@ class AzimuthNN_base(AutoloadInferenceTools):
 ########################################################################
 ######## Object for high level interactive usage #######################
 
+_VALID_REFINE_LEVELS = ['broad', 'medium', 'fine']
+
 class AzimuthNN(AzimuthNN_base):
     """
     AzimuthNN: A high-level interface for a cell annotation pipeline 
@@ -1142,6 +1198,11 @@ class AzimuthNN(AzimuthNN_base):
     The pipeline automatically applies confidence calibration to improve 
     the reliability of prediction confidence scores using trained 
     calibration models.
+
+    As of v0.3.0, inference, calibration, output processing, and label 
+    refinement are performed in minibatches to reduce peak memory usage.
+    Softmax arrays and intermediate inference outputs are released after
+    each minibatch is processed.
     
     For more fine-grained control over the annotation process, users 
     should directly use the AzimuthNN_base class.
@@ -1160,7 +1221,8 @@ class AzimuthNN(AzimuthNN_base):
     model_version: str, default set to match package major version.
         Model version to use.
     eval_batch_size : int, default=8192
-        Batch size to use during model inference.
+        Batch size to use during model inference and minibatched 
+        annotation pipeline.
     normalization_override : bool, default=False
         If True, skips normalization check and forces processing to 
         continue.
@@ -1169,6 +1231,15 @@ class AzimuthNN(AzimuthNN_base):
     output_mode : str, default='minimal'
         Controls the verbosity of output in the cell meta dataframe. 
         Options are 'minimal' or 'detailed'.
+    refine : list, bool, or None, default=True
+        Which refinement levels to apply during initialization. 
+        Accepts a list containing one or more of 'broad', 'medium', 
+        'fine'. If 'medium' or 'fine' is included without 'broad', 
+        'broad' is added automatically as it is a prerequisite.
+        Also accepts True (equivalent to ['broad', 'medium', 'fine']),
+        False or None (no refinement), or an empty list (no refinement).
+        As of v0.3.0, refinement is performed by default within the 
+        minibatched pipeline.
         
     Attributes
     ----------
@@ -1186,17 +1257,23 @@ class AzimuthNN(AzimuthNN_base):
         if normalization_override is not a bool,
         or if norm_check_batch_size is not an integer.
     ValueError
-        If output_mode is not 'minimal' or 'detailed'.
+        If output_mode is not 'minimal' or 'detailed', or if refine 
+        contains invalid refinement levels.
     
     Examples
     --------
     >>> import anndata
     >>> adata = anndata.read_h5ad('my_data.h5ad')
     >>> azimuth = AzimuthNN(adata)
-    >>> azimuth.azimuth_refine()
     >>> embeddings = azimuth.azimuth_embed()
     >>> umap = azimuth.azimuth_umap()
     >>> cell_metadata = azimuth.cells_meta
+
+    Refine only at broad and fine levels:
+    >>> azimuth = AzimuthNN(adata, refine=['broad', 'fine'])
+
+    Skip refinement entirely:
+    >>> azimuth = AzimuthNN(adata, refine=False)
     """
 
     def __init__(
@@ -1208,17 +1285,23 @@ class AzimuthNN(AzimuthNN_base):
         eval_batch_size=8192,
         normalization_override=False,
         norm_check_batch_size=100,
-        output_mode='minimal'
+        output_mode='minimal',
+        refine=True
         ):
 
         """
         Initialize AzimuthNN with automatic annotation pipeline execution.
 
-        This constructor automatically runs the complete annotation workflow:
+        This constructor automatically runs the complete annotation 
+        workflow in minibatches:
         1. Data loading and preprocessing
-        2. Model inference 
-        3. Confidence calibration using trained calibration models
-        4. Output processing and metadata updating
+        2. For each minibatch:
+            a. Model inference 
+            b. Confidence calibration using trained calibration models
+            c. Output processing
+            d. Label refinement (per refine parameter)
+            e. Release of softmax arrays and intermediate outputs
+        3. Accumulate results and update cell metadata
         """
 
         if (
@@ -1232,7 +1315,8 @@ class AzimuthNN(AzimuthNN_base):
 
         if feature_names_col is None:
             warnings.warn(
-                "Ensure that the features metadata is indexed with gene names.",
+                "Ensure that the features metadata is indexed "
+                "with gene names.",
                 UserWarning
                 )
 
@@ -1246,6 +1330,8 @@ class AzimuthNN(AzimuthNN_base):
             raise ValueError(
                 "output_mode must be either 'minimal' or 'detailed'"
             )
+
+        self._refine_levels = self._parse_refine_arg(refine)
 
         self._query_arg = query_arg
         self._normalization_override = normalization_override
@@ -1269,46 +1355,238 @@ class AzimuthNN(AzimuthNN_base):
                 feature_names_col = feature_names_col
                 )
 
+        
+
         self.process_query(
             normalization_override = self._normalization_override,
             norm_check_batch_size = self._norm_check_batch_size
         )
 
-        _ = self.run_inference_model()
-        _ = self.calibrate_predictions()
-        self.annotations = self.process_outputs(mode=self._output_mode)
+        
+
+        self._run_minibatched_pipeline()
+
+
+    @staticmethod
+    def _parse_refine_arg(refine):
+        """
+        Parse and validate the refine argument into an ordered list of 
+        refinement levels.
+
+        Parameters
+        ----------
+        refine : list, bool, or None
+            Raw refine argument from __init__.
+
+        Returns
+        -------
+        list
+            Ordered list of refinement levels to apply. May be empty 
+            if no refinement is requested.
+
+        Raises
+        ------
+        TypeError
+            If refine is not a list, bool, or None.
+        ValueError
+            If refine contains invalid refinement level strings.
+        """
+
+        if refine is None or refine is False:
+            return []
+
+        if refine is True:
+            return ['broad', 'medium', 'fine']
+
+        if not isinstance(refine, list):
+            raise TypeError(
+                "refine must be a list of refinement levels, "
+                "True, False, or None."
+            )
+
+        if len(refine) == 0:
+            return []
+
+        invalid = [
+            level for level in refine 
+            if level not in _VALID_REFINE_LEVELS
+        ]
+        if invalid:
+            raise ValueError(
+                f"Invalid refinement level(s): {invalid}. "
+                f"Valid options are {_VALID_REFINE_LEVELS}."
+            )
+
+        # broad is a trivial prerequisite for medium and fine
+        if ('medium' in refine or 'fine' in refine) and (
+            'broad' not in refine
+        ):
+            refine = ['broad'] + refine
+
+        # enforce canonical ordering
+        ordered = [
+            level for level in _VALID_REFINE_LEVELS 
+            if level in refine
+        ]
+
+        return ordered
+
+
+    def _run_minibatched_pipeline(self):
+        """
+        Run inference, calibration, output processing, and optional 
+        refinement in minibatches. After each minibatch, intermediate 
+        softmax arrays and unprocessed outputs are released via the 
+        _scoped_slice context manager on AzimuthNN_base.
+
+        Internal print messages from run_inference_model, 
+        calibrate_predictions, and refine_labels are suppressed 
+        during minibatched processing.
+        """
+
+        n_cells = self._inference_input_matrix.shape[0]
+        n_batches = (
+            (n_cells + self._eval_batch_size - 1) 
+            // self._eval_batch_size
+        )
+
+        if self._refine_levels:
+            refine_str = ', '.join(self._refine_levels)
+        else:
+            refine_str = 'none'
+
+        print(
+            f"Splitting query data into {n_batches} "
+            f"evaluation batch(es) of up to \n"
+            f"{self._eval_batch_size} cells.\n"
+        )
+        if refine_str != 'none':
+            print(
+                "Interpreting label predictions for consistent granularity "
+                f"at {refine_str} level(s).\n"
+            )
+
+        # accumulators for results across minibatches
+        all_processed_outputs = {}
+        all_refined_labels = {}
+
+        # suppress internal prints during minibatched processing
+        self._verbose = False
+
+        print("Running model:")
+
+        for batch_idx in range(n_batches):
+            start = batch_idx * self._eval_batch_size
+            end = min(
+                (batch_idx + 1) * self._eval_batch_size, n_cells
+            )
+
+            with MemoryContext():
+                with self._scoped_slice(start, end):
+
+                    _ = self.run_inference_model()
+                    _ = self.calibrate_predictions()
+                    _ = self.process_outputs(mode=self._output_mode)
+
+                    for level in self._refine_levels:
+                        _ = self.refine_labels(refine_level=level)
+
+                    # collect before scope restores state
+                    for key, values in (
+                        self.processed_outputs.items()
+                    ):
+                        if key not in all_processed_outputs:
+                            all_processed_outputs[key] = (
+                                [None] * n_cells
+                            )
+                        all_processed_outputs[key][start:end] = (
+                            list(values)
+                        )
+
+                    for key, values in (
+                        self._azimuth_refined_labels.items()
+                    ):
+                        if key not in all_refined_labels:
+                            all_refined_labels[key] = (
+                                [None] * n_cells
+                            )
+                        all_refined_labels[key][start:end] = (
+                            list(values)
+                        )
+
+                    # release minibatch softmax arrays and 
+                    # intermediate outputs before scope restores
+                    self._inference_outputs_unprocessed = None
+
+        self._verbose = True
+
+        # set final accumulated results
+        self.processed_outputs = all_processed_outputs
+        self._azimuth_refined_labels = all_refined_labels
+        self.annotations = self.processed_outputs
+
         _ = self.update_cells_meta()
 
-    def azimuth_refine(self):
+
+    def azimuth_refine(self, refine=None):
         """
         Refine cell type annotations at multiple granularity levels.
         
-        This method applies a hierarchical refinement of cell type labels,
-        progressing from broad to fine classifications. The results are
-        stored in the annotations attribute and the cell metadata is 
-        updated.
-        
-        Returns
-        -------
-        None
-            Updates the annotations attribute in-place and updates cell 
-            metadata.
+        .. deprecated:: 0.3.0
+            Label refinement is now performed during initialization as 
+            part of the minibatched pipeline. This method is retained 
+            for backwards compatibility and will be removed in a future 
+            release. Use the ``refine`` parameter in :class:`AzimuthNN` 
+            initialization instead.
+
+        If a refinement level was not included at initialization, 
+        re-initialization is required since softmax arrays are no 
+        longer held in memory after the pipeline completes.
+
+        Parameters
+        ----------
+        refine : list, optional
+            List of refinement levels to check. If None, checks all 
+            three levels ['broad', 'medium', 'fine'].
         """
 
-        _ = self.refine_labels(refine_level='broad')
-        _ = self.refine_labels(refine_level='medium')
-        _ = self.refine_labels(refine_level='fine')
+        warnings.warn(
+            "azimuth_refine() is deprecated as of v0.3.0 and will be "
+            "removed in a future release. Use the 'refine' parameter "
+            "in AzimuthNN initialization instead.",
+            DeprecationWarning,
+            stacklevel=2
+        )
 
-        _ = self.update_cells_meta()
+        if refine is None:
+            requested = _VALID_REFINE_LEVELS
+        else:
+            requested = refine
+
+        missing = [
+            level for level in requested 
+            if level not in self._refine_levels
+        ]
+
+        if missing:
+            print(
+                f"Refinement level(s) {missing} were not included "
+                f"at initialization. \n"
+                f"To include these levels, re-initialize AzimuthNN "
+                f"with refine={requested}."
+            )
+            return
+
+        pass
 
     def azimuth_embed(self):
         """
         Extract embeddings from the Azimuth model's embedding layer.
         
-        This method extracts cell embeddings from a pre-defined layer in
-          the inference model and stores them in the embeddings 
-          dictionary under the key 'azimuth_embed', replacing the 
-          original model-specific key.
+        This method extracts cell embeddings from a pre-defined layer 
+        in the inference model and stores them in the embeddings 
+        dictionary under the key 'azimuth_embed', replacing the 
+        original model-specific key.
 
         To extract embeddings from a different layer in the model, use
         AzimuthNN_base class for more fine grained control. 
@@ -1335,7 +1613,8 @@ class AzimuthNN(AzimuthNN_base):
 
         self.embeddings['azimuth_embed'] = azimuth_embeddings
         del self.embeddings[
-            f'{self.inference_model_name}_{azimuth_embedding_layer_name}_embed'
+            f'{self.inference_model_name}_'
+            f'{azimuth_embedding_layer_name}_embed'
             ]
 
         return azimuth_embeddings
@@ -1406,7 +1685,9 @@ class AzimuthNN(AzimuthNN_base):
             init=init
         )
 
-        umap_gen = umap_class.create_umap(self.embeddings['azimuth_embed'])
+        umap_gen = umap_class.create_umap(
+            self.embeddings['azimuth_embed']
+        )
         self.umaps['azimuth_umap'] = umap_gen
 
         return umap_gen
@@ -1469,7 +1750,10 @@ class AzimuthNN(AzimuthNN_base):
                 'inference_model_embedding_layer'
         ]
 
-        azimuth_embeddings, azimuth_umap = self.inference_embeddings_and_umap(
+        (
+            azimuth_embeddings, 
+            azimuth_umap
+        ) = self.inference_embeddings_and_umap(
             embedding_layer_name = azimuth_embedding_layer_name,
             n_neighbors=n_neighbors,
             n_components=n_components,
@@ -1483,10 +1767,12 @@ class AzimuthNN(AzimuthNN_base):
         )
 
         embed_key_og = (
-            f'{self.inference_model_name}_{azimuth_embedding_layer_name}_embed'
+            f'{self.inference_model_name}_'
+            f'{azimuth_embedding_layer_name}_embed'
         )
         umap_key_og = (
-            f'{self.inference_model_name}_{azimuth_embedding_layer_name}_umap'
+            f'{self.inference_model_name}_'
+            f'{azimuth_embedding_layer_name}_umap'
         )
 
         self.embeddings['azimuth_embed'] = azimuth_embeddings
@@ -1535,7 +1821,8 @@ def annotate_core(
     verbose,
     init,
     model_version=model_version_default   
-    # adding a default here, so the R script does not need mods to access the default.
+    # adding a default here, so the R script does not need mods 
+    # to access the default.
     ):
     """
     Core function for cell type annotation using the Azimuth neural 
@@ -1548,6 +1835,10 @@ def annotate_core(
       call: data preprocessing, model inference, confidence calibration,
       label generation, optional label refinement, and optional 
       embedding/UMAP generation.
+
+    As of v0.3.0, this function uses the AzimuthNN class internally,
+    which performs inference, calibration, and refinement in minibatches
+    for improved memory efficiency.
     
     Parameters
     ----------
@@ -1565,7 +1856,7 @@ def annotate_core(
     normalization_override : bool, default=False
         If True, skips normalization check and forces processing to 
         continue.
-    norm_check_batch_size : int, default=1000
+    norm_check_batch_size : int, default=100
         Number of cells to sample for normalization check.
     output_mode : str, default='minimal'
         Controls the verbosity of output in the cell meta dataframe.
@@ -1601,7 +1892,7 @@ def annotate_core(
     -------
     dict
         A dictionary containing:
-        - 'azimuth_object': The instantiated AzimuthNN_base object
+        - 'azimuth_object': The instantiated AzimuthNN object
         - 'embeddings_dict': Dictionary of computed embeddings
         - 'umap_dict': Dictionary of computed UMAP projections
         - 'cells_meta': Updated cell metadata with annotations
@@ -1661,10 +1952,10 @@ def annotate_core(
             "'minimal' or 'detailed'"
         )
 
-    if not isinstance(extract_embeddings,bool):
+    if not isinstance(extract_embeddings, bool):
         raise TypeError("extract_embeddings argument should be boolean")
 
-    if not isinstance(umap_embeddings,bool):
+    if not isinstance(umap_embeddings, bool):
         raise TypeError("umap_embeddings argument should be boolean")
 
     if not isinstance(refine_labels, bool):
@@ -1677,89 +1968,54 @@ def annotate_core(
                 "Set extract_embeddings to True."
             )
 
-    azimuth = AzimuthNN_base(
-        annotation_pipeline = annotation_pipeline,
-        model_version = model_version,
-        eval_batch_size = eval_batch_size
+    # load model meta to print model name before pipeline runs
+    _version_module = importlib.import_module(
+        f"panhumanpy._tools.{model_version}"
     )
-
-    azimuth.query_stripped(
-        X_query,
-        query_features,
-        cells_meta
-    )
+    _model_meta = _version_module.model_meta
 
     print("Reference model and parameters:")
-    print(f"    Model name: {azimuth.model_meta['inference_model_name']}")
+    print(f"    Model version: {model_version}")
+    print(f"    Model name: {_model_meta['inference_model_name']}")
     print(f"    Evaluation batch size: {eval_batch_size}")
     print(f"    Extract embeddings: {extract_embeddings}")
     print(f"    Run umap: {umap_embeddings}")
     print(f"    Refine labels in postprocessing: {refine_labels}")
 
+    # construct a minimal AnnData from pre-extracted components.
+    # this wraps references, no data is copied.
+    query_adata = anndata.AnnData(
+        X = X_query,
+        obs = cells_meta,
+        var = pd.DataFrame(index=query_features)
+    )
 
-
-    azimuth.process_query(
-            normalization_override = normalization_override,
-            norm_check_batch_size = norm_check_batch_size
-        )
-
-    _ = azimuth.run_inference_model()
-    _ = azimuth.calibrate_predictions()
-    _ = azimuth.process_outputs(mode=output_mode)
-
-    if refine_labels:
-        _ = azimuth.refine_labels(refine_level='broad')
-        _ = azimuth.refine_labels(refine_level='medium')
-        _ = azimuth.refine_labels(refine_level='fine')
-
-    _ = azimuth.update_cells_meta()
+    azimuth = AzimuthNN(
+        query_adata,
+        annotation_pipeline = annotation_pipeline,
+        model_version = model_version,
+        eval_batch_size = eval_batch_size,
+        normalization_override = normalization_override,
+        norm_check_batch_size = norm_check_batch_size,
+        output_mode = output_mode,
+        refine = refine_labels
+    )
 
     if extract_embeddings:
-        azimuth_embedding_layer_name = azimuth.model_meta[
-                    'inference_model_embedding_layer'
-            ]
         if umap_embeddings:
-            (
-                azimuth_embeddings, 
-                azimuth_umap
-                ) = azimuth.inference_embeddings_and_umap(
-                    embedding_layer_name = azimuth_embedding_layer_name,
-                    n_neighbors=n_neighbors,
-                    n_components=n_components,
-                    metric=metric,
-                    min_dist=min_dist,
-                    umap_lr=umap_lr,
-                    umap_seed=umap_seed,
-                    spread=spread,
-                    verbose=verbose,
-                    init=init
-                )
-
-            embed_key_og = (
-                f'{azimuth.inference_model_name}_'
-                f'{azimuth_embedding_layer_name}_embed'
+            azimuth.azimuth_embed_and_umap(
+                n_neighbors=n_neighbors,
+                n_components=n_components,
+                metric=metric,
+                min_dist=min_dist,
+                umap_lr=umap_lr,
+                umap_seed=umap_seed,
+                spread=spread,
+                verbose=verbose,
+                init=init
             )
-            umap_key_og = (
-                f'{azimuth.inference_model_name}_'
-                f'{azimuth_embedding_layer_name}_umap'
-            )
-
-            azimuth.embeddings['azimuth_embed'] = azimuth_embeddings
-            azimuth.umaps['azimuth_umap'] = azimuth_umap
-
-            del azimuth.embeddings[embed_key_og]
-            del azimuth.umaps[umap_key_og]
-
         else:
-            azimuth_embeddings = azimuth.inference_model_embeddings(
-                embedding_layer_name = azimuth_embedding_layer_name
-            )
-
-            azimuth.embeddings['azimuth_embed'] = azimuth_embeddings
-            del azimuth.embeddings[
-                f'{azimuth.inference_model_name}_'
-                f'{azimuth_embedding_layer_name}_embed'
-                ]
+            azimuth.azimuth_embed()
 
     core_outputs = {
         'azimuth_object' : azimuth,
