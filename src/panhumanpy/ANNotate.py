@@ -1902,11 +1902,11 @@ def annotate_core(
     While AzimuthNN and AzimuthNN_base classes provide interactive 
     functionality for exploratory analysis, this function offers a 
     one-step method for automated annotation via Python or R scripts. It
-      performs the complete annotation workflow in a single function 
-      call: data preprocessing, model inference, confidence calibration,
-      label generation, optional label refinement, and optional 
-      embedding/UMAP generation.
-
+    performs the complete annotation workflow in a single function 
+    call: data preprocessing, model inference, confidence calibration,
+    label generation, optional label refinement, optional Cell Ontology
+    mapping, and optional embedding/UMAP generation.
+ 
     As of v0.3.0, this function uses the AzimuthNN class internally,
     which performs inference, calibration, and refinement in minibatches
     for improved memory efficiency.
@@ -1920,44 +1920,57 @@ def annotate_core(
         columns in X_query.
     cells_meta : pandas.DataFrame
         Metadata for cells, with rows corresponding to cells in X_query.
-    annotation_pipeline : str, default='supervised'
+    annotation_pipeline : str
         Type of annotation pipeline to use for cell type prediction.
-    eval_batch_size : int, default=8192
+    eval_batch_size : int
         Batch size to use during model inference.
-    normalization_override : bool, default=False
+    normalization_override : bool
         If True, skips normalization check and forces processing to 
         continue.
-    norm_check_batch_size : int, default=100
+    norm_check_batch_size : int
         Number of cells to sample for normalization check.
-    output_mode : str, default='minimal'
+    output_mode : str
         Controls the verbosity of output in the cell meta dataframe.
         Options are 'minimal' or 'detailed'.
-    refine_labels : bool, default=True
+    refine_labels : bool
         Whether to perform label refinement at broad, medium, and fine 
         levels.
-    extract_embeddings : bool, default=True
+    map_to_cl : list of str or None
+        List of column names in cells_meta to map to Cell Ontology
+        terms after annotation is complete. Each named column must
+        exist in cells_meta at the time of mapping, so columns produced
+        by the annotation pipeline (e.g. 'azimuth_broad', 'azimuth_fine')
+        are valid targets. If None, no mapping is applied.
+    include_cl_id : bool
+        If True, also adds a CL identifier column (e.g. 'CL:0000236')
+        alongside each CL label column produced by map_to_cl. Has no
+        effect if map_to_cl is None.
+    extract_embeddings : bool
         Whether to extract embeddings from the model.
-    umap_embeddings : bool, default=True
+    umap_embeddings : bool
         Whether to generate UMAP projections from the embeddings.
         Requires extract_embeddings=True.
-    n_neighbors : int, default=30
+    n_neighbors : int
         Number of neighbors to consider for each point in UMAP.
-    n_components : int, default=2
+    n_components : int
         Dimensionality of the UMAP projection.
-    metric : str, default='cosine'
+    metric : str
         Distance metric to use for UMAP.
-    min_dist : float, default=0.3
+    min_dist : float
         Minimum distance between points in the UMAP projection.
-    umap_lr : float, default=1.0
+    umap_lr : float
         UMAP learning rate.
-    umap_seed : int, default=42
+    umap_seed : int
         Random seed for UMAP for reproducibility.
-    spread : float, default=1.0
+    spread : float
         Scales the effective scale of embedded points.
-    verbose : bool, default=True
+    verbose : bool
         Whether to display progress during UMAP computation.
-    init : str, default='spectral'
+    init : str
         Initialization method for UMAP.
+    model_version : str
+        Model version to use, e.g. 'v0' or 'v1'. Defaults to
+        model_version_default as defined in this module.
         
     Returns
     -------
@@ -1966,14 +1979,16 @@ def annotate_core(
         - 'azimuth_object': The instantiated AzimuthNN object
         - 'embeddings_dict': Dictionary of computed embeddings
         - 'umap_dict': Dictionary of computed UMAP projections
-        - 'cells_meta': Updated cell metadata with annotations
+        - 'cells_meta': Updated cell metadata with annotations and,
+          if map_to_cl was specified, Cell Ontology columns
         
     Raises
     ------
     TypeError
         If normalization_override, extract_embeddings, umap_embeddings,
-        or refine_labels are not boolean values, or if 
-        norm_check_batch_size is not an integer.
+        refine_labels, or include_cl_id are not boolean values, if
+        norm_check_batch_size is not an integer, or if map_to_cl is
+        not a list of strings or None.
     ValueError
         If output_mode is not 'minimal' or 'detailed', or if 
         umap_embeddings is True but extract_embeddings is False.
@@ -1984,12 +1999,16 @@ def annotate_core(
     automated annotation workflows. Unlike the interactive AzimuthNN and
     AzimuthNN_base classes which allow step-by-step exploration and 
     visualization, this function executes the entire annotation pipeline
-      in one call.
+    in one call.
     
     It's particularly useful for:
     - Batch processing of multiple datasets
     - Integration into automated analysis pipelines
     - Creating wrappers for other languages (like R)
+ 
+    Cell Ontology mapping (map_to_cl) is applied after the full
+    annotation pipeline completes, so columns added by the pipeline
+    (e.g. 'azimuth_broad', 'azimuth_fine') can be specified directly.
     
     Examples
     --------
@@ -1997,15 +2016,16 @@ def annotate_core(
     >>> import pandas as pd
     >>> import numpy as np
     >>> 
-    >>> # Example data (normally this would be your scRNA-seq data)
     >>> X = csr_matrix(np.random.rand(100, 1000))
     >>> features = [f"gene_{i}" for i in range(1000)]
     >>> meta = pd.DataFrame(index=range(100))
     >>> 
-    >>> # Run annotation
-    >>> results = annotate_core(X, features, meta)
-    >>> 
-    >>> # Access results
+    >>> # Run annotation with Cell Ontology mapping
+    >>> results = annotate_core(
+    ...     X, features, meta,
+    ...     map_to_cl=['azimuth_broad', 'azimuth_fine'],
+    ...     include_cl_id=True,
+    ... )
     >>> annotated_meta = results['cells_meta']
     >>> embeddings = results['embeddings_dict']['azimuth_embed']
     >>> umap_coords = results['umap_dict']['azimuth_umap']
