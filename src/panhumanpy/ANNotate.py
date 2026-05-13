@@ -1,28 +1,28 @@
 """
 Azimuth Cell Annotation: Neural network-based hierarchical cell type 
 annotation for single-cell RNA-seq data.
-
+ 
 This module provides tools for hierarchical cell type annotation and 
 interpretation based on single-cell RNA-seq data using the Azimuth 
 neural network model trained on annotated panhuman scRNA-seq data.
-
+ 
 Key Components
 -------------
 AzimuthNN_base : Class
     Low-level class providing fine-grained control over the annotation 
     process. Suitable for advanced users who need detailed control or 
     are processing data in batches to optimize memory usage.
-
+ 
 AzimuthNN : Class
     High-level interface that wraps around AzimuthNN_base for interactive 
     analysis. Provides a streamlined workflow for cell annotation with 
     sensible defaults. Recommended for most interactive analysis sessions 
     and notebooks.
-
+ 
 annotate_core : Function
     Core function for script-based automated annotation. Designed for 
     batch processing and integration into analysis pipelines.
-
+ 
 Usage Examples
 -------------
 Interactive usage with high-level interface:
@@ -33,23 +33,26 @@ Interactive usage with high-level interface:
     >>> azimuth = AzimuthNN(adata)
     >>> embeddings = azimuth.azimuth_embed()  # Extract embeddings
     >>> umap = azimuth.azimuth_umap()  # Generate UMAP
+    >>> # Optionally map annotations to Cell Ontology terms
+    >>> azimuth.map_to_cell_ontology('azimuth_fine')
+    >>> azimuth.map_to_cell_ontology('azimuth_broad', include_cl_id=True)
     >>> adata_annotated = azimuth.pack_adata('output.h5ad')  # Save results
-
+ 
 For more detailed documentation on specific classes and functions:
     >>> help(AzimuthNN)
     >>> help(AzimuthNN_base)
     >>> help(annotate_core)
-
+ 
 Command-line Usage
 -----------------
 This module can be run as a standalone script to annotate h5ad files:
-
+ 
     annotate /path/to/input.h5ad [options]
-
+ 
 Required positional argument:
     filepath               Path to input h5ad file containing 
                             single-cell data
-
+ 
 Optional arguments:
     -fn, --feature_names_col
                            Column in query.var containing gene 
@@ -69,13 +72,25 @@ Optional arguments:
                             (default: 'minimal')
     -rf, --refine_labels   Skip hierarchical label refinement
                            (default: use refinement)
+    -mcl, --map_to_cl      One or more column names in the cell metadata
+                           to map to Cell Ontology labels after annotation.
+                           Multiple columns can be provided as a 
+                           space-separated list.
+                           e.g. -mcl azimuth_broad azimuth_fine
+                           (default: None, no mapping applied)
+    -clid, --include_cl_id
+                           If set, also adds CL ID columns
+                           (e.g. CL:0000236) alongside CL label columns
+                           produced by --map_to_cl. Has no effect if
+                           --map_to_cl is not specified.
+                           (default: False)
     -em, --extract_embeddings
                            Skip neural network embeddings extraction
                            (default: extract embeddings)
     -umap, --umap_embeddings
                            Skip UMAP projection generation
                            (default: generate UMAP)
-
+ 
 UMAP parameters:
     -nnbrs, --n_neighbors  Neighbors per point in UMAP (default: 30)
     -nc, --n_components    UMAP dimensionality (default: 2)
@@ -87,15 +102,16 @@ UMAP parameters:
     -uv, --umap_verbose    Hide UMAP progress
                            (default: show progress)
     -uin, --umap_init      UMAP initialization method (default: 'spectral')
-
+ 
 Output:
 The annotated data will be saved as a new h5ad file in the same directory
 as the input file, with '_ANN' appended to the filename. If a file with 
 that name already exists, a timestamp (YYYYMMDD_HHMMSS) will be 
 automatically appended to prevent overwriting existing results.
-
-Example command:
+ 
+Example commands:
     annotate my_cells.h5ad -fn feature_name -ebs 4096 -nc 3
+    annotate my_cells.h5ad -mcl azimuth_broad azimuth_fine -clid
 """
 
 
