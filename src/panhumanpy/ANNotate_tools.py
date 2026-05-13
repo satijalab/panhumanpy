@@ -903,6 +903,100 @@ def coerce_metadata_types(df):
 
     return df_coerced
 
+
+
+def _available_model_versions():
+    """
+    Return the list of model versions available in panhumanpy._tools.
+ 
+    Versions are discovered dynamically by listing subdirectories of
+    the _tools package directory whose names start with 'v', mirroring
+    the convention already used by InferenceTools and
+    PostprocessingAzimuthLabels.
+ 
+    Returns
+    -------
+    list of str
+        Sorted list of version strings, e.g. ['v0', 'v1'].
+    """
+    tools_path = files(importlib.import_module("panhumanpy._tools"))
+    versions = sorted([
+        entry.name
+        for entry in tools_path.iterdir()
+        if entry.is_dir() and entry.name.startswith("v")
+    ])
+    return versions
+
+
+
+def _load_versioned_ontology_map(model_version):
+    """
+    Load the cell ontology map CSV for the specified model version.
+ 
+    Resolves the path via importlib.resources (files()), consistent
+    with how PostprocessingAzimuthLabels loads its postprocessing CSVs.
+    Validates that the version exists, the directory exists, the CSV
+    file exists, and that the required columns are present.
+ 
+    Parameters
+    ----------
+    model_version : str
+        Model version string, e.g. 'v0' or 'v1'.
+ 
+    Returns
+    -------
+    pandas.DataFrame
+        DataFrame with at minimum the columns:
+        'Annotation_Label', 'CL_Label', 'CL_ID'.
+ 
+    Raises
+    ------
+    ValueError
+        If the specified model_version is not available.
+    FileNotFoundError
+        If the cell_ontology_map directory or CSV file is not found
+        for the specified version.
+    ValueError
+        If the CSV is missing required columns.
+    """
+    available = _available_model_versions()
+    if model_version not in available:
+        raise ValueError(
+            f"Model version '{model_version}' is not available. "
+            f"Available versions: {available}"
+        )
+ 
+    version_module = importlib.import_module(
+        f"panhumanpy._tools.{model_version}"
+    )
+    version_path = files(version_module)
+    ontology_dir = version_path / "cell_ontology_map"
+    ontology_csv = ontology_dir / "cell_ontology_map.csv"
+ 
+    if not ontology_dir.is_dir():
+        raise FileNotFoundError(
+            f"cell_ontology_map directory not found for version "
+            f"'{model_version}'. Expected at: {ontology_dir}"
+        )
+ 
+    if not ontology_csv.is_file():
+        raise FileNotFoundError(
+            f"cell_ontology_map.csv not found for version "
+            f"'{model_version}'. Expected at: {ontology_csv}"
+        )
+ 
+    ontology_df = pd.read_csv(ontology_csv)
+ 
+    required_cols = ["Annotation_Label", "CL_Label", "CL_ID"]
+    missing = [c for c in required_cols if c not in ontology_df.columns]
+    if missing:
+        raise ValueError(
+            f"cell_ontology_map.csv for version '{model_version}' is "
+            f"missing required columns: {missing}"
+        )
+ 
+    return ontology_df
+
         
     
 
