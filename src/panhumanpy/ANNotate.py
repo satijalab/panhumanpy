@@ -2234,6 +2234,30 @@ def arg_parse_in():
                         action = "store_false",
                         help="Skip label refinement."
                         )
+
+    parser.add_argument(
+                        "-mcl",
+                        "--map_to_cl",
+                        default=None,
+                        nargs='+',
+                        help=(
+                            "One or more column names in the cell "
+                            "metadata to map to Cell Ontology labels. "
+                            "e.g. -mcl azimuth_broad azimuth_fine"
+                        ),
+                        type=str
+                        )
+ 
+    parser.add_argument(
+                        "-clid",
+                        "--include_cl_id",
+                        action="store_true",
+                        help=(
+                            "If set, also adds CL ID columns "
+                            "(e.g. CL:0000236) alongside CL label "
+                            "columns. Default: False."
+                        )
+                        )
     
     parser.add_argument(
                         "-em",
@@ -2349,6 +2373,7 @@ def arg_parse_in():
     parser.set_defaults(
         normalization_override=False,
         refine_labels=True,
+        include_cl_id=False,
         extract_embeddings=True,
         umap_embeddings=True,
         umap_verbose=True
@@ -2393,6 +2418,8 @@ def arg_parse_out(args):
     norm_check_batch_size = args.norm_check_batch_size
     output_mode = args.output_mode
     refine_labels = args.refine_labels
+    map_to_cl = args.map_to_cl
+    include_cl_id = args.include_cl_id
     extract_embeddings = args.extract_embeddings
     umap_embeddings = args.umap_embeddings
     n_neighbors = args.n_neighbors
@@ -2415,6 +2442,8 @@ def arg_parse_out(args):
         'norm_check_batch_size' : norm_check_batch_size,
         'output_mode' : output_mode,
         'refine_labels' : refine_labels,
+        'map_to_cl' : map_to_cl,
+        'include_cl_id' : include_cl_id,
         'extract_embeddings' : extract_embeddings,
         'umap_embeddings' : umap_embeddings,
         'n_neighbors' : n_neighbors,
