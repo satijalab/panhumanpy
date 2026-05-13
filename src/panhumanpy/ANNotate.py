@@ -1878,6 +1878,8 @@ def annotate_core(
     norm_check_batch_size,
     output_mode,
     refine_labels,
+    map_to_cl,
+    include_cl_id,
     extract_embeddings,
     umap_embeddings,
     n_neighbors, 
@@ -2030,6 +2032,19 @@ def annotate_core(
     if not isinstance(refine_labels, bool):
         raise TypeError("refine_labels argument should be boolean") 
 
+    if map_to_cl is not None:
+        if not isinstance(map_to_cl, list):
+            raise TypeError(
+                "map_to_cl must be a list of column name strings or None."
+            )
+        if not all(isinstance(col, str) for col in map_to_cl):
+            raise TypeError(
+                "All entries in map_to_cl must be strings."
+            )
+ 
+    if not isinstance(include_cl_id, bool):
+        raise TypeError("include_cl_id must be a bool.")
+
     if umap_embeddings:
         if not extract_embeddings:
             raise ValueError(
@@ -2050,6 +2065,8 @@ def annotate_core(
     print(f"    Extract embeddings: {extract_embeddings}")
     print(f"    Run umap: {umap_embeddings}")
     print(f"    Refine labels in postprocessing: {refine_labels}")
+    print(f"    Map to Cell Ontology columns: {map_to_cl}")
+    print(f"    Include CL ID: {include_cl_id}")
 
     # construct a minimal AnnData from pre-extracted components.
     # this wraps references, no data is copied.
@@ -2085,6 +2102,13 @@ def annotate_core(
             )
         else:
             azimuth.azimuth_embed()
+
+    if map_to_cl is not None:
+        for col in map_to_cl:
+            azimuth.map_to_cell_ontology(
+                src_col=col,
+                include_cl_id=include_cl_id
+            )
 
     core_outputs = {
         'azimuth_object' : azimuth,
