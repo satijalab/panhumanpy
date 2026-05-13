@@ -2505,6 +2505,8 @@ def annotate():
         norm_check_batch_size,
         output_mode,
         refine_labels,
+        map_to_cl,
+        include_cl_id,
         extract_embeddings,
         umap_embeddings,
         n_neighbors, 
