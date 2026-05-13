@@ -1177,6 +1177,75 @@ class AzimuthNN_base(AutoloadInferenceTools):
 
         return adata_obj
 
+    def map_to_cell_ontology(
+        self,
+        src_col,
+        include_cl_id=False
+        ):
+        """
+        Map annotation labels in cells_meta to Cell Ontology terms.
+ 
+        Applies the versioned cell ontology map for the model version
+        used in this run to the specified column in cells_meta, adding
+        one (or two) new columns immediately after src_col. Unmapped
+        labels are set to 'unmapped' and a single warning is emitted
+        listing all unique labels that could not be mapped.
+ 
+        Parameters
+        ----------
+        src_col : str
+            Name of the column in cells_meta carrying the source
+            annotation labels to be mapped.
+        include_cl_id : bool, default False
+            If True, also adds a column named {src_col}_CL_ID
+            containing the CL identifier string (e.g. 'CL:0000236'),
+            or 'unmapped'.
+ 
+        Returns
+        -------
+        pandas.DataFrame
+            Updated cells_meta with new column(s) added.
+ 
+        New columns added
+        -----------------
+        {src_col}_CL
+            CL label string for each cell, or 'unmapped'.
+        {src_col}_CL_ID  (only if include_cl_id=True)
+            CL identifier string, or 'unmapped'.
+ 
+        Raises
+        ------
+        TypeError
+            If cells_meta is not a pandas DataFrame.
+        ValueError
+            If src_col is not present in cells_meta.
+ 
+        Warns
+        -----
+        UserWarning
+            Emitted once, listing all unique labels that could not be
+            mapped to a CL term.
+ 
+        Examples
+        --------
+        >>> azimuth = AzimuthNN(adata)
+        >>> azimuth.map_to_cell_ontology('azimuth_fine')
+        >>> azimuth.map_to_cell_ontology('azimuth_broad', include_cl_id=True)
+        """
+        if not isinstance(self.cells_meta, pd.DataFrame):
+            raise TypeError(
+                "cells_meta is not available as a pandas DataFrame."
+            )
+ 
+        self.cells_meta = map_to_cell_ontology(
+            self.cells_meta,
+            src_col=src_col,
+            model_version=self._model_version,
+            include_cl_id=include_cl_id
+        )
+ 
+        return self.cells_meta
+
 
 
 
