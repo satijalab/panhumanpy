@@ -2039,8 +2039,25 @@ def annotate_core(
     >>> # Run annotation with Cell Ontology mapping
     >>> results = annotate_core(
     ...     X, features, meta,
+    ...     annotation_pipeline='supervised',
+    ...     eval_batch_size=8192,
+    ...     normalization_override=False,
+    ...     norm_check_batch_size=100,
+    ...     output_mode='minimal',
+    ...     refine_labels=True,
     ...     map_to_cl=['azimuth_broad', 'azimuth_fine'],
     ...     include_cl_id=True,
+    ...     extract_embeddings=True,
+    ...     umap_embeddings=True,
+    ...     n_neighbors=30,
+    ...     n_components=2,
+    ...     metric='cosine',
+    ...     min_dist=0.3,
+    ...     umap_lr=1.0,
+    ...     umap_seed=42,
+    ...     spread=1.0,
+    ...     verbose=True,
+    ...     init='spectral'
     ... )
     >>> annotated_meta = results['cells_meta']
     >>> embeddings = results['embeddings_dict']['azimuth_embed']
@@ -2248,7 +2265,7 @@ def arg_parse_in():
                         help=(
                             "enter the number of cells over which "
                             "normalization will be verified, defaults "
-                            "to 1000"
+                            "to 100"
                         ), 
                         type=int
                         )
