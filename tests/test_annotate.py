@@ -271,6 +271,8 @@ def test_annotate_core_with_h5ad():
             norm_check_batch_size=32,
             output_mode='minimal',
             refine_labels=False,
+            map_to_cl=None,
+            include_cl_id = False,
             extract_embeddings=False,
             umap_embeddings=False,
             n_neighbors=5, 
@@ -693,6 +695,8 @@ def test_annotate_core_with_h5ad_alternate_models(model_version):
             norm_check_batch_size=32,
             output_mode='minimal',
             refine_labels=False,
+            map_to_cl = None,
+            include_cl_id = False,
             extract_embeddings=False,
             umap_embeddings=False,
             n_neighbors=5, 
@@ -1434,5 +1438,269 @@ def test_azimuthnn_embeddings_still_work_after_pipeline():
     except Exception as e:
         assert False, (
             f"test_azimuthnn_embeddings_still_work_after_pipeline: {e}"
+        )
+
+
+
+####### AzimuthNN cell ontology mapping tests ##############################
+############################################################################
+
+
+def test_map_to_cell_ontology_class_method():
+    """Test that AzimuthNN_base.map_to_cell_ontology adds a _CL column
+    immediately after the source column in cells_meta."""
+    try:
+        from panhumanpy import AzimuthNN
+
+        test_file = os.path.join("queries", "test_obj.h5ad")
+        if not os.path.exists(test_file):
+            pytest.skip(f"Test file {test_file} not found")
+
+        azimuth = AzimuthNN(
+            query_arg=test_file,
+            eval_batch_size=32,
+            refine=['broad']
+        )
+
+        azimuth.map_to_cell_ontology('azimuth_broad')
+
+        cols = list(azimuth.cells_meta.columns)
+
+        assert 'azimuth_broad_CL' in cols, (
+            "test_map_to_cell_ontology_class_method: "
+            "'azimuth_broad_CL' not found in cells_meta"
+        )
+
+        # verify column is immediately after src_col
+        src_idx = cols.index('azimuth_broad')
+        cl_idx = cols.index('azimuth_broad_CL')
+        assert cl_idx == src_idx + 1, (
+            "test_map_to_cell_ontology_class_method: "
+            "'azimuth_broad_CL' should be immediately after 'azimuth_broad'"
+        )
+
+        # verify no None values
+        assert azimuth.cells_meta['azimuth_broad_CL'].notna().all(), (
+            "test_map_to_cell_ontology_class_method: "
+            "'azimuth_broad_CL' should have no NaN values"
+        )
+
+    except Exception as e:
+        assert False, (
+            f"test_map_to_cell_ontology_class_method: {e}"
+        )
+
+
+def test_map_to_cell_ontology_class_method_include_cl_id():
+    """Test that AzimuthNN_base.map_to_cell_ontology with include_cl_id=True
+    adds both _CL and _CL_ID columns in the correct order."""
+    try:
+        from panhumanpy import AzimuthNN
+
+        test_file = os.path.join("queries", "test_obj.h5ad")
+        if not os.path.exists(test_file):
+            pytest.skip(f"Test file {test_file} not found")
+
+        azimuth = AzimuthNN(
+            query_arg=test_file,
+            eval_batch_size=32,
+            refine=['broad']
+        )
+
+        azimuth.map_to_cell_ontology('azimuth_broad', include_cl_id=True)
+
+        cols = list(azimuth.cells_meta.columns)
+
+        assert 'azimuth_broad_CL' in cols, (
+            "test_map_to_cell_ontology_class_method_include_cl_id: "
+            "'azimuth_broad_CL' not found in cells_meta"
+        )
+        assert 'azimuth_broad_CL_ID' in cols, (
+            "test_map_to_cell_ontology_class_method_include_cl_id: "
+            "'azimuth_broad_CL_ID' not found in cells_meta"
+        )
+
+        # verify ordering: src_col, _CL, _CL_ID
+        src_idx = cols.index('azimuth_broad')
+        cl_idx = cols.index('azimuth_broad_CL')
+        cl_id_idx = cols.index('azimuth_broad_CL_ID')
+
+        assert cl_idx == src_idx + 1, (
+            "test_map_to_cell_ontology_class_method_include_cl_id: "
+            "'azimuth_broad_CL' should be immediately after 'azimuth_broad'"
+        )
+        assert cl_id_idx == cl_idx + 1, (
+            "test_map_to_cell_ontology_class_method_include_cl_id: "
+            "'azimuth_broad_CL_ID' should be immediately after "
+            "'azimuth_broad_CL'"
+        )
+
+        # verify no None values in either column
+        for col in ['azimuth_broad_CL', 'azimuth_broad_CL_ID']:
+            assert azimuth.cells_meta[col].notna().all(), (
+                f"test_map_to_cell_ontology_class_method_include_cl_id: "
+                f"'{col}' should have no NaN values"
+            )
+
+    except Exception as e:
+        assert False, (
+            f"test_map_to_cell_ontology_class_method_include_cl_id: {e}"
+        )
+
+
+def test_map_to_cell_ontology_invalid_src_col_raises():
+    """Test that map_to_cell_ontology raises ValueError when src_col
+    does not exist in cells_meta."""
+    from panhumanpy import AzimuthNN
+
+    test_file = os.path.join("queries", "test_obj.h5ad")
+    if not os.path.exists(test_file):
+        pytest.skip(f"Test file {test_file} not found")
+
+    azimuth = AzimuthNN(
+        query_arg=test_file,
+        eval_batch_size=32,
+        refine=False
+    )
+
+    with pytest.raises(ValueError):
+        azimuth.map_to_cell_ontology('nonexistent_column')
+
+
+def test_annotate_core_with_map_to_cl():
+    """Test that annotate_core with map_to_cl adds CL columns to the
+    returned cells_meta."""
+    try:
+        from panhumanpy import annotate_core
+
+        test_file = os.path.join("queries", "test_obj.h5ad")
+        if not os.path.exists(test_file):
+            pytest.skip(f"Test file {test_file} not found")
+
+        test_obj = anndata.read_h5ad(test_file)
+        X_query = csr_matrix(test_obj.X)
+        query_features = test_obj.var_names.tolist()
+        cells_meta = test_obj.obs
+
+        results = annotate_core(
+            X_query=X_query,
+            query_features=query_features,
+            cells_meta=cells_meta,
+            annotation_pipeline='supervised',
+            eval_batch_size=32,
+            normalization_override=False,
+            norm_check_batch_size=32,
+            output_mode='minimal',
+            refine_labels=True,
+            map_to_cl=['azimuth_broad'],
+            include_cl_id=False,
+            extract_embeddings=False,
+            umap_embeddings=False,
+            n_neighbors=5,
+            n_components=2,
+            metric='cosine',
+            min_dist=0.1,
+            umap_lr=1.0,
+            umap_seed=42,
+            spread=1.0,
+            verbose=False,
+            init='spectral'
+        )
+
+        assert 'azimuth_broad_CL' in results['cells_meta'].columns, (
+            "test_annotate_core_with_map_to_cl: "
+            "'azimuth_broad_CL' not found in returned cells_meta"
+        )
+
+        assert results['cells_meta']['azimuth_broad_CL'].notna().all(), (
+            "test_annotate_core_with_map_to_cl: "
+            "'azimuth_broad_CL' should have no NaN values"
+        )
+
+    except Exception as e:
+        assert False, (
+            f"test_annotate_core_with_map_to_cl: {e}"
+        )
+
+
+def test_annotate_core_map_to_cl_invalid_type_raises():
+    """Test that annotate_core raises TypeError when map_to_cl is a
+    string instead of a list."""
+    from panhumanpy import annotate_core
+
+    test_file = os.path.join("queries", "test_obj.h5ad")
+    if not os.path.exists(test_file):
+        pytest.skip(f"Test file {test_file} not found")
+
+    test_obj = anndata.read_h5ad(test_file)
+    X_query = csr_matrix(test_obj.X)
+    query_features = test_obj.var_names.tolist()
+    cells_meta = test_obj.obs
+
+    with pytest.raises(TypeError):
+        annotate_core(
+            X_query=X_query,
+            query_features=query_features,
+            cells_meta=cells_meta,
+            annotation_pipeline='supervised',
+            eval_batch_size=32,
+            normalization_override=False,
+            norm_check_batch_size=32,
+            output_mode='minimal',
+            refine_labels=False,
+            map_to_cl='azimuth_broad',
+            include_cl_id=False,
+            extract_embeddings=False,
+            umap_embeddings=False,
+            n_neighbors=5,
+            n_components=2,
+            metric='cosine',
+            min_dist=0.1,
+            umap_lr=1.0,
+            umap_seed=42,
+            spread=1.0,
+            verbose=False,
+            init='spectral'
+        )
+
+
+def test_annotate_core_include_cl_id_invalid_type_raises():
+    """Test that annotate_core raises TypeError when include_cl_id is
+    not a bool."""
+    from panhumanpy import annotate_core
+
+    test_file = os.path.join("queries", "test_obj.h5ad")
+    if not os.path.exists(test_file):
+        pytest.skip(f"Test file {test_file} not found")
+
+    test_obj = anndata.read_h5ad(test_file)
+    X_query = csr_matrix(test_obj.X)
+    query_features = test_obj.var_names.tolist()
+    cells_meta = test_obj.obs
+
+    with pytest.raises(TypeError):
+        annotate_core(
+            X_query=X_query,
+            query_features=query_features,
+            cells_meta=cells_meta,
+            annotation_pipeline='supervised',
+            eval_batch_size=32,
+            normalization_override=False,
+            norm_check_batch_size=32,
+            output_mode='minimal',
+            refine_labels=False,
+            map_to_cl=None,
+            include_cl_id='yes',
+            extract_embeddings=False,
+            umap_embeddings=False,
+            n_neighbors=5,
+            n_components=2,
+            metric='cosine',
+            min_dist=0.1,
+            umap_lr=1.0,
+            umap_seed=42,
+            spread=1.0,
+            verbose=False,
+            init='spectral'
         )
  

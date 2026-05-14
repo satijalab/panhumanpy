@@ -77,7 +77,8 @@ def test_version_directory_structure():
             "inference_feature_panel": ["__init__.py", "inference_feature_panel.txt"],
             "inference_model": ["__init__.py", "inference_model.keras"],
             "postprocessing": ["__init__.py", "panhuman_annotate_fine.csv", "panhuman_annotate_medium.csv"],
-            "calibration":["__init__.py"]
+            "calibration":["__init__.py"],
+            "cell_ontology_map": ["__init__.py", "cell_ontology_map.csv"]
         }
         
         # Check each required subdirectory and its contents

@@ -903,11 +903,396 @@ def coerce_metadata_types(df):
 
     return df_coerced
 
-        
-    
 
 
-
+def _available_model_versions():
+    """
+    Return the list of model versions available in panhumanpy._tools.
+ 
+    Versions are discovered dynamically by listing subdirectories of
+    the _tools package directory whose names start with 'v', mirroring
+    the convention already used by InferenceTools and
+    PostprocessingAzimuthLabels.
+ 
+    Returns
+    -------
+    list of str
+        Sorted list of version strings, e.g. ['v0', 'v1'].
+    """
+    tools_module = importlib.import_module("panhumanpy._tools")
+    tools_path = files(tools_module)
+    versions = sorted([
+        entry.name
+        for entry in tools_path.iterdir()
+        if entry.is_dir() and entry.name.startswith("v")
+    ])
+    return versions
+ 
+ 
+def _load_versioned_ontology_map(model_version):
+    """
+    Load the cell ontology map CSV for the specified model version.
+ 
+    Resolves the path via importlib.resources (files()), consistent
+    with how PostprocessingAzimuthLabels loads its postprocessing CSVs.
+    Validates that the version exists, the directory exists, the CSV
+    file exists, and that the required columns are present.
+ 
+    Parameters
+    ----------
+    model_version : str
+        Model version string, e.g. 'v0' or 'v1'.
+ 
+    Returns
+    -------
+    pandas.DataFrame
+        DataFrame with at minimum the columns:
+        'Annotation_Label', 'CL_Label', 'CL_ID'.
+ 
+    Raises
+    ------
+    ValueError
+        If the specified model_version is not available.
+    FileNotFoundError
+        If the cell_ontology_map directory or CSV file is not found
+        for the specified version.
+    ValueError
+        If the CSV is missing required columns.
+    """
+    available = _available_model_versions()
+    if model_version not in available:
+        raise ValueError(
+            f"Model version '{model_version}' is not available. "
+            f"Available versions: {available}"
+        )
+ 
+    version_module = importlib.import_module(
+        f"panhumanpy._tools.{model_version}"
+    )
+    version_path = files(version_module)
+    ontology_dir = version_path / "cell_ontology_map"
+    ontology_csv = ontology_dir / "cell_ontology_map.csv"
+ 
+    if not ontology_dir.is_dir():
+        raise FileNotFoundError(
+            f"cell_ontology_map directory not found for version "
+            f"'{model_version}'. Expected at: {ontology_dir}"
+        )
+ 
+    if not ontology_csv.is_file():
+        raise FileNotFoundError(
+            f"cell_ontology_map.csv not found for version "
+            f"'{model_version}'. Expected at: {ontology_csv}"
+        )
+ 
+    ontology_df = pd.read_csv(ontology_csv)
+ 
+    required_cols = ["Annotation_Label", "CL_Label", "CL_ID"]
+    missing = [c for c in required_cols if c not in ontology_df.columns]
+    if missing:
+        raise ValueError(
+            f"cell_ontology_map.csv for version '{model_version}' is "
+            f"missing required columns: {missing}"
+        )
+ 
+    return ontology_df
+ 
+ 
+def _make_cl_output_path(input_path, suffix="_CL"):
+    """
+    Construct an output file path by inserting a suffix before the
+    extension. If the resulting path already exists, appends a
+    timestamp (YYYYMMDD_HHMMSS) to avoid overwriting, consistent
+    with the behaviour of pack_adata.
+ 
+    Parameters
+    ----------
+    input_path : str
+        Original input file path.
+    suffix : str, default '_CL'
+        Suffix to insert before the file extension.
+ 
+    Returns
+    -------
+    str
+        Output path, guaranteed not to collide with an existing file.
+    """
+    base, ext = os.path.splitext(input_path)
+    out_path = f"{base}{suffix}{ext}"
+ 
+    if os.path.exists(out_path):
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        out_path = f"{base}{suffix}_{timestamp}{ext}"
+        print(
+            "Output file already exists. Adding timestamp suffix "
+            "to prevent overwrite."
+        )
+ 
+    return out_path
+ 
+ 
+def _map_labels(labels, model_version, include_cl_id):
+    """
+    Core label mapping logic. Maps a list of annotation labels to
+    Cell Ontology terms using the versioned ontology map. Unmapped
+    labels are set to 'unmapped'. A single warning is emitted listing
+    all unique labels that could not be mapped.
+ 
+    Parameters
+    ----------
+    labels : list of str
+        Source annotation labels to map.
+    model_version : str
+        Model version string.
+    include_cl_id : bool
+        Whether to also return CL IDs.
+ 
+    Returns
+    -------
+    cl_labels : list of str
+        CL label for each input label, or 'unmapped' if not found.
+    cl_id_labels : list of str or None
+        CL ID for each input label, or 'unmapped' if not found.
+        None if include_cl_id is False.
+    """
+    ontology_df = _load_versioned_ontology_map(model_version)
+ 
+    label_to_cl = dict(
+        zip(ontology_df["Annotation_Label"], ontology_df["CL_Label"])
+    )
+    label_to_cl_id = dict(
+        zip(ontology_df["Annotation_Label"], ontology_df["CL_ID"])
+    )
+ 
+    cl_labels = [label_to_cl.get(label) for label in labels]
+ 
+    unmapped_unique = sorted(set(
+        label for label, cl in zip(labels, cl_labels) if cl is None
+    ))
+    if unmapped_unique:
+        warnings.warn(
+            f"The following labels could not be mapped to Cell Ontology "
+            f"terms and have been set to 'unmapped': {unmapped_unique}",
+            UserWarning
+        )
+ 
+    cl_labels = [cl if cl is not None else "unmapped" for cl in cl_labels]
+ 
+    if include_cl_id:
+        cl_id_labels = [
+            label_to_cl_id.get(label, "unmapped") for label in labels
+        ]
+    else:
+        cl_id_labels = None
+ 
+    return cl_labels, cl_id_labels
+ 
+ 
+def map_to_cell_ontology(
+        data,
+        src_col=None,
+        model_version=None,
+        include_cl_id=False
+        ):
+    """
+    Map annotation labels to Cell Ontology terms.
+ 
+    Applies the versioned cell ontology map bundled with the package.
+    Unmapped labels are set to the string 'unmapped' and a single
+    warning is emitted listing all unique labels that could not be
+    mapped.
+ 
+    Accepts five input types:
+ 
+    - list of str:
+        Maps the labels directly and returns a list of CL labels, or
+        a tuple (cl_labels, cl_id_labels) if include_cl_id is True.
+        src_col is not required for this input type.
+ 
+    - str path ending in '.h5ad':
+        Reads the file, annotates obs, writes a new h5ad with '_CL'
+        appended to the stem (e.g. my_data.h5ad -> my_data_CL.h5ad),
+        and returns the annotated AnnData object.
+ 
+    - str path ending in '.csv':
+        Reads the CSV as a metadata DataFrame, annotates it, writes a
+        new CSV with '_CL' appended to the stem, and returns the
+        annotated DataFrame.
+ 
+    - anndata.AnnData:
+        Annotates .obs in place and returns the AnnData object.
+        No file is written.
+ 
+    - pandas.DataFrame:
+        Annotates the DataFrame in place and returns it.
+        No file is written.
+ 
+    For file outputs, if the target filename already exists a timestamp
+    suffix (YYYYMMDD_HHMMSS) is appended to avoid overwriting,
+    consistent with the behaviour of pack_adata.
+ 
+    Parameters
+    ----------
+    data : list, str, anndata.AnnData, or pandas.DataFrame
+        Input data. See above for how each type is handled.
+    src_col : str or None, optional
+        Name of the column in the metadata carrying the source
+        annotation labels to be mapped. Required for all input types
+        except list.
+    model_version : str or None, optional
+        Model version whose bundled ontology map should be used,
+        e.g. 'v0' or 'v1'. If None, defaults to model_version_default
+        as defined in ANNotate.py. Available versions are discovered
+        dynamically from the panhumanpy._tools directory.
+    include_cl_id : bool, default False
+        If True, also returns or adds CL identifier strings
+        (e.g. 'CL:0000236'), or 'unmapped'. For DataFrame/AnnData/file
+        inputs, the column is named {src_col}_CL_ID.
+ 
+    Returns
+    -------
+    For list input:
+        list of str, or tuple (list of str, list of str)
+            cl_labels, and cl_id_labels if include_cl_id is True.
+    For all other inputs:
+        anndata.AnnData or pandas.DataFrame with new columns:
+            {src_col}_CL       CL label, or 'unmapped'.
+            {src_col}_CL_ID    CL ID, or 'unmapped' (if include_cl_id).
+ 
+    Raises
+    ------
+    TypeError
+        If data is not one of the supported input types, or if a string
+        path does not end in '.h5ad' or '.csv'.
+    ValueError
+        If model_version is not in the list of available versions,
+        or if src_col is not provided for non-list input types,
+        or if src_col is not present in the metadata.
+    FileNotFoundError
+        If an h5ad or CSV path does not exist, or if the ontology map
+        files are missing for the specified version.
+ 
+    Warns
+    -----
+    UserWarning
+        Emitted once, listing all unique labels that could not be
+        mapped to a CL term.
+ 
+    Examples
+    --------
+    Map a list of labels directly:
+ 
+    >>> cl_labels, cl_ids = map_to_cell_ontology(
+    ...     ['B cell', 'T cell', 'UnknownType'],
+    ...     include_cl_id=True
+    ... )
+ 
+    Apply to an AnnData object:
+ 
+    >>> adata = map_to_cell_ontology(adata, src_col='azimuth_fine')
+ 
+    Apply to an h5ad file, include CL IDs, use v1 map:
+ 
+    >>> adata = map_to_cell_ontology(
+    ...     'my_data.h5ad',
+    ...     src_col='azimuth_fine',
+    ...     model_version='v1',
+    ...     include_cl_id=True
+    ... )
+ 
+    Apply to a metadata CSV:
+ 
+    >>> df = map_to_cell_ontology(
+    ...     'my_metadata.csv',
+    ...     src_col='azimuth_broad'
+    ... )
+    """
+    if model_version is None:
+        from panhumanpy.ANNotate import model_version_default
+        model_version = model_version_default
+ 
+    # ── list input: map directly and return ───────────────────────────
+    if isinstance(data, list):
+        cl_labels, cl_id_labels = _map_labels(
+            data, model_version, include_cl_id
+        )
+        if include_cl_id:
+            return cl_labels, cl_id_labels
+        return cl_labels
+ 
+    # ── all other input types require src_col ─────────────────────────
+    if src_col is None:
+        raise ValueError(
+            "src_col must be provided for AnnData, DataFrame, "
+            "and file path inputs."
+        )
+ 
+    def _apply_to_df(df):
+        if src_col not in df.columns:
+            raise ValueError(
+                f"Column '{src_col}' not found in metadata. "
+                f"Available columns: {list(df.columns)}"
+            )
+        labels = df[src_col].tolist()
+        cl_labels, cl_id_labels = _map_labels(
+            labels, model_version, include_cl_id
+        )
+        src_col_idx = df.columns.get_loc(src_col)
+        cl_col = f"{src_col}_CL"
+        df_out = insert_col(df, src_col_idx + 1, cl_col, cl_labels)
+        if include_cl_id:
+            cl_id_col = f"{src_col}_CL_ID"
+            cl_col_idx = df_out.columns.get_loc(cl_col)
+            df_out = insert_col(
+                df_out, cl_col_idx + 1, cl_id_col, cl_id_labels
+            )
+        return df_out
+ 
+    if isinstance(data, str):
+        if data.endswith(".h5ad"):
+            if not os.path.isfile(data):
+                raise FileNotFoundError(
+                    f"h5ad file not found: {data}"
+                )
+            adata = anndata.read_h5ad(data)
+            adata.obs = _apply_to_df(adata.obs)
+            out_path = _make_cl_output_path(data)
+            adata.write(out_path)
+            print(f"Annotated h5ad saved to: {out_path}")
+            return adata
+ 
+        elif data.endswith(".csv"):
+            if not os.path.isfile(data):
+                raise FileNotFoundError(
+                    f"CSV file not found: {data}"
+                )
+            df = pd.read_csv(data)
+            df = _apply_to_df(df)
+            out_path = _make_cl_output_path(data)
+            df.to_csv(out_path, index=False)
+            print(f"Annotated CSV saved to: {out_path}")
+            return df
+ 
+        else:
+            raise TypeError(
+                f"String path must end in '.h5ad' or '.csv', "
+                f"got: '{data}'"
+            )
+ 
+    elif isinstance(data, anndata.AnnData):
+        data.obs = _apply_to_df(data.obs)
+        return data
+ 
+    elif isinstance(data, pd.DataFrame):
+        return _apply_to_df(data)
+ 
+    else:
+        raise TypeError(
+            "data must be a list, an anndata.AnnData, a pandas "
+            "DataFrame, a path string to an .h5ad file, or a path "
+            f"string to a .csv file. Got: {type(data)}"
+        )
+ 
 
         
 

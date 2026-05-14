@@ -1,0 +1,447 @@
+Organ_Level,Organ_ID,Annotation_Label,Annotation_Label_ID,CL_Label,CL_ID,CL_Match
+body_proper,UBERON:0013702,Adipocyte,PAZ:0000001,adipocyte,CL:0000136,skos:exactMatch
+body_proper,UBERON:0013702,Doublet like cell,PAZ:0000002,cell:doublet like cell,CL:0000000,skos:narrowMatch
+body_proper,UBERON:0013702,Embryonic cell,PAZ:0000003,embryonic cell (metazoa),CL:0002321,skos:exactMatch
+body_proper,UBERON:0013702,Endothelial cell,PAZ:0000004,endothelial cell,CL:0000115,skos:exactMatch
+body_proper,UBERON:0013702,Epithelial cell,PAZ:0000005,epithelial cell,CL:0000066,skos:exactMatch
+body_proper,UBERON:0013702,Fibroblast,PAZ:0000006,fibroblast,CL:0000057,skos:exactMatch
+body_proper,UBERON:0013702,Germ cell,PAZ:0000007,germ cell,CL:0000586,skos:exactMatch
+body_proper,UBERON:0013702,Glial cell,PAZ:0000008,glial cell,CL:0000125,skos:exactMatch
+body_proper,UBERON:0013702,Immune cell,PAZ:0000009,leukocyte,CL:0000738,skos:exactMatch
+body_proper,UBERON:0013702,Muscle cell,PAZ:0000010,muscle cell,CL:0000187,skos:exactMatch
+body_proper,UBERON:0013702,Neuron,PAZ:0000011,neuron,CL:0000540,skos:exactMatch
+body_proper,UBERON:0013702,Perivascular cell,PAZ:0000012,perivascular cell,CL:4033054,skos:exactMatch
+body_proper,UBERON:0013702,Fibroblast/Granulosa doublet like cell,PAZ:0000013,cell:fibroblast/granulosa doublet like cell,CL:0000000,skos:narrowMatch
+body_proper,UBERON:0013702,Mesodermal cell,PAZ:0000014,mesodermal cell,CL:0000222,skos:exactMatch
+body_proper,UBERON:0013702,Trophoblast,PAZ:0000015,trophoblast cell,CL:0000351,skos:exactMatch
+body_proper,UBERON:0013702,Arterial EC,PAZ:0000016,endothelial cell of artery,CL:1000413,skos:exactMatch
+body_proper,UBERON:0013702,Capillary EC,PAZ:0000017,capillary endothelial cell,CL:0002144,skos:exactMatch
+body_proper,UBERON:0013702,Cycling EC,PAZ:0000018,endothelial cell:cycling,CL:0000115,skos:narrowMatch
+body_proper,UBERON:0013702,Endocardial cell,PAZ:0000019,endocardial cell,CL:0002350,skos:exactMatch
+body_proper,UBERON:0013702,Endothelial‑mesenchymal transition EC,PAZ:0000020,endothelial cell:endothelial-mesenchymal transition,CL:0000115,skos:narrowMatch
+body_proper,UBERON:0013702,Lymphatic EC,PAZ:0000021,endothelial cell of lymphatic vessel,CL:0002138,skos:exactMatch
+body_proper,UBERON:0013702,Tip EC,PAZ:0000022,endothelial tip cell,CL:0000704,skos:exactMatch
+body_proper,UBERON:0013702,Venous EC,PAZ:0000023,vein endothelial cell,CL:0002543,skos:exactMatch
+body_proper,UBERON:0013702,Endocrine cell,PAZ:0000024,endocrine cell,CL:0000163,skos:exactMatch
+body_proper,UBERON:0013702,Epithelial cell of adrenal gland,PAZ:0000025,adrenal gland glandular cell,CL:1001601,skos:exactMatch
+body_proper,UBERON:0013702,Epithelial cell of bladder,PAZ:0000026,epithelial cell:bladder,CL:0000066,skos:narrowMatch
+body_proper,UBERON:0013702,Epithelial cell of breast,PAZ:0000027,mammary gland epithelial cell,CL:0002327,skos:exactMatch
+body_proper,UBERON:0013702,Epithelial cell of eye,PAZ:0000028,epithelial cell:liver,CL:0000066,skos:narrowMatch
+body_proper,UBERON:0013702,Epithelial cell of gingiva,PAZ:0000029,gingival epithelial cell,CL:0002621,skos:exactMatch
+body_proper,UBERON:0013702,Epithelial cell of intestine,PAZ:0000030,intestinal epithelial cell,CL:0002563,skos:exactMatch
+body_proper,UBERON:0013702,Epithelial cell of kidney,PAZ:0000031,kidney epithelial cell,CL:0002518,skos:exactMatch
+body_proper,UBERON:0013702,Epithelial cell of liver,PAZ:0000032,epithelial cell:liver,CL:0000066,skos:narrowMatch
+body_proper,UBERON:0013702,Epithelial cell of lung,PAZ:0000033,epithelial cell of lung,CL:0000082,skos:exactMatch
+body_proper,UBERON:0013702,Epithelial cell of ovary,PAZ:0000034,epithelial cell:ovary,CL:0000066,skos:narrowMatch
+body_proper,UBERON:0013702,Epithelial cell of pancreas,PAZ:0000035,epithelial cell of pancreas,CL:0000083,skos:exactMatch
+body_proper,UBERON:0013702,Epithelial cell of skin,PAZ:0000036,epithelial cell:skin,CL:0000066,skos:narrowMatch
+body_proper,UBERON:0013702,Epithelial cell of stomach,PAZ:0000037,epithelial cell of stomach,CL:0002178,skos:exactMatch
+body_proper,UBERON:0013702,Epithelial cell of testis,PAZ:0000038,epithelial cell:testis,CL:0000066,skos:narrowMatch
+body_proper,UBERON:0013702,Epithelial cell of thymus,PAZ:0000039,epithelial cell of thymus,CL:0002293,skos:exactMatch
+body_proper,UBERON:0013702,Mesothelial cell,PAZ:0000040,mesothelial cell,CL:0000077,skos:exactMatch
+body_proper,UBERON:0013702,Adipose ITLN1 fibroblast,PAZ:0000041,fibroblast:Adipose ITLN1,CL:0000057,skos:narrowMatch
+body_proper,UBERON:0013702,ANGPTL7+NRP2+ fibroblast,PAZ:0000042,fibroblast:ANGPTL7+NRP2+,CL:0000057,skos:narrowMatch
+body_proper,UBERON:0013702,C2orf40+ fibroblast,PAZ:0000043,fibroblast:C2orf40+,CL:0000057,skos:narrowMatch
+body_proper,UBERON:0013702,C3+ fibroblast,PAZ:0000044,fibroblast:C3+,CL:0000057,skos:narrowMatch
+body_proper,UBERON:0013702,CCL11+ fibroblast,PAZ:0000045,fibroblast:CCL11+,CL:0000057,skos:narrowMatch
+body_proper,UBERON:0013702,CCL2+SFRP2+ fibroblast,PAZ:0000046,fibroblast:CCL2+SFRP2+,CL:0000057,skos:narrowMatch
+body_proper,UBERON:0013702,CD55+SEMA3C+ fibroblast,PAZ:0000047,fibroblast:CD55+SEMA3C+,CL:0000057,skos:narrowMatch
+body_proper,UBERON:0013702,CDCA7+ fibroblast,PAZ:0000048,fibroblast:CDCA7+,CL:0000057,skos:narrowMatch
+body_proper,UBERON:0013702,CFD+MGP+ fibroblast,PAZ:0000049,fibroblast:CFD+MGP+,CL:0000057,skos:narrowMatch
+body_proper,UBERON:0013702,CLU+ fibroblast,PAZ:0000050,fibroblast:CLU+,CL:0000057,skos:narrowMatch
+body_proper,UBERON:0013702,CXCL+ fibroblast,PAZ:0000051,fibroblast:CXCL+,CL:0000057,skos:narrowMatch
+body_proper,UBERON:0013702,Cycling fibroblast,PAZ:0000052,fibroblast:Cycling,CL:0000057,skos:narrowMatch
+body_proper,UBERON:0013702,F3+ fibroblast,PAZ:0000053,fibroblast:F3+,CL:0000057,skos:narrowMatch
+body_proper,UBERON:0013702,FBLN2+APOD+ fibroblast,PAZ:0000054,fibroblast:FBLN2+APOD+,CL:0000057,skos:narrowMatch
+body_proper,UBERON:0013702,FRZB+ fibroblast,PAZ:0000055,fibroblast:FRZB+,CL:0000057,skos:narrowMatch
+body_proper,UBERON:0013702,G0S2+PPP1R14A+ fibroblast,PAZ:0000056,fibroblast:G0S2+PPP1R14A+,CL:0000057,skos:narrowMatch
+body_proper,UBERON:0013702,GREB1+ fibroblast,PAZ:0000057,fibroblast:GREB1+,CL:0000057,skos:narrowMatch
+body_proper,UBERON:0013702,IGFBP1+ fibroblast,PAZ:0000058,fibroblast:IGFBP1+,CL:0000057,skos:narrowMatch
+body_proper,UBERON:0013702,IGFBP6+APOD+ fibroblast,PAZ:0000059,fibroblast:IGFBP6+APOD+,CL:0000057,skos:narrowMatch
+body_proper,UBERON:0013702,IGFBP6+SFRP4+ fibroblast,PAZ:0000060,fibroblast:IGFBP6+SFRP4+,CL:0000057,skos:narrowMatch
+body_proper,UBERON:0013702,KCNN3+ fibroblast,PAZ:0000061,fibroblast:KCNN3+,CL:0000057,skos:narrowMatch
+body_proper,UBERON:0013702,MDK+NREP+ fibroblast,PAZ:0000062,fibroblast:MDK+NREP+,CL:0000057,skos:narrowMatch
+body_proper,UBERON:0013702,Mesenchymal stromal cell,PAZ:0000063,mesenchymal cell:stromal,CL:0008019,skos:narrowMatch
+body_proper,UBERON:0013702,Metallothionein+ fibroblast,PAZ:0000064,fibroblast:Metallothionein-positive,CL:0000057,skos:narrowMatch
+body_proper,UBERON:0013702,MMP1+ fibroblast,PAZ:0000065,fibroblast:MMP1-positive,CL:0000057,skos:narrowMatch
+body_proper,UBERON:0013702,Myofibroblast,PAZ:0000066,myofibroblast cell,CL:0000186,skos:exactMatch
+body_proper,UBERON:0013702,NR4A3 fibroblast,PAZ:0000067,fibroblast:NR4A3,CL:0000057,skos:narrowMatch
+body_proper,UBERON:0013702,PCOLCE2 fibroblast,PAZ:0000068,fibroblast:PCOLCE2,CL:0000057,skos:narrowMatch
+body_proper,UBERON:0013702,PLA2G2A+IGFBP4+APOC1+ fibroblast,PAZ:0000069,fibroblast:PLA2G2A+IGFBP4+APOC1+,CL:0000057,skos:narrowMatch
+body_proper,UBERON:0013702,PLAC9+ fibroblast,PAZ:0000070,fibroblast:PLAC9+,CL:0000057,skos:narrowMatch
+body_proper,UBERON:0013702,POSTN fibroblast,PAZ:0000071,fibroblast:POSTN,CL:0000057,skos:narrowMatch
+body_proper,UBERON:0013702,RNASE1+ fibroblast,PAZ:0000072,fibroblast:RNASE1+,CL:0000057,skos:narrowMatch
+body_proper,UBERON:0013702,SCN7A fibroblast,PAZ:0000073,fibroblast:SCN7A,CL:0000057,skos:narrowMatch
+body_proper,UBERON:0013702,SPARCL1+ fibroblast,PAZ:0000074,fibroblast:SPARCL1+,CL:0000057,skos:narrowMatch
+body_proper,UBERON:0013702,TCIM+NRG1+ fibroblast,PAZ:0000075,fibroblast:TCIM+NRG1+,CL:0000057,skos:narrowMatch
+body_proper,UBERON:0013702,THY1+ fibroblast,PAZ:0000076,fibroblast:THY1+,CL:0000057,skos:narrowMatch
+body_proper,UBERON:0013702,TNC fibroblast,PAZ:0000077,fibroblast:TNC,CL:0000057,skos:narrowMatch
+body_proper,UBERON:0013702,WISP2+ fibroblast,PAZ:0000078,fibroblast:WISP2+,CL:0000057,skos:narrowMatch
+body_proper,UBERON:0013702,Oocyte,PAZ:0000079,oocyte,CL:0000023,skos:exactMatch
+body_proper,UBERON:0013702,Primordial germ cell,PAZ:0000080,primordial germ cell,CL:0000670,skos:exactMatch
+body_proper,UBERON:0013702,Spermatocyte,PAZ:0000081,spermatocyte,CL:0000017,skos:exactMatch
+body_proper,UBERON:0013702,Glial cell of brain,PAZ:0000082,glial cell:brain,CL:0000125,skos:narrowMatch
+body_proper,UBERON:0013702,Glial cell of intestine,PAZ:0000083,glial cell:intestine,CL:0000125,skos:narrowMatch
+body_proper,UBERON:0013702,Muller glia,PAZ:0000084,Mueller cell,CL:0000636,skos:exactMatch
+body_proper,UBERON:0013702,Cycling immune cell,PAZ:0000085,leukocyte:cycling,CL:0000738,skos:narrowMatch
+body_proper,UBERON:0013702,Erythrocyte/Megakaryocyte,PAZ:0000086,myeloid cell:erythrocyte/megakaryocyte,CL:0000763,skos:narrowMatch
+body_proper,UBERON:0013702,Hematopoietic precursor cell,PAZ:0000087,hematopoietic precursor cell,CL:0008001,skos:exactMatch
+body_proper,UBERON:0013702,Lymphoid cell,PAZ:0000088,lymphocyte,CL:0000542,skos:exactMatch
+body_proper,UBERON:0013702,Myeloid cell,PAZ:0000089,myeloid cell,CL:0000763,skos:exactMatch
+body_proper,UBERON:0013702,Cardiomyocyte,PAZ:0000090,cardiac muscle cell,CL:0000746,skos:exactMatch
+body_proper,UBERON:0013702,Skeletal muscle cell,PAZ:0000091,cell of skeletal muscle,CL:0000188,skos:exactMatch
+body_proper,UBERON:0013702,Neuron of brain,PAZ:0000092,neuron:brain,CL:0000540,skos:narrowMatch
+body_proper,UBERON:0013702,Neuron of retina,PAZ:0000093,retinal cell:neuron,CL:0009004,skos:narrowMatch
+body_proper,UBERON:0013702,Cycling perivascular cell,PAZ:0000102,perivascular cell:cycling,CL:4033054,skos:narrowMatch
+body_proper,UBERON:0013702,Pericyte,PAZ:0000103,pericyte,CL:0000669,skos:exactMatch
+body_proper,UBERON:0013702,Vascular smooth muscle cell,PAZ:0000104,vascular associated smooth muscle cell,CL:0000359,skos:exactMatch
+body_proper,UBERON:0013702,ZEB2+ mesoderm,PAZ:0000105,mesodermal cell:ZEB2+,CL:0000222,skos:narrowMatch
+body_proper,UBERON:0013702,Cytotrophoblast,PAZ:0000106,trophoblast cell:cytotrophoblast,CL:0000351,skos:narrowMatch
+body_proper,UBERON:0013702,Extravillous trophoblast,PAZ:0000107,extravillous trophoblast,CL:0008036,skos:exactMatch
+body_proper,UBERON:0013702,INF-activated trophoblast,PAZ:0000108,trophoblast cell:INF:activated,CL:0000351,skos:narrowMatch
+body_proper,UBERON:0013702,Syncytiotrophoblast,PAZ:0000109,syncytiotrophoblast cell,CL:0000525,skos:exactMatch
+body_proper,UBERON:0013702,ACTA2+ arterial EC,PAZ:0000110,endothelial cell of artery:ACTA2+,CL:1000413,skos:narrowMatch
+body_proper,UBERON:0013702,Fetal MHC- arterial EC,PAZ:0000111,fetal artery endothelial cell:MHC-,CL:4047006,skos:narrowMatch
+body_proper,UBERON:0013702,SRGN+ arterial EC,PAZ:0000112,endothelial cell of artery:SRGN+,CL:1000413,skos:narrowMatch
+body_proper,UBERON:0013702,ACTA2+ capillary EC,PAZ:0000113,capillary endothelial cell:ACTA2+,CL:0002144,skos:narrowMatch
+body_proper,UBERON:0013702,Fetal MHC- capillary EC,PAZ:0000114,capillary endothelial cell:MHC- fetal,CL:0002144,skos:narrowMatch
+body_proper,UBERON:0013702,Fetal MHC- venous EC,PAZ:0000115,fetal vein endothelial cell:MHC-,CL:4047011,skos:narrowMatch
+body_proper,UBERON:0013702,Capsular cell,PAZ:0000116,adrenal gland glandular cell:capsular,CL:1001601,skos:narrowMatch
+body_proper,UBERON:0013702,Chromaffin cell,PAZ:0000117,chromaffin cell of adrenal gland,CL:1000426,skos:exactMatch
+body_proper,UBERON:0013702,Steroidogenic cell,PAZ:0000118,adrenal gland glandular cell:steroidogenic,CL:1001601,skos:narrowMatch
+body_proper,UBERON:0013702,Sympathoadrenal cell,PAZ:0000119,adrenal gland glandular cell:sympathoadrenal,CL:1001601,skos:narrowMatch
+body_proper,UBERON:0013702,Sympathoblast,PAZ:0000120,adrenal gland glandular cell:sympathoblast,CL:1001601,skos:narrowMatch
+body_proper,UBERON:0013702,Basal cell of bladder,PAZ:0000121,basal cell:bladder,CL:0000646,skos:narrowMatch
+body_proper,UBERON:0013702,Lactocyte,PAZ:0000122,lactocyte,CL:0002325,skos:exactMatch
+body_proper,UBERON:0013702,Mammary basal cell,PAZ:0000123,basal-myoepithelial cell of mammary gland,CL:0002324,skos:exactMatch
+body_proper,UBERON:0013702,Mammary luminal cell,PAZ:0000124,luminal hormone-sensing cell of mammary gland,CL:4033058,skos:exactMatch
+body_proper,UBERON:0013702,Mammary luminal progenitor,PAZ:0000125,luminal adaptive secretory precursor cell of mammary gland,CL:4033057,skos:exactMatch
+body_proper,UBERON:0013702,Ciliary body cell,PAZ:0000126,epithelial cell:ciliary body,CL:0000066,skos:narrowMatch
+body_proper,UBERON:0013702,Corneal epithelial cell,PAZ:0000127,corneal epithelial cell,CL:0000575,skos:exactMatch
+body_proper,UBERON:0013702,Epithelial cell of conjunctiva,PAZ:0000128,conjunctival epithelial cell,CL:1000432,skos:exactMatch
+body_proper,UBERON:0013702,Eye melanocyte,PAZ:0000129,melanocyte:eye,CL:0000148,skos:narrowMatch
+body_proper,UBERON:0013702,Retinal pigment epithelial cell,PAZ:0000130,retinal pigment epithelial cell,CL:0002586,skos:exactMatch
+body_proper,UBERON:0013702,Melanocyte,PAZ:0000131,melanocyte:gingiva,CL:0000148,skos:narrowMatch
+body_proper,UBERON:0013702,Colonocyte,PAZ:0000132,colonocyte,CL:1000347,skos:exactMatch
+body_proper,UBERON:0013702,Enterocyte,PAZ:0000133,enterocyte,CL:0000584,skos:exactMatch
+body_proper,UBERON:0013702,Enteroendocrine cell,PAZ:0000134,enteroendocrine cell:intestinal,CL:0000164,skos:narrowMatch
+body_proper,UBERON:0013702,Goblet cell,PAZ:0000135,intestine goblet cell,CL:0019031,skos:exactMatch
+body_proper,UBERON:0013702,Microfold cell,PAZ:0000136,M cell of gut,CL:0000682,skos:exactMatch
+body_proper,UBERON:0013702,Paneth cell,PAZ:0000137,paneth cell,CL:0000510,skos:exactMatch
+body_proper,UBERON:0013702,Squamous epithelial cell,PAZ:0000138,squamous epithelial cell:intestinal,CL:0000076,skos:narrowMatch
+body_proper,UBERON:0013702,Transit-amplifying cell,PAZ:0000139,transit amplifying cell of gut,CL:4047017,skos:exactMatch
+body_proper,UBERON:0013702,Tuft cell,PAZ:0000140,intestinal tuft cell,CL:0019032,skos:exactMatch
+body_proper,UBERON:0013702,Renal epithelial cell - distal tubules,PAZ:0000141,epithelial cell of distal tubule,CL:0002305,skos:exactMatch
+body_proper,UBERON:0013702,Renal epithelial cell - Loop of Henle,PAZ:0000142,kidney loop of Henle epithelial cell,CL:1000909,skos:exactMatch
+body_proper,UBERON:0013702,Renal epithelial cell - proximal tubules,PAZ:0000143,epithelial cell of proximal tubule,CL:0002306,skos:exactMatch
+body_proper,UBERON:0013702,Renal intercalated cell,PAZ:0000144,renal intercalated cell,CL:0005010,skos:exactMatch
+body_proper,UBERON:0013702,cholangiocyte,PAZ:0000145,cholangiocyte,CL:1000488,skos:exactMatch
+body_proper,UBERON:0013702,Hepatocyte,PAZ:0000146,hepatocyte,CL:0000182,skos:exactMatch
+body_proper,UBERON:0013702,Aerocyte,PAZ:0000147,alveolar capillary type 2 endothelial cell,CL:4028003,skos:exactMatch
+body_proper,UBERON:0013702,Airway basal cell,PAZ:0000148,respiratory tract epithelial cell,CL:0002368,skos:exactMatch
+body_proper,UBERON:0013702,Alveolar epithelial cell,PAZ:0000149,pulmonary alveolar epithelial cell,CL:0000322,skos:exactMatch
+body_proper,UBERON:0013702,Club cell,PAZ:0000150,club cell:lung,CL:0000158,skos:narrowMatch
+body_proper,UBERON:0013702,Multiciliated cell,PAZ:0000151,lung multiciliated epithelial cell,CL:1000271,skos:exactMatch
+body_proper,UBERON:0013702,Neuroendocrine cell,PAZ:0000152,pulmonary neuroendocrine cell,CL:1000223,skos:exactMatch
+body_proper,UBERON:0013702,AFP+ epithelial cell,PAZ:0000153,epithelial cell:AFP+ ovary,CL:0000066,skos:narrowMatch
+body_proper,UBERON:0013702,CLDN3+ epithelial cell,PAZ:0000154,epithelial cell:CLDN3+ ovary,CL:0000066,skos:narrowMatch
+body_proper,UBERON:0013702,GABRP+ epithelial cell,PAZ:0000155,epithelial cell:GABRP+ ovary,CL:0000066,skos:narrowMatch
+body_proper,UBERON:0013702,Granulosa cell,PAZ:0000156,granulosa cell,CL:0000501,skos:exactMatch
+body_proper,UBERON:0013702,Acinar cell,PAZ:0000157,pancreatic acinar cell,CL:0002064,skos:exactMatch
+body_proper,UBERON:0013702,Alpha cell,PAZ:0000158,pancreatic A cell,CL:0000171,skos:exactMatch
+body_proper,UBERON:0013702,Beta cell,PAZ:0000159,type B pancreatic cell,CL:0000169,skos:exactMatch
+body_proper,UBERON:0013702,Epsilon cell,PAZ:0000160,pancreatic epsilon cell,CL:0005019,skos:exactMatch
+body_proper,UBERON:0013702,Metallothionein+ epithelial cell,PAZ:0000161,epithelial cell of pancreas:Metallothionein+,CL:0000083,skos:narrowMatch
+body_proper,UBERON:0013702,Pancreatic ductal cell,PAZ:0000162,pancreatic ductal cell,CL:0002079,skos:exactMatch
+body_proper,UBERON:0013702,PP cell,PAZ:0000163,pancreatic PP cell,CL:0002275,skos:exactMatch
+body_proper,UBERON:0013702,Keratinocyte,PAZ:0000164,keratinocyte,CL:0000312,skos:exactMatch
+body_proper,UBERON:0013702,Merkel cell carcinoma enriched epithelial cell,PAZ:0000165,Merkel cell,CL:0000242,skos:narrowMatch
+body_proper,UBERON:0013702,Chief cell,PAZ:0000166,peptic cell,CL:0000155,skos:exactMatch
+body_proper,UBERON:0013702,Delta cell,PAZ:0000167,type D cell of stomach,CL:0002267,skos:exactMatch
+body_proper,UBERON:0013702,Enterochromaffin cell,PAZ:0000168,type EC enteroendocrine cell,CL:0000577,skos:exactMatch
+body_proper,UBERON:0013702,SCGB2A1+ endocrine cell,PAZ:0000169,enteroendocrine cell:SCGB2A1+,CL:0000164,skos:narrowMatch
+body_proper,UBERON:0013702,Surface mucous cell,PAZ:0000170,mucous cell of stomach:surface,CL:0002180,skos:narrowMatch
+body_proper,UBERON:0013702,Leydig cell,PAZ:0000171,Leydig cell,CL:0000178,skos:exactMatch
+body_proper,UBERON:0013702,Luminal cell,PAZ:0000172,epithelial cell:testis luminal,CL:0000066,skos:narrowMatch
+body_proper,UBERON:0013702,Peritubular myoid cell,PAZ:0000173,peritubular myoid cell,CL:0002481,skos:exactMatch
+body_proper,UBERON:0013702,Sertoli and Interstitial cell common progenitor,PAZ:0000174,epithelial cell:Sertoli and interstitial common progenitor,CL:0000066,skos:narrowMatch
+body_proper,UBERON:0013702,Sertoli cell,PAZ:0000175,Sertoli cell,CL:0000216,skos:exactMatch
+body_proper,UBERON:0013702,Supporting-like PAX8+ cell,PAZ:0000176,epithelial cell:testis supporting-like PAX8+ cell,CL:0000066,skos:narrowMatch
+body_proper,UBERON:0013702,Cortical thymic epithelial cell,PAZ:0000177,cortical thymic epithelial cell,CL:0002364,skos:exactMatch
+body_proper,UBERON:0013702,Cycling thymic epithelial cell,PAZ:0000178,epithelial cell of thymus:cycling,CL:0002293,skos:narrowMatch
+body_proper,UBERON:0013702,Medullary thymic epithelial cell,PAZ:0000179,medullary thymic epithelial cell,CL:0002365,skos:exactMatch
+body_proper,UBERON:0013702,Thymic ciliated cell,PAZ:0000180,epithelial cell of thymus:ciliated,CL:0002293,skos:narrowMatch
+body_proper,UBERON:0013702,Thymic myoid cell,PAZ:0000181,epithelial cell of thymus:myoid,CL:0002293,skos:narrowMatch
+body_proper,UBERON:0013702,CRABP1+ mesothelial cell,PAZ:0000182,mesothelial cell:CRABP1+,CL:0000077,skos:narrowMatch
+body_proper,UBERON:0013702,Cycling mesothelial cell,PAZ:0000183,mesothelial cell:cycling,CL:0000077,skos:narrowMatch
+body_proper,UBERON:0013702,GATA4+ mesothelial cell,PAZ:0000184,mesothelial cell:GATA4+,CL:0000077,skos:narrowMatch
+body_proper,UBERON:0013702,Cycling CDCA7+ fibroblast,PAZ:0000185,fibroblast:Cycling CDCA7+,CL:0000057,skos:narrowMatch
+body_proper,UBERON:0013702,APCDD1+ fibroblast,PAZ:0000186,fibroblast:APCDD1+,CL:0000057,skos:narrowMatch
+body_proper,UBERON:0013702,APOE+ fibroblast,PAZ:0000187,fibroblast:APOE+,CL:0000057,skos:narrowMatch
+body_proper,UBERON:0013702,C7+ fibroblast,PAZ:0000188,fibroblast:C7+,CL:0000057,skos:narrowMatch
+body_proper,UBERON:0013702,COCH+ fibroblast,PAZ:0000189,fibroblast:COCH+,CL:0000057,skos:narrowMatch
+body_proper,UBERON:0013702,CXCL14+ fibroblast,PAZ:0000190,fibroblast:CXCL14+,CL:0000057,skos:narrowMatch
+body_proper,UBERON:0013702,FGFBP2+ fibroblast,PAZ:0000191,fibroblast:FGFBP2+,CL:0000057,skos:narrowMatch
+body_proper,UBERON:0013702,CXCL1/2/3 fibroblast,PAZ:0000192,fibroblast:CXCL1/2/3,CL:0000057,skos:narrowMatch
+body_proper,UBERON:0013702,ADAMDEC1+ fibroblast,PAZ:0000193,fibroblast:ADAMDEC1+,CL:0000057,skos:narrowMatch
+body_proper,UBERON:0013702,Metallothionein+ Collagen- fibroblast,PAZ:0000194,fibroblast:Metallothionein+ Collagen-,CL:0000057,skos:narrowMatch
+body_proper,UBERON:0013702,Meiotic oocyte,PAZ:0000195,oocyte:meiotic,CL:0000023,skos:narrowMatch
+body_proper,UBERON:0013702,Mitotic oocyte,PAZ:0000196,oocyte:mitotic,CL:0000023,skos:narrowMatch
+body_proper,UBERON:0013702,Retinoid acid responsive oocyte,PAZ:0000197,oocyte:retinoid acid responsive,CL:0000023,skos:narrowMatch
+body_proper,UBERON:0013702,Cycling primordial germ cell,PAZ:0000198,primordial germ cell:cycling,CL:0000670,skos:narrowMatch
+body_proper,UBERON:0013702,Early spermatocyte,PAZ:0000199,primary spermatocyte,CL:0000656,skos:exactMatch
+body_proper,UBERON:0013702,Late spermatocyte,PAZ:0000200,secondary spermatocyte,CL:0000657,skos:exactMatch
+body_proper,UBERON:0013702,Spermatid,PAZ:0000201,spermatid,CL:0000018,skos:exactMatch
+body_proper,UBERON:0013702,Spermatogonial stem cell,PAZ:0000202,spermatogonium,CL:0000020,skos:exactMatch
+body_proper,UBERON:0013702,Astrocyte,PAZ:0000203,astrocyte:brain,CL:0000127,skos:narrowMatch
+body_proper,UBERON:0013702,Oligodendrocyte,PAZ:0000204,oligodendrocyte:brain,CL:0000128,skos:narrowMatch
+body_proper,UBERON:0013702,Cycling glial cell,PAZ:0000205,cycling glial cell:intestine,CL:4047002,skos:narrowMatch
+body_proper,UBERON:0013702,Megakaryocyte,PAZ:0000206,megakaryocyte,CL:0000556,skos:exactMatch
+body_proper,UBERON:0013702,Red blood cell,PAZ:0000207,erythrocyte,CL:0000232,skos:exactMatch
+body_proper,UBERON:0013702,CLP,PAZ:0000208,common lymphoid progenitor,CL:0000051,skos:exactMatch
+body_proper,UBERON:0013702,EoBaMa Progenitor,PAZ:0000209,granulocytopoietic cell:eosinophil-basophil-mast cell precursor,CL:0002191,skos:narrowMatch
+body_proper,UBERON:0013702,GMP,PAZ:0000210,granulocyte monocyte progenitor cell,CL:0000557,skos:exactMatch
+body_proper,UBERON:0013702,HSC,PAZ:0000211,hematopoietic stem cell,CL:0000037,skos:exactMatch
+body_proper,UBERON:0013702,LMPP,PAZ:0000212,early lymphoid progenitor,CL:0000936,skos:exactMatch
+body_proper,UBERON:0013702,MEP,PAZ:0000213,megakaryocyte-erythroid progenitor cell,CL:0000050,skos:exactMatch
+body_proper,UBERON:0013702,MkP,PAZ:0000214,megakaryocyte progenitor cell,CL:0000553,skos:exactMatch
+body_proper,UBERON:0013702,MPP,PAZ:0000215,hematopoietic multipotent progenitor cell,CL:0000837,skos:exactMatch
+body_proper,UBERON:0013702,Pre-cDC,PAZ:0000216,pre-conventional dendritic cell,CL:0002010,skos:exactMatch
+body_proper,UBERON:0013702,Pre-pDC,PAZ:0000217,hematopoietic lineage restricted progenitor cell:pre-plasmacytoid dendritic cell,CL:0002031,skos:narrowMatch
+body_proper,UBERON:0013702,B cell,PAZ:0000218,B cell,CL:0000236,skos:exactMatch
+body_proper,UBERON:0013702,T/NK cell,PAZ:0000219,lymphocyte:T/NK,CL:0000542,skos:narrowMatch
+body_proper,UBERON:0013702,Cycling myeloid cell,PAZ:0000220,cycling myeloid cell,CL:4033081,skos:exactMatch
+body_proper,UBERON:0013702,Dendritic cell,PAZ:0000221,dendritic cell,CL:0000451,skos:exactMatch
+body_proper,UBERON:0013702,Granulocyte,PAZ:0000222,granulocyte,CL:0000094,skos:exactMatch
+body_proper,UBERON:0013702,Macrophage,PAZ:0000223,macrophage,CL:0000235,skos:exactMatch
+body_proper,UBERON:0013702,Monocyte,PAZ:0000224,monocyte,CL:0000576,skos:exactMatch
+body_proper,UBERON:0013702,Monocyte/DC,PAZ:0000225,monocyte-derived dendritic cell,CL:0011031,skos:exactMatch
+body_proper,UBERON:0013702,Osteoclast,PAZ:0000226,osteoclast,CL:0000092,skos:exactMatch
+body_proper,UBERON:0013702,Atrial cardiomyocyte,PAZ:0000227,regular atrial cardiac myocyte,CL:0002129,skos:exactMatch
+body_proper,UBERON:0013702,Ventricular cardiomyocyte,PAZ:0000228,ventricular cardiac muscle cell,CL:2000046,skos:exactMatch
+body_proper,UBERON:0013702,Fast-twitch skeletal muscle cell,PAZ:0000229,fast muscle cell,CL:0000190,skos:exactMatch
+body_proper,UBERON:0013702,MYOM1+ skeletal muscle cell,PAZ:0000230,cell of skeletal muscle:MYOM1+,CL:0000188,skos:narrowMatch
+body_proper,UBERON:0013702,Skeletal muscle myoblast,PAZ:0000231,skeletal muscle myoblast,CL:0000515,skos:exactMatch
+body_proper,UBERON:0013702,Slow-twitch skeletal muscle cell,PAZ:0000232,slow muscle cell,CL:0000189,skos:exactMatch
+body_proper,UBERON:0013702,Excitatory neuron,PAZ:0000233,neuron:excitatory,CL:0000540,skos:narrowMatch
+body_proper,UBERON:0013702,Inhibitory neuron,PAZ:0000234,neuron:inhibitory,CL:0000540,skos:narrowMatch
+body_proper,UBERON:0013702,Miscellaneous neuron,PAZ:0000235,neuron:miscellaneous,CL:0000540,skos:narrowMatch
+body_proper,UBERON:0013702,Amacrine cell,PAZ:0000236,amacrine cell,CL:0000561,skos:exactMatch
+body_proper,UBERON:0013702,Bipolar cell,PAZ:0000237,retinal bipolar neuron,CL:0000748,skos:exactMatch
+body_proper,UBERON:0013702,Cone cell,PAZ:0000238,retinal cone cell,CL:0000573,skos:exactMatch
+body_proper,UBERON:0013702,Ganglion cell,PAZ:0000239,retinal ganglion cell,CL:0000740,skos:exactMatch
+body_proper,UBERON:0013702,Horizontal cell,PAZ:0000240,retina horizontal cell,CL:0000745,skos:exactMatch
+body_proper,UBERON:0013702,Rod cell,PAZ:0000241,retinal rod cell,CL:0000604,skos:exactMatch
+body_proper,UBERON:0013702,CCL19/21 pericyte,PAZ:0000242,pericyte:CCL19/21,CL:0000669,skos:narrowMatch
+body_proper,UBERON:0013702,CXCL+ pericyte,PAZ:0000243,pericyte:CXCL+,CL:0000669,skos:narrowMatch
+body_proper,UBERON:0013702,CYGB+ pericyte,PAZ:0000244,pericyte:CYGB+,CL:0000669,skos:narrowMatch
+body_proper,UBERON:0013702,SPRR2F+ pericyte,PAZ:0000245,pericyte:SPRR2F+,CL:0000669,skos:narrowMatch
+body_proper,UBERON:0013702,CREB+MT1A+ vascular smooth muscle cell,PAZ:0000246,vascular associated smooth muscle cell:CREB+MT1A+,CL:0000359,skos:narrowMatch
+body_proper,UBERON:0013702,Metallothionein+ smooth muscle cell,PAZ:0000247,vascular associated smooth muscle cell:Metallothionein+,CL:0000359,skos:narrowMatch
+body_proper,UBERON:0013702,PCP4+ vascular smooth muscle cell,PAZ:0000248,vascular associated smooth muscle cell:PCP4+,CL:0000359,skos:narrowMatch
+body_proper,UBERON:0013702,PSG5+ syncytiotrophoblast,PAZ:0000249,syncytiotrophoblast cell:PSG5+,CL:0000525,skos:narrowMatch
+body_proper,UBERON:0013702,Villous cytotrophoblast,PAZ:0000250,placental villous trophoblast:cytotrophoblast,CL:2000060,skos:narrowMatch
+body_proper,UBERON:0013702,Cycling extravillous trophoblast,PAZ:0000251,extravillous trophoblast:cycling,CL:0008036,skos:narrowMatch
+body_proper,UBERON:0013702,SLC13A4+ Syncytiotrophoblast,PAZ:0000252,syncytiotrophoblast cell:SLC13A4+,CL:0000525,skos:narrowMatch
+body_proper,UBERON:0013702,Fetal MHC- Collagen+ arterial EC,PAZ:0000253,fetal artery endothelial cell:MHC- collagen+,CL:4047006,skos:narrowMatch
+body_proper,UBERON:0013702,Fetal MHC- Collagen+ capillary EC,PAZ:0000254,capillary endothelial cell:MHC- collagen -fetal,CL:0002144,skos:narrowMatch
+body_proper,UBERON:0013702,Fetal MHC- Collagen+ venous EC,PAZ:0000255,fetal vein endothelial cell:MHC- collagen-,CL:4047011,skos:narrowMatch
+body_proper,UBERON:0013702,DKK1+MMP1+ basal cell of bladder,PAZ:0000256,basal cell:DKK1+MMP1+ bladder,CL:0000646,skos:narrowMatch
+body_proper,UBERON:0013702,FOS+ basal cell of bladder,PAZ:0000257,basal cell:FOS+ bladder,CL:0000646,skos:narrowMatch
+body_proper,UBERON:0013702,MMP7+ basal cell of bladder,PAZ:0000258,basal cell:MMP7+ bladder,CL:0000646,skos:narrowMatch
+body_proper,UBERON:0013702,CCSER1 mammary basal cell,PAZ:0000259,basal-myoepithelial cell of mammary gland:CCSER1,CL:0002324,skos:narrowMatch
+body_proper,UBERON:0013702,CXCL14 mammary basal cell,PAZ:0000260,basal-myoepithelial cell of mammary gland:CXCL14,CL:0002324,skos:narrowMatch
+body_proper,UBERON:0013702,KRT6B mammary basal cell,PAZ:0000261,basal-myoepithelial cell of mammary gland:KRT6B,CL:0002324,skos:narrowMatch
+body_proper,UBERON:0013702,KRT17 mammary luminal cell,PAZ:0000262,luminal hormone-sensing cell of mammary gland:KRT17,CL:4033058,skos:narrowMatch
+body_proper,UBERON:0013702,PIP mammary luminal cell,PAZ:0000263,luminal hormone-sensing cell of mammary gland:PIP,CL:4033058,skos:narrowMatch
+body_proper,UBERON:0013702,Secretoglobin mammary luminal cell,PAZ:0000264,luminal hormone-sensing cell of mammary gland:Secretoglobin,CL:4033058,skos:narrowMatch
+body_proper,UBERON:0013702,Cycling mammary luminal progenitor,PAZ:0000265,luminal adaptive secretory precursor cell of mammary gland:Cycling,CL:4033057,skos:narrowMatch
+body_proper,UBERON:0013702,SAA2 mammary luminal progenitor,PAZ:0000266,luminal adaptive secretory precursor cell of mammary gland:SAA2,CL:4033057,skos:narrowMatch
+body_proper,UBERON:0013702,SCGB3A1 mammary luminal progenitor,PAZ:0000267,luminal adaptive secretory precursor cell of mammary gland:SCGB3A1,CL:4033057,skos:narrowMatch
+body_proper,UBERON:0013702,Secretoglobin mammary luminal progenitor,PAZ:0000268,luminal adaptive secretory precursor cell of mammary gland:Secretoglobin,CL:4033057,skos:narrowMatch
+body_proper,UBERON:0013702,SFN mammary luminal progenitor,PAZ:0000269,luminal adaptive secretory precursor cell of mammary gland:SFN,CL:4033057,skos:narrowMatch
+body_proper,UBERON:0013702,BEST4 enterocyte,PAZ:0000270,BEST4+ enterocyte,CL:4030026,skos:exactMatch
+body_proper,UBERON:0013702,Podocyte,PAZ:0000271,podocyte,CL:0000653,skos:exactMatch
+body_proper,UBERON:0013702,Type A intercalated cell,PAZ:0000272,renal alpha-intercalated cell,CL:0005011,skos:exactMatch
+body_proper,UBERON:0013702,Type B intercalated cell,PAZ:0000273,renal beta-intercalated cell,CL:0002201,skos:exactMatch
+body_proper,UBERON:0013702,CXCL6+ cholangiocyte,PAZ:0000274,cholangiocyte:CXCL6+,CL:1000488,skos:narrowMatch
+body_proper,UBERON:0013702,SPINK1+SGMS2+ cholangiocyte,PAZ:0000275,cholangiocyte:SPINK1+SGMS2+,CL:1000488,skos:narrowMatch
+body_proper,UBERON:0013702,TFF+ cholangiocyte,PAZ:0000276,cholangiocyte:TFF+,CL:1000488,skos:narrowMatch
+body_proper,UBERON:0013702,AFP+ fetal hepatocyte,PAZ:0000277,hepatocyte:AFP+ fetal,CL:0000182,skos:narrowMatch
+body_proper,UBERON:0013702,AT1,PAZ:0000278,pulmonary alveolar type 1 cell,CL:0002062,skos:exactMatch
+body_proper,UBERON:0013702,AT2,PAZ:0000279,pulmonary alveolar type 2 cell,CL:0002063,skos:exactMatch
+body_proper,UBERON:0013702,CDC20B+ Multiciliated cell,PAZ:0000280,lung multiciliated epithelial cell:CDC20B+,CL:1000271,skos:narrowMatch
+body_proper,UBERON:0013702,MT2A+ granulosa cell,PAZ:0000281,granulosa cell:MT2A+,CL:0000501,skos:narrowMatch
+body_proper,UBERON:0013702,OSR1+ granulosa cell,PAZ:0000282,granulosa cell:OSR1+,CL:0000501,skos:narrowMatch
+body_proper,UBERON:0013702,PAX8+ granulosa cell,PAZ:0000283,granulosa cell,CL:0000501,skos:narrowMatch
+body_proper,UBERON:0013702,TAC1+ granulosa cell,PAZ:0000284,granulosa cell,CL:0000501,skos:narrowMatch
+body_proper,UBERON:0013702,TFF1+ ductal cell,PAZ:0000285,pancreatic ductal cell:TFF1+,CL:0002079,skos:narrowMatch
+body_proper,UBERON:0013702,TUBA1A+ ductal cell,PAZ:0000286,pancreatic ductal cell:TUBA1A+,CL:0002079,skos:narrowMatch
+body_proper,UBERON:0013702,Basal keratinocyte,PAZ:0000287,basal cell of epidermis,CL:0002187,skos:exactMatch
+body_proper,UBERON:0013702,Cycling keratinocyte,PAZ:0000288,keratinocyte:cycling,CL:0000312,skos:narrowMatch
+body_proper,UBERON:0013702,Granular keratinocyte,PAZ:0000289,granular cell of epidermis,CL:0002189,skos:exactMatch
+body_proper,UBERON:0013702,Secretory cell,PAZ:0000290,keratinocyte:secretory,CL:0000312,skos:narrowMatch
+body_proper,UBERON:0013702,Spinous keratinocyte,PAZ:0000291,prickle cell,CL:0000649,skos:exactMatch
+body_proper,UBERON:0013702,CXCL2/3+ surface mucous cell,PAZ:0000292,mucous cell of stomach:CXCL2/3+ surface,CL:0002180,skos:narrowMatch
+body_proper,UBERON:0013702,Cycling surface mucous cell,PAZ:0000293,mucous cell of stomach:cycling surface,CL:0002180,skos:narrowMatch
+body_proper,UBERON:0013702,GKN1/2+ surface mucous cell,PAZ:0000294,mucous cell of stomach:GKN1/2+ surface,CL:0002180,skos:narrowMatch
+body_proper,UBERON:0013702,Cycling Leydig cell,PAZ:0000295,Leydig cell:cycling,CL:0000178,skos:narrowMatch
+body_proper,UBERON:0013702,Fetal Leydig cell,PAZ:0000296,Leydig cell:fetal,CL:0000178,skos:narrowMatch
+body_proper,UBERON:0013702,IL1RAPL1+ Leyding cell,PAZ:0000297,Leydig cell:IL1RAPL1+,CL:0000178,skos:narrowMatch
+body_proper,UBERON:0013702,INSL3+ Leydig cell,PAZ:0000298,Leydig cell:INSL3+,CL:0000178,skos:narrowMatch
+body_proper,UBERON:0013702,Leydig cell progenitor,PAZ:0000299,Leydig stem cell,CL:0009091,skos:broadMatch
+body_proper,UBERON:0013702,Peritubular myoid cell progenitor,PAZ:0000300,peritubular myoid cell:progenitor,CL:0002481,skos:narrowMatch
+body_proper,UBERON:0013702,Cycling Sertoli cell,PAZ:0000301,Sertoli cell:cycling,CL:0000216,skos:narrowMatch
+body_proper,UBERON:0013702,ROBO2+ fetal Sertoli cell,PAZ:0000302,Sertoli cell:ROBO2+ fetal,CL:0000216,skos:narrowMatch
+body_proper,UBERON:0013702,Corneocyte-like mTEC,PAZ:0000303,medullary thymic epithelial cell type 3,CL:0009073,skos:exactMatch
+body_proper,UBERON:0013702,Immature medullary thymic epithelial cell,PAZ:0000304,medullary thymic epithelial cell:immature,CL:0002365,skos:narrowMatch
+body_proper,UBERON:0013702,CXCL14+POSTN+ fibroblast,PAZ:0000305,fibroblast:CXCL14+ POSTN+,CL:0000057,skos:narrowMatch
+body_proper,UBERON:0013702,Cycling CXCL14+ fibroblast,PAZ:0000306,fibroblast:CXCL14+ cycling,CL:0000057,skos:narrowMatch
+body_proper,UBERON:0013702,PTGDS+CXCL14+ fibroblast,PAZ:0000307,fibroblast:CXCL14+ PTGDS+,CL:0000057,skos:narrowMatch
+body_proper,UBERON:0013702,Elongated spermatid,PAZ:0000308,spermatid:elongated,CL:0000018,skos:narrowMatch
+body_proper,UBERON:0013702,Elongating spermatid,PAZ:0000309,spermatid:elongating,CL:0000018,skos:narrowMatch
+body_proper,UBERON:0013702,Round spermatid,PAZ:0000310,spermatid:round,CL:0000018,skos:narrowMatch
+body_proper,UBERON:0013702,Cycling spermatogonial stem cell,PAZ:0000311,spermatogonium:cycling,CL:0000020,skos:narrowMatch
+body_proper,UBERON:0013702,Fibrous astrocyte,PAZ:0000312,fibrous astrocyte:brain,CL:4042008,skos:narrowMatch
+body_proper,UBERON:0013702,Protoplasmic astrocyte,PAZ:0000313,protoplasmic astrocyte:brain,CL:4042007,skos:narrowMatch
+body_proper,UBERON:0013702,Oligodendrocyte progenitor cell,PAZ:0000314,oligodendrocyte precursor cell,CL:0002453,skos:exactMatch
+body_proper,UBERON:0013702,Platelet,PAZ:0000315,platelet,CL:0000233,skos:exactMatch
+body_proper,UBERON:0013702,Erythroblast,PAZ:0000316,erythroblast,CL:0000765,skos:exactMatch
+body_proper,UBERON:0013702,Fetal HBG+ erythrocyte,PAZ:0000317,erythrocyte:fetal,CL:0000232,skos:narrowMatch
+body_proper,UBERON:0013702,Early GMP,PAZ:0000318,granulocyte monocyte progenitor cell:early,CL:0000557,skos:narrowMatch
+body_proper,UBERON:0013702,Late GMP,PAZ:0000319,granulocyte monocyte progenitor cell:late,CL:0000557,skos:narrowMatch
+body_proper,UBERON:0013702,MPP-Cycling,PAZ:0000320,hematopoietic multipotent progenitor cell:cyling,CL:0000837,skos:narrowMatch
+body_proper,UBERON:0013702,MPP-MkEry,PAZ:0000321,hematopoietic multipotent progenitor cell:MkEry,CL:0000837,skos:narrowMatch
+body_proper,UBERON:0013702,MPP-MyLy,PAZ:0000322,hematopoietic multipotent progenitor cell:MyLy,CL:0000837,skos:narrowMatch
+body_proper,UBERON:0013702,B cell precursor,PAZ:0000323,precursor B cell,CL:0000817,skos:exactMatch
+body_proper,UBERON:0013702,Cycling B,PAZ:0000324,cycling B cell,CL:4033068,skos:exactMatch
+body_proper,UBERON:0013702,Germinal center B cell,PAZ:0000325,germinal center B cell,CL:0000844,skos:exactMatch
+body_proper,UBERON:0013702,Memory B cell,PAZ:0000326,memory B cell,CL:0000787,skos:exactMatch
+body_proper,UBERON:0013702,Naive B cell,PAZ:0000327,naive B cell,CL:0000788,skos:exactMatch
+body_proper,UBERON:0013702,Plasma cell,PAZ:0000328,plasma cell,CL:0000786,skos:exactMatch
+body_proper,UBERON:0013702,Cycling T/NK cell,PAZ:0000329,lymphocyte:cycling T/NK,CL:0000542,skos:narrowMatch
+body_proper,UBERON:0013702,ILC,PAZ:0000330,innate lymphoid cell,CL:0001065,skos:exactMatch
+body_proper,UBERON:0013702,NK cell,PAZ:0000331,natural killer cell,CL:0000623,skos:exactMatch
+body_proper,UBERON:0013702,T cell,PAZ:0000332,T cell,CL:0000084,skos:exactMatch
+body_proper,UBERON:0013702,G2/M phase myeloid cell,PAZ:0000333,cycling myeloid cell:G2/M phase,CL:4033081,skos:narrowMatch
+body_proper,UBERON:0013702,S phase myeloid cell,PAZ:0000334,cycling myeloid cell:S phase,CL:4033081,skos:narrowMatch
+body_proper,UBERON:0013702,ASDC,PAZ:0000335,"Axl+ dendritic cell, human",CL:0017009,skos:exactMatch
+body_proper,UBERON:0013702,cDC,PAZ:0000336,conventional dendritic cell,CL:0000990,skos:exactMatch
+body_proper,UBERON:0013702,mregDC,PAZ:0000337,dendritic cell:mature dendritic cell enriched in immunoregulatory molecules,CL:0000451,skos:narrowMatch
+body_proper,UBERON:0013702,pDC,PAZ:0000338,plasmacytoid dendritic cell,CL:0000784,skos:exactMatch
+body_proper,UBERON:0013702,Mast cell,PAZ:0000339,mast cell,CL:0000097,skos:exactMatch
+body_proper,UBERON:0013702,Neutrophil,PAZ:0000340,neutrophil,CL:0000775,skos:exactMatch
+body_proper,UBERON:0013702,Cycling macrophage,PAZ:0000341,cycling macrophage,CL:4033076,skos:exactMatch
+body_proper,UBERON:0013702,DIAPH3+ macrophage,PAZ:0000342,macrophage:DIAPH3+,CL:0000235,skos:narrowMatch
+body_proper,UBERON:0013702,LYVE1 macrophage,PAZ:0000343,macrophage:LYVE1,CL:0000235,skos:narrowMatch
+body_proper,UBERON:0013702,M1 macrophage,PAZ:0000344,inflammatory macrophage,CL:0000863,skos:exactMatch
+body_proper,UBERON:0013702,Tissue resident macrophage,PAZ:0000345,tissue-resident macrophage,CL:0000864,skos:exactMatch
+body_proper,UBERON:0013702,CD14 monocyte,PAZ:0000346,CD14-positive monocyte,CL:0001054,skos:exactMatch
+body_proper,UBERON:0013702,CD14/CD16 monocyte,PAZ:0000347,monocyte:CD14orCD16,CL:0000576,skos:narrowMatch
+body_proper,UBERON:0013702,CD16 monocyte,PAZ:0000348,monocyte:CD16,CL:0000576,skos:narrowMatch
+body_proper,UBERON:0013702,Placenta CAMP+ monocyte,PAZ:0000349,monocyte:placenta CAMP+,CL:0000576,skos:narrowMatch
+body_proper,UBERON:0013702,Placenta defensin+ monocyte,PAZ:0000350,monocyte:placenta defensin+,CL:0000576,skos:narrowMatch
+body_proper,UBERON:0013702,Fetal ventricular cardiomyocyte,PAZ:0000351,ventricular cardiac muscle cell:fetal,CL:2000046,skos:narrowMatch
+body_proper,UBERON:0013702,Amygdala excitatory neuron,PAZ:0000352,amygdala excitatory neuron,CL:4023039,skos:exactMatch
+body_proper,UBERON:0013702,Cortical excitatory neuron,PAZ:0000353,neuron:cortical excitatory,CL:0000540,skos:narrowMatch
+body_proper,UBERON:0013702,Hippocampal excitatory neurons,PAZ:0000354,neuron:hippocampal excitatory,CL:0000540,skos:narrowMatch
+body_proper,UBERON:0013702,PLCH1 L4/5 excitatory neuron,PAZ:0000355,neuron:PLCH1 L4/5 excitatory,CL:0000540,skos:narrowMatch
+body_proper,UBERON:0013702,Pyramidal neuron,PAZ:0000356,pyramidal neuron,CL:0000598,skos:exactMatch
+body_proper,UBERON:0013702,Thalamic excitatory neuron,PAZ:0000357,thalamic excitatory neuron,CL:4023068,skos:exactMatch
+body_proper,UBERON:0013702,Cerebellar inhibitory neuron,PAZ:0000358,neuron:cerebellar inhibitory,CL:0000540,skos:narrowMatch
+body_proper,UBERON:0013702,CGE-derived inhibitory neuron,PAZ:0000359,caudal ganglionic eminence derived cortical interneuron,CL:4023064,skos:exactMatch
+body_proper,UBERON:0013702,CXCL14 inhibitory neuron,PAZ:0000360,neuron:CXCL14 inhibitory,CL:0000540,skos:narrowMatch
+body_proper,UBERON:0013702,Medium spiny neurons,PAZ:0000361,medium spiny neuron,CL:1001474,skos:exactMatch
+body_proper,UBERON:0013702,MGE-derived inhibitory neuron,PAZ:0000362,medial ganglionic eminence derived GABAergic cortical interneuron,CL:4023069,skos:exactMatch
+body_proper,UBERON:0013702,Midbrain-derived inhibitory neuron,PAZ:0000363,midbrain-derived inhibitory neuron,CL:4023079,skos:exactMatch
+body_proper,UBERON:0013702,PVALB inhibitory neuron,PAZ:0000364,neuron:PVALB inhibitory,CL:0000540,skos:narrowMatch
+body_proper,UBERON:0013702,Lower rhombic lip-derived neuron,PAZ:0000365,neuron:lower rhombic lip-derived,CL:0000540,skos:narrowMatch
+body_proper,UBERON:0013702,Mammillary body neuron,PAZ:0000366,mammillary body neuron,CL:4023074,skos:exactMatch
+body_proper,UBERON:0013702,Splatter neuron,PAZ:0000367,neuron:splatter,CL:0000540,skos:narrowMatch
+body_proper,UBERON:0013702,Upper rhombic lip-derived neuron,PAZ:0000368,neuron:upper rhombic lip-derived,CL:0000540,skos:narrowMatch
+body_proper,UBERON:0013702,Cone-OFF-bipolar cell,PAZ:0000369,OFF-bipolar cell:cone,CL:0000750,skos:narrowMatch
+body_proper,UBERON:0013702,Cone-ON-bipolar cell,PAZ:0000370,ON-bipolar cell:cone,CL:0000749,skos:narrowMatch
+body_proper,UBERON:0013702,PCP4L1+ bipolar cell,PAZ:0000371,retinal bipolar neuron:PCP4L1+,CL:0000748,skos:narrowMatch
+body_proper,UBERON:0013702,Rod-bipolar cell,PAZ:0000372,rod bipolar cell,CL:0000751,skos:exactMatch
+body_proper,UBERON:0013702,Cycling villous cytotrophoblast,PAZ:0000373,placental villous trophoblast:cycling cytotrophoblast,CL:2000060,skos:narrowMatch
+body_proper,UBERON:0013702,Cycling AT2,PAZ:0000374,cycling pulmonary alveolar type 2 cell,CL:4033080,skos:exactMatch
+body_proper,UBERON:0013702,G2/M phase surface mucous cell,PAZ:0000375,mucous cell of stomach:G2/M phase cycling surface,CL:0002180,skos:narrowMatch
+body_proper,UBERON:0013702,S phase surface mucous cell,PAZ:0000376,mucous cell of stomach:S phasecycling surface,CL:0002180,skos:narrowMatch
+body_proper,UBERON:0013702,Early SOX4+ erythroblast,PAZ:0000377,erythroblast:early SOX4+,CL:0000765,skos:narrowMatch
+body_proper,UBERON:0013702,Intermediate EPCAM+ erythroblast,PAZ:0000378,erythroblast:intermediate EPCAM+,CL:0000765,skos:narrowMatch
+body_proper,UBERON:0013702,Late hemoglobin+ erythroblast,PAZ:0000379,erythroblast:late hemoglobin+,CL:0000765,skos:narrowMatch
+body_proper,UBERON:0013702,Pre-ProB cell,PAZ:0000380,fraction A pre-pro B cell,CL:0002045,skos:exactMatch
+body_proper,UBERON:0013702,PreB cell,PAZ:0000381,precursor B cell:preB,CL:0000817,skos:narrowMatch
+body_proper,UBERON:0013702,ProB cell,PAZ:0000382,pro-B cell,CL:0000826,skos:exactMatch
+body_proper,UBERON:0013702,Plasma cell precursor,PAZ:0000383,plasmablast,CL:0000980,skos:exactMatch
+body_proper,UBERON:0013702,Cycling T cell,PAZ:0000384,cycling T cell,CL:4033069,skos:exactMatch
+body_proper,UBERON:0013702,SLAMF1-XCL+ ILC,PAZ:0000385,innate lymphoid cell:SLAMF1- XCL+,CL:0001065,skos:narrowMatch
+body_proper,UBERON:0013702,SLAMF1+XCL- ILC,PAZ:0000386,innate lymphoid cell:SLAMF1+ XCL-,CL:0001065,skos:narrowMatch
+body_proper,UBERON:0013702,CD16 NK cell,PAZ:0000387,"CD16-positive, CD56-dim natural killer cell, human",CL:0000939,skos:exactMatch
+body_proper,UBERON:0013702,CD56 NK cell,PAZ:0000388,"CD16-negative, CD56-bright natural killer cell, human",CL:0000938,skos:exactMatch
+body_proper,UBERON:0013702,Tissue-resident NK cell,PAZ:0000389,natural killer cell:tissue-resident,CL:0000623,skos:narrowMatch
+body_proper,UBERON:0013702,abT (entry) cell,PAZ:0000390,alpha-beta T cell,CL:0000789,skos:exactMatch
+body_proper,UBERON:0013702,Agonist T cell,PAZ:0000391,T cell:agonist,CL:0000084,skos:narrowMatch
+body_proper,UBERON:0013702,CD4 T cell,PAZ:0000392,"CD4-positive, alpha-beta T cell",CL:0000624,skos:exactMatch
+body_proper,UBERON:0013702,CD8 T cell,PAZ:0000393,T cell:CD8,CL:0000084,skos:narrowMatch
+body_proper,UBERON:0013702,Cycling DN/DP T cell,PAZ:0000394,cycling T cell:DN/DP,CL:4033069,skos:narrowMatch
+body_proper,UBERON:0013702,Double negative T cell,PAZ:0000395,double negative thymocyte,CL:0002489,skos:exactMatch
+body_proper,UBERON:0013702,Double positive T cell,PAZ:0000396,"double-positive, alpha-beta thymocyte",CL:0000809,skos:exactMatch
+body_proper,UBERON:0013702,gdT cell,PAZ:0000397,gamma-delta T cell,CL:0000798,skos:exactMatch
+body_proper,UBERON:0013702,INF-activated T cell,PAZ:0000398,T cell:IFN-activated,CL:0000084,skos:narrowMatch
+body_proper,UBERON:0013702,MAIT cell,PAZ:0000399,mucosal invariant T cell,CL:0000940,skos:exactMatch
+body_proper,UBERON:0013702,Memory T cell,PAZ:0000400,memory T cell,CL:0000813,skos:exactMatch
+body_proper,UBERON:0013702,Naive T cell,PAZ:0000401,naive T cell,CL:0000898,skos:exactMatch
+body_proper,UBERON:0013702,cDC1,PAZ:0000402,CD141-positive myeloid dendritic cell,CL:0002394,skos:exactMatch
+body_proper,UBERON:0013702,cDC2,PAZ:0000403,CD1c-positive myeloid dendritic cell,CL:0002399,skos:exactMatch
+body_proper,UBERON:0013702,Neutrophil precursor,PAZ:0000404,neutrophil progenitor cell,CL:0000834,skos:exactMatch
+body_proper,UBERON:0013702,Cycling LYVE1 macrophage,PAZ:0000405,macrophage:LYVE1 cycling,CL:0000235,skos:narrowMatch
+body_proper,UBERON:0013702,Alveolar macrophage,PAZ:0000406,alveolar macrophage,CL:0000583,skos:exactMatch
+body_proper,UBERON:0013702,Hofbauer cell,PAZ:0000407,Hofbauer cell,CL:3000001,skos:exactMatch
+body_proper,UBERON:0013702,Microglia,PAZ:0000408,microglial cell,CL:0000129,skos:exactMatch
+body_proper,UBERON:0013702,MHCII high CD14 monocyte,PAZ:0000409,CD14-positive monocyte:MHCII high,CL:0001054,skos:narrowMatch
+body_proper,UBERON:0013702,MHCII low CD14 monocyte,PAZ:0000410,CD14-positive monocyte:MHCII low,CL:0001054,skos:narrowMatch
+body_proper,UBERON:0013702,Deep-layer excitatory neuron,PAZ:0000411,neuron:deep-layer excitatory,CL:0000540,skos:narrowMatch
+body_proper,UBERON:0013702,Upper-layer excitatory neuron,PAZ:0000412,neuron:upper-layer excitatory,CL:0000540,skos:narrowMatch
+body_proper,UBERON:0013702,Hippocampal CA1-3 neuron,PAZ:0000413,neuron:hippocampal CA1-3 excitatory,CL:0000540,skos:narrowMatch
+body_proper,UBERON:0013702,Hippocampal CA4 neuron,PAZ:0000414,neuron:hippocampal CA4 excitatory,CL:0000540,skos:narrowMatch
+body_proper,UBERON:0013702,Hippocampal dentate gyrus neuron,PAZ:0000415,neuron:hippocampal dentate gyrus excitatory,CL:0000540,skos:narrowMatch
+body_proper,UBERON:0013702,PAX2 inhibitory neuron,PAZ:0000416,neuron:PAX2 cerebellar inhibitory,CL:0000540,skos:narrowMatch
+body_proper,UBERON:0013702,SCGN inhibitory neuron,PAZ:0000417,neuron:SCGN cerebellar inhibitory,CL:0000540,skos:narrowMatch
+body_proper,UBERON:0013702,SV2C inhibitory neuron,PAZ:0000418,caudal ganglionic eminence derived cortical interneuron:SV2C,CL:4023064,skos:narrowMatch
+body_proper,UBERON:0013702,VIP inhibitory neuron,PAZ:0000419,VIP GABAergic cortical interneuron,CL:4023016,skos:exactMatch
+body_proper,UBERON:0013702,D1 medium spiny neuron,PAZ:0000420,direct pathway medium spiny neuron,CL:4023026,skos:exactMatch
+body_proper,UBERON:0013702,D2 medium spiny neuron,PAZ:0000421,indirect pathway medium spiny neuron,CL:4023029,skos:exactMatch
+body_proper,UBERON:0013702,Eccentric medium spiny neuron,PAZ:0000422,eccentric medium spiny neuron,CL:4030057,skos:exactMatch
+body_proper,UBERON:0013702,SST inhibitory neuron,PAZ:0000423,sst GABAergic cortical interneuron,CL:4023017,skos:exactMatch
+body_proper,UBERON:0013702,Cycling late hemoglobin+ erythroblast,PAZ:0000424,erythroblast:cycling late hemoglobin+,CL:0000765,skos:narrowMatch
+body_proper,UBERON:0013702,Cycling preB cell,PAZ:0000425,precursor B cell:cycling preB,CL:0000817,skos:narrowMatch
+body_proper,UBERON:0013702,Cycling proB cell,PAZ:0000426,pro-B cell:cycling,CL:0000826,skos:narrowMatch
+body_proper,UBERON:0013702,GZMK NK cell,PAZ:0000427,natural killer cell:GZMK,CL:0000623,skos:narrowMatch
+body_proper,UBERON:0013702,GZMK cytotoxic CD4 T cell,PAZ:0000428,"CD4-positive, alpha-beta cytotoxic T cell:GZMK",CL:0000934,skos:narrowMatch
+body_proper,UBERON:0013702,KLRB1 cytotoxic CD4 T,PAZ:0000429,"CD4-positive, alpha-beta cytotoxic T cell:KLRB1",CL:0000934,skos:narrowMatch
+body_proper,UBERON:0013702,Memory CD4 T cell,PAZ:0000430,"CD4-positive, alpha-beta memory T cell",CL:0000897,skos:exactMatch
+body_proper,UBERON:0013702,Naive CD4 T cell,PAZ:0000431,"naive thymus-derived CD4-positive, alpha-beta T cell",CL:0000895,skos:exactMatch
+body_proper,UBERON:0013702,Tfh cell,PAZ:0000432,T follicular helper cell,CL:0002038,skos:exactMatch
+body_proper,UBERON:0013702,Treg cell,PAZ:0000433,"CD4-positive, CD25-positive, alpha-beta regulatory T cell",CL:0000792,skos:exactMatch
+body_proper,UBERON:0013702,CD8aa+ T cell,PAZ:0000434,T cell:CD8aa+,CL:0000084,skos:narrowMatch
+body_proper,UBERON:0013702,Memory CD8 T cell,PAZ:0000435,"CD8-positive, alpha-beta memory T cell",CL:0000909,skos:exactMatch
+body_proper,UBERON:0013702,Naive CD8 T cell,PAZ:0000436,"naive thymus-derived CD8-positive, alpha-beta T cell",CL:0000900,skos:exactMatch
+body_proper,UBERON:0013702,Double negative T cell (entry),PAZ:0000437,double negative thymocyte:entry,CL:0002489,skos:narrowMatch
+body_proper,UBERON:0013702,S100A+ preNeutrophil,PAZ:0000438,neutrophil progenitor cell:S100A+,CL:0000834,skos:narrowMatch
+body_proper,UBERON:0013702,L4 excitatory neuron,PAZ:0000439,neuron:L4 excitatory,CL:0000540,skos:narrowMatch
+body_proper,UBERON:0013702,L5 excitatory neuron,PAZ:0000440,neuron:L5 excitatory,CL:0000540,skos:narrowMatch
+body_proper,UBERON:0013702,L5/6 excitatory neuron,PAZ:0000441,neuron:l5/6 excitatory,CL:0000540,skos:narrowMatch
+body_proper,UBERON:0013702,L5b excitatory neuron,PAZ:0000442,neuron:L5b excitatory,CL:0000540,skos:narrowMatch
+body_proper,UBERON:0013702,L6 excitatory neuron,PAZ:0000443,neuron:L6 excitatory,CL:0000540,skos:narrowMatch
+body_proper,UBERON:0013702,TSHZ2 L4/5 excitatory neuron,PAZ:0000444,neuron:TSHZ2 L4/5 excitatory,CL:0000540,skos:narrowMatch
+body_proper,UBERON:0013702,L2/3 excitatory neuron,PAZ:0000445,neuron:L2/3 excitatory,CL:0000540,skos:narrowMatch
+body_proper,UBERON:0013702,Differentiating Treg cell,PAZ:0000446,"CD4-positive, CD25-positive, alpha-beta regulatory T cell:differentiating",CL:0000792,skos:narrowMatch
+body_proper,UBERON:0013702,CXCL13 exhausted CD8 T cell,PAZ:0000447,"CD8-positive, alpha-beta memory T cell:exhausted",CL:0000909,skos:narrowMatch
+body_proper,UBERON:0013702,GZMB CD8 T cell,PAZ:0000448,"CD8-positive, alpha-beta memory T cell:GZMB",CL:0000909,skos:narrowMatch
+body_proper,UBERON:0013702,GZMK CD8 T cell,PAZ:0000449,granzyme K-associated CD8 T cell,CL:4052021,skos:exactMatch
+body_proper,UBERON:0013702,KLRB1 CD8 T cell,PAZ:0000450,"CD8-positive, alpha-beta memory T cell:KLRB1",CL:0000909,skos:narrowMatch
+body_proper,UBERON:0013702,Cycling S100A+ preNeutrophil,PAZ:0000451,neutrophil progenitor cell:S100A+ cycling,CL:0000834,skos:narrowMatch
+body_proper,UBERON:0013702,GZMK+IL7R- CD8 T cell,PAZ:0000452,granzyme K-associated CD8 T cell:IL7R-negative,CL:4052021,skos:narrowMatch
+body_proper,UBERON:0013702,GZMK+IL7R+ CD8 T cell,PAZ:0000453,granzyme K-associated CD8 T cell:IL7R-positive,CL:4052021,skos:narrowMatch
+body_proper,UBERON:0013702,Pulmonary ionocyte,PAZ:0000454,pulmonary ionocyte,CL:0017000,skos:narrowMatch
