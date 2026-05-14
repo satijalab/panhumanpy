@@ -90,7 +90,8 @@ def test_detailed_annotations_import():
         # Import specific tools and functions that should be available
         from panhumanpy.ANNotate_tools import (
             QueryObj, ReadQueryObj, InferenceInputData, OutputLabels, 
-            Inference, AutoloadInferenceTools, Embeddings, Umaps
+            Inference, AutoloadInferenceTools, Embeddings, Umaps,
+            map_to_cell_ontology
         )
         assert True
     except ImportError:
