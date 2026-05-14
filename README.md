@@ -30,6 +30,23 @@ panhumanpy uses versioned models corresponding to major package releases. The pa
 
 Currently available model versions: 'v0', 'v1'
 
+## Cell Ontology Mapping
+
+panhumanpy includes a built-in crosswalk that maps Pan-human Azimuth cell type annotations to [Cell Ontology](https://obofoundry.org/ontology/cl.html) (CL) terms. This mapping is versioned alongside the model and can be applied to annotation outputs via the `map_to_cell_ontology` function in `ANNotate_tools` or the `map_to_cell_ontology` method on `AzimuthNN` and `AzimuthNN_base`.
+
+**Crosswalk provenance:**
+
+| Field | Detail |
+|---|---|
+| Title | Crosswalk of Pan-human Azimuth Types annotated cells to Cell Ontology |
+| Author | Aleix Puig-Barbe |
+| Author ORCID | 0000-0001-6677-8489 |
+| Reviewers | Bruce Herr II, Katy Borner, Jie Zheng |
+| Reviewer ORCIDs | 0000-0002-6703-7647, 0000-0002-3321-6137, 0000-0002-2999-0103 |
+| Data DOI | https://doi.org/10.48539/HBM727.TLKL.237 |
+| Date | December 15, 2025 |
+| Version | v1.1 |
+
 ## Tutorial
 
 For an introductory tutorial, please check out this [notebook](https://github.com/satijalab/panhumanpy/blob/main/tutorial_panhumanpy.ipynb).
