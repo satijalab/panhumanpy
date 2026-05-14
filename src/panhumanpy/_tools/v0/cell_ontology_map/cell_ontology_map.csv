@@ -18,7 +18,7 @@ body_proper,UBERON:0013702,Arterial EC,PAZ:0000016,endothelial cell of artery,CL
 body_proper,UBERON:0013702,Capillary EC,PAZ:0000017,capillary endothelial cell,CL:0002144,skos:exactMatch
 body_proper,UBERON:0013702,Cycling EC,PAZ:0000018,endothelial cell:cycling,CL:0000115,skos:narrowMatch
 body_proper,UBERON:0013702,Endocardial cell,PAZ:0000019,endocardial cell,CL:0002350,skos:exactMatch
-body_proper,UBERON:0013702,Endothelial-mesenchymal transition EC,PAZ:0000020,endothelial cell:endothelial-mesenchymal transition,CL:0000115,skos:narrowMatch
+body_proper,UBERON:0013702,Endothelial‑mesenchymal transition EC,PAZ:0000020,endothelial cell:endothelial-mesenchymal transition,CL:0000115,skos:narrowMatch
 body_proper,UBERON:0013702,Lymphatic EC,PAZ:0000021,endothelial cell of lymphatic vessel,CL:0002138,skos:exactMatch
 body_proper,UBERON:0013702,Tip EC,PAZ:0000022,endothelial tip cell,CL:0000704,skos:exactMatch
 body_proper,UBERON:0013702,Venous EC,PAZ:0000023,vein endothelial cell,CL:0002543,skos:exactMatch
