@@ -61,7 +61,7 @@ This project follows a generalised semantic versioning where major versions are 
 - **PATCH (X.Y.Z):** Bug fixes, small improvements
 
 #### Current Version:
-- 0.3.0 (Andromeda)
+- 0.4.0 (Andromeda)
 
 #### Version Philosophy:
 - **New default models, and/or breaking changes to API = Major versions** because they represent ("soft") breaking changes.
