@@ -5,6 +5,7 @@ annotated panhuman scRNA-seq data.
 
 import argparse
 import os
+import urllib.request
 from pathlib import Path
 import numpy as np
 import tensorflow as tf
@@ -29,6 +30,19 @@ import gc
 #warnings.filterwarnings("ignore")  make this optional in script
 
 
+
+
+########################################################################
+############# models published on zenodo ###############################
+########################################################################
+########################################################################
+
+MODEL_URLS = {
+    "v0": "https://zenodo.org/records/20401417/files/panhumanpy_inference_model_v0.keras?download=1",
+    "v1": "https://zenodo.org/records/20401417/files/panhumanpy_inference_model_v1.keras?download=1",
+}
+
+CACHE_DIR = Path.home() / ".cache" / "panhumanpy"
 
 
 
