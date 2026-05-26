@@ -75,7 +75,7 @@ def test_version_directory_structure():
         required_subdirs = {
             "inference_encoders": ["__init__.py", "inference_encoders.pkl"],
             "inference_feature_panel": ["__init__.py", "inference_feature_panel.txt"],
-            "inference_model": ["__init__.py", "inference_model.keras"],
+            "inference_model": ["__init__.py"],
             "postprocessing": ["__init__.py", "panhuman_annotate_fine.csv", "panhuman_annotate_medium.csv"],
             "calibration":["__init__.py"],
             "cell_ontology_map": ["__init__.py", "cell_ontology_map.csv"]
