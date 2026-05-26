@@ -5,6 +5,7 @@ annotated panhuman scRNA-seq data.
 
 import argparse
 import os
+import urllib.request
 from pathlib import Path
 import numpy as np
 import tensorflow as tf
@@ -29,6 +30,19 @@ import gc
 #warnings.filterwarnings("ignore")  make this optional in script
 
 
+
+
+########################################################################
+############# models published on zenodo ###############################
+########################################################################
+########################################################################
+
+MODEL_URLS = {
+    "v0": "https://zenodo.org/records/20401417/files/panhumanpy_inference_model_v0.keras?download=1",
+    "v1": "https://zenodo.org/records/20401417/files/panhumanpy_inference_model_v1.keras?download=1",
+}
+
+CACHE_DIR = Path.home() / ".cache" / "panhumanpy"
 
 
 
@@ -2092,27 +2106,37 @@ class InferenceTools():
         """
         Load the trained Keras model for inference.
         
-        Loads the model from a predefined directory structure using the
-        version and filename specified during initialization. The model 
-        is expected to be in .keras format.
+        On first use, downloads the model from Zenodo to
+        ~/.cache/panhumanpy/<version>/inference_model/. 
+        Subsequent calls load directly from cache.
         
         Returns
         -------
         keras.Model
             The loaded model used for inference.
-            
-        Notes
-        -----
-        The model must be saved in the 'inference_model' directory in the
-        version directory (for e.g. "v0"). This should be accessible via 
-        the 'files' import system. Model name must correspond to the name 
-        provided at initialization.
         """
-        model_dir_path = self._version_path/"inference_model"
-        model_path = model_dir_path / self._inference_model_filename
+        model_cache_dir = (
+            CACHE_DIR / self._model_version / "inference_model"
+        )
+        model_path = model_cache_dir / self._inference_model_filename
 
-        model= load_model(model_path)
+        if not model_path.exists():
+            if self._model_version not in MODEL_URLS:
+                raise ValueError(
+                    f"No download URL found for model version "
+                    f"'{self._model_version}'. Available versions: "
+                    f"{list(MODEL_URLS.keys())}"
+                )
+            model_cache_dir.mkdir(parents=True, exist_ok=True)
+            url = MODEL_URLS[self._model_version]
+            print(
+                f"Downloading model '{self._model_version}' to "
+                f"{model_path} ..."
+            )
+            urllib.request.urlretrieve(url, model_path)
+            print("Download complete.\n")
 
+        model = load_model(model_path)
         return model
     
     def load_model_meta(self):

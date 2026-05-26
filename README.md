@@ -1,6 +1,6 @@
 # panhumanpy
 
-**Current version: 0.4.0 (Andromeda)**
+**Current version: 0.5.0 (Andromeda)**
 
 A package for cell annotation using Azimuth Neural Network.
 
@@ -15,10 +15,23 @@ A package for cell annotation using Azimuth Neural Network.
 To install the base version of the package (with CPU support only), run:
 
 ```bash
+pip install panhumanpy
+```
+
+or to install from GitHub, run:
+
+```bash
 pip install git+https://github.com/satijalab/panhumanpy.git
 ```
 
 If you require GPU acceleration for enhanced performance on compatible hardware, install the package with GPU dependencies:
+
+```bash
+pip install panhumanpy[gpu]
+```
+
+or from GitHub:
+
 
 ```bash
 pip install git+https://github.com/satijalab/panhumanpy.git#egg=panhumanpy[gpu]
@@ -29,6 +42,16 @@ pip install git+https://github.com/satijalab/panhumanpy.git#egg=panhumanpy[gpu]
 panhumanpy uses versioned models corresponding to major package releases. The package defaults to model 'v{i}' where i is the major package version. For example for panhumanpy 0.2.1 (Andromeda), the default model version is 'v0'. For most users, the default version is recommended. The user can also choose to use a different model version as outlined in the tutorial mentioned below. 
 
 Currently available model versions: 'v0', 'v1'
+
+## Model Weights
+
+Model weights are hosted on Zenodo and downloaded automatically on first use, cached in `~/.cache/panhumanpy/`. No manual download is required.
+
+| Field | Detail |
+|---|---|
+| DOI | https://doi.org/10.5281/zenodo.20401417 |
+| Models | v0, v1 |
+| License | CC BY 4.0 |
 
 ## Cell Ontology Mapping
 
