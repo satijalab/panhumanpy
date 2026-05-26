@@ -6,7 +6,7 @@ import pytest
 from pathlib import Path
 from unittest.mock import patch, MagicMock
 from panhumanpy.ANNotate_tools import InferenceTools, CACHE_DIR, MODEL_URLS
-from panhumanpy._available_model_versions import _available_model_versions
+from panhumanpy.ANNotate_tools import _available_model_versions
 
 
 def _make_inference_tools(version):
