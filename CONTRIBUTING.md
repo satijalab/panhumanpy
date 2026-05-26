@@ -73,7 +73,7 @@ This project follows a generalised semantic versioning where major versions are 
 1. The default model version number must match the package major version
    - Package `0.2.1` → Model `v0` as default
    - Package `1.3.2` → Model `v1` as default
-2. Model artifacts are stored in `src/panhumanpy/_tools/v{i}/`
+2. Non-model artifacts are stored in `src/panhumanpy/_tools/v{i}/` and models are saved on zenodo as mentioned in the README
 3. When bumping major package version, create new `v{i}` directory with updated models and set default model version in ANNotate.py appropriately.
 
 #### Example:
