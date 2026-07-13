@@ -2,7 +2,9 @@
 
 **Current version: 0.5.0 (Andromeda)**
 
-A package for cell annotation using Azimuth Neural Network.
+A package for unified and scalable organism-wide cell annotation in single-cell and spatial transcriptomics.
+
+Uses the Pan-human Azimuth neural network.
 
 ## Prerequisites
 
@@ -73,3 +75,5 @@ panhumanpy includes a built-in crosswalk that maps Pan-human Azimuth cell type a
 ## Tutorial
 
 For an introductory tutorial, please check out this [notebook](https://github.com/satijalab/panhumanpy/blob/main/tutorial_panhumanpy.ipynb).
+
+For more information on Pan-human Azimuth please visit our [website](https://satijalab.org/pan_human_azimuth/).
