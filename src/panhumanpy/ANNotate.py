@@ -118,7 +118,7 @@ Example commands:
 
 from panhumanpy.ANNotate_tools import *
 
-model_version_default = 'v0'
+model_version_default = 'v1'
 
 _gpu_configured = False
 
