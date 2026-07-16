@@ -1,6 +1,6 @@
 # panhumanpy
 
-**Current version: 0.5.0 (Andromeda)**
+**Current version: 1.0.0 (Orion)**
 
 A package for unified and scalable organism-wide cell annotation in single-cell and spatial transcriptomics.
 
@@ -41,7 +41,7 @@ pip install git+https://github.com/satijalab/panhumanpy.git#egg=panhumanpy[gpu]
 
 ## Model Versions
 
-panhumanpy uses versioned models corresponding to major package releases. The package defaults to model 'v{i}' where i is the major package version. For example for panhumanpy 0.2.1 (Andromeda), the default model version is 'v0'. For most users, the default version is recommended. The user can also choose to use a different model version as outlined in the tutorial mentioned below. 
+panhumanpy uses versioned models corresponding to major package releases. The package defaults to model 'v{i}' where i is the major package version. For panhumanpy 1.0.0 (Orion), the default model version is 'v1'. For most users, the default version is recommended. The user can also choose to use a different model version as outlined in the tutorial mentioned below. 
 
 Currently available model versions: 'v0', 'v1'
 
