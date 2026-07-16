@@ -12,8 +12,8 @@ __all__ = [
     'configure'
 ]
 
-__version__ = "0.5.0"
-__version_name__ = "Andromeda"
+__version__ = "1.0.0"
+__version_name__ = "Orion"
 __version_full__ = f'{__version__} ({__version_name__})'
 __author__ = 'SatijaLab'
 
