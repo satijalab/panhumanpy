@@ -7,7 +7,7 @@ name = "panhumanpy"
 version = "1.0.0"
 description = "A Python package for automated cell type annotation in scRNA-seq using Azimuth Neural Network."
 readme = "README.md"
-license = {text = "MIT"}
+license = {file = "LICENSE"}
 requires-python = ">=3.9"
 dependencies = [
     "anndata",
