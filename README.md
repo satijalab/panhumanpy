@@ -77,3 +77,7 @@ panhumanpy includes a built-in crosswalk that maps Pan-human Azimuth cell type a
 For an introductory tutorial, please check out this [notebook](https://github.com/satijalab/panhumanpy/blob/main/tutorial_panhumanpy.ipynb).
 
 For more information on Pan-human Azimuth please visit our [website](https://satijalab.org/pan_human_azimuth/).
+
+## Preprint
+
+A pre-print on the development and applications of Pan-human Azimuth is now on [bioRxiv](https://www.biorxiv.org/content/10.64898/2026.07.16.738997v1).
