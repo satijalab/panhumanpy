@@ -3329,10 +3329,14 @@ class PostprocessingAzimuthLabels(OutputLabels):
                     f'Annotate_{self.refine_level}'
                 ].tolist()
                 matching_refined_labels = list(set(matching_refined_labels))
+                if len(matching_refined_labels) == 1:
+                    return matching_refined_labels[0]
                 return matching_refined_labels
             if refined_label == label:
                 return refined_label
-            elif refined_label in label:
+            elif refined_label in label or all(
+                p in label.split("|") for p in refined_label.split("|")
+            ):
                 return refined_label
         return "False"
 
